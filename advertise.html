@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="te">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ప్రకటనల సమాచారం (Advertise With Us) - మమేక మహోదయం | Mameka Mahodayam</title>
+    <meta name="description" content="Advertise With Us Page Structural Placeholder - Mameka Mahodayam Telugu Daily Newspaper" />
+    <link rel="stylesheet" href="styles/design-system.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link" data-i18n="skip_link">ముఖ్య నివిడికి వెళ్ళండి</a>
+
+    <!-- 1. HEADER / MASTHEAD -->
+    <header role="banner" class="masthead-container">
+      <!-- Top Utility Bar -->
+      <div class="utility-bar">
+        <div class="container-standard utility-bar-inner">
+          <div class="utility-bar-left">
+            <span data-i18n="top_date_placeholder">బుధవారం, 11 సెప్టెంబర్ 2026</span>
+            <span data-i18n="top_edition_placeholder">ఆంధ్రప్రదేశ్ & తెలంగాణ</span>
+          </div>
+          <div class="utility-bar-right">
+            <span data-i18n="top_weather_placeholder">విజయవాడ: 31°C | తేమ: 68%</span>
+            <a href="epaper.html" style="color: inherit; text-decoration: underline;" data-i18n="top_epaper_link">ఈ-పేపర్ చదవండి</a> 
+            <span aria-hidden="true" style="opacity: 0.5;">|</span> 
+            <a href="editorial-team.html" class="top-special-link" data-i18n="nav_team">✨ మా సంపాదకీయ బృందం</a>
+            <span aria-hidden="true" style="opacity: 0.5;">|</span> 
+            <a href="admin/index.html" style="color: #ffcc00; text-decoration: underline; font-weight: bold;" data-i18n="top_admin_link">🔒 అడ్మిన్ లాగిన్</a>
+            
+            <!-- ONE-CLICK LANGUAGE SWITCHER -->
+            <div class="lang-switcher" role="region" aria-label="Language Selector / భాష ఎంపిక">
+              <button type="button" class="lang-btn active" data-lang-btn="te" aria-label="తెలుగు భాషకి మారండి">తెలుగు</button>
+              <span class="lang-divider" aria-hidden="true">|</span>
+              <button type="button" class="lang-btn" data-lang-btn="en" aria-label="Switch to English language">English</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Masthead Brand Area (Pink/Magenta Print Reference) -->
+      <div class="masthead-brand-area">
+        <div class="container-standard">
+          <div class="masthead-grid">
+            
+            <div class="masthead-left desktop-only"></div>
+
+            <div class="masthead-center">
+              <a href="INDEX.html" style="text-decoration: none;">
+                <h1 class="brand-logo-3d" aria-label="మమేక మహోదయం">
+                  <span class="brand-stacked-wrap">
+                    <span class="brand-prefix-stacked" data-i18n="brand_prefix_te">మమేక</span>
+                    <span class="brand-main-stacked" data-i18n="brand_main_te">మహోదయం</span>
+                  </span>
+                </h1>
+                <div class="brand-english-sub" data-i18n="brand_name_en">MAMEKA MAHODAYAM</div>
+                <div class="newspaper-tagline-green">అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం</div>
+                <div class="newspaper-badge-purple" data-i18n="brand_tagline">తెలుగు దినపత్రిక</div>
+              </a>
+            </div>
+
+            <div class="masthead-right">
+              <label class="search-bar-wrap" data-i18n-aria="search_bar_aria">
+                <input type="text" class="search-bar-input" data-i18n-placeholder="search_placeholder" placeholder="శోధించండి..." />
+                <button type="button" class="search-bar-btn" data-i18n-aria="search_submit_aria" aria-label="శోధన సమర్పించండి">⌕</button>
+              </label>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </header>
+
+    <!-- 2. MAIN NAVIGATION -->
+    <nav class="main-nav" role="navigation" aria-label="Main Navigation">
+      <div class="container-standard">
+        <ul class="nav-list">
+          <li><a href="INDEX.html" class="nav-item" data-i18n="nav_home">హోమ్</a></li>
+          <li><a href="category.html?c=latest" class="nav-item" data-i18n="nav_latest">తాజా వార్తలు</a></li>
+          <li><a href="category.html?c=state" class="nav-item" data-i18n="nav_state">ఆంధ్రప్రదేశ్</a></li>
+          <li><a href="district.html" class="nav-item" data-i18n="nav_district">జిల్లాల వార్తలు</a></li>
+          <li><a href="category.html?c=politics" class="nav-item" data-i18n="nav_politics">రాజకీయాలు</a></li>
+          <li><a href="category.html?c=national" class="nav-item" data-i18n="nav_national">దేశం &amp; ప్రపంచం</a></li>
+          <li><a href="category.html?c=tech" class="nav-item" data-i18n="nav_tech">టెక్నాలజీ</a></li>
+          <li><a href="category.html?c=business" class="nav-item" data-i18n="nav_business">బిజినెస్</a></li>
+          
+          <!-- MORE DROPDOWN FOR REMAINING CATEGORIES -->
+          <li class="nav-dropdown">
+            <button type="button" class="nav-dropdown-btn" aria-haspopup="true" aria-expanded="false" data-i18n="nav_more">
+              మరిన్ని ▾
+            </button>
+            <ul class="nav-dropdown-menu">
+              <li><a href="category.html?c=cinema" class="nav-dropdown-item" data-i18n="nav_cinema">సినిమా</a></li>
+              <li><a href="category.html?c=sports" class="nav-dropdown-item" data-i18n="nav_sports">క్రీడలు</a></li>
+              <li><a href="category.html?c=education" class="nav-dropdown-item" data-i18n="nav_education">విద్య &amp; ఉద్యోగాలు</a></li>
+              <li><a href="category.html?c=editorial" class="nav-dropdown-item" data-i18n="nav_editorial">సంపాదకీయం</a></li>
+              <li><a href="epaper.html" class="nav-dropdown-item" data-i18n="nav_epaper">ఈ-పేపర్</a></li>
+              <li><a href="search.html" class="nav-dropdown-item" data-i18n="nav_search">శోధన</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main id="main-content" role="main" class="container" style="margin-top: var(--space-xl);">
+      
+      <!-- BREADCRUMB -->
+      <nav class="breadcrumb-wrap" data-i18n-aria="advertise_title">
+        <a href="INDEX.html" data-i18n="nav_home">హోమ్</a>
+        <span>›</span>
+        <span data-i18n="nav_advertise">ప్రకటనలు</span>
+      </nav>
+
+      <!-- UTILITY HEADER BANNER -->
+      <div class="utility-header-banner">
+        <h1 class="utility-title" data-i18n="advertise_title">ప్రకటనల సమాచారం</h1>
+        <p class="utility-subtitle" data-i18n="editorial_identity_note">మమేక మహోదయం — స్వతంత్ర, నిష్పాక్షిక తెలుగు దినపత్రిక డిజిటల్ వేదిక.</p>
+      </div>
+
+      <!-- MAIN CONTENT GRID -->
+      <div class="article-layout-grid">
+        
+        <!-- MAIN COLUMN -->
+        <div class="article-main-column">
+          
+          <!-- Print & Digital Ad Options -->
+          <div class="utility-card">
+            <h2 class="utility-card-title">ప్రకటనల మార్గాలు &amp; విధానాలు (Advertising Options)</h2>
+            <div class="grid-2" style="margin-top: var(--space-xs);">
+              
+              <div style="border: 1px solid var(--color-border); padding: var(--space-md); background: var(--color-surface);">
+                <h3 class="tp-h3" style="font-size: 1.05rem; color: var(--color-brand-primary);">1. ప్రింట్ పేపర్ ప్రకటనలు (Print Newspaper Ads)</h3>
+                <ul class="footer-nav-list" style="margin-top: 8px; color: var(--color-text-secondary);">
+                  <li>• Front Page Jacket & Strip Ad Placeholders</li>
+                  <li>• Full Page & Half Page Ad Tariff Placeholders</li>
+                  <li>• Classifieds & Appointment Ad Placeholders</li>
+                  <li>• District Tabloid Supplement Ad Placeholders</li>
+                </ul>
+              </div>
+
+              <div style="border: 1px solid var(--color-border); padding: var(--space-md); background: var(--color-surface);">
+                <h3 class="tp-h3" style="font-size: 1.05rem; color: var(--color-brand-primary);">2. డిజిటల్ &amp; ఈ-పేపర్ ప్రకటనలు (Digital Ads)</h3>
+                <ul class="footer-nav-list" style="margin-top: 8px; color: var(--color-text-secondary);">
+                  <li>• </li>
+                  <li>• </li>
+                  <li>• </li>
+                  <li>• Digital E-Paper Sponsored Page Placeholder</li>
+                </ul>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Readership & Audience Metrics -->
+          <div class="utility-card">
+            <h2 class="utility-card-title">పాఠకుల సంఖ్య &amp; విస్తృతి (Readership Metrics)</h2>
+            <div class="grid-3" style="margin-top: var(--space-xs);">
+              <div style="background-color: var(--color-surface-muted); padding: var(--space-md); border: 1px solid var(--color-border-light); text-align: center;">
+                <h3 class="tp-h2" style="color: var(--color-brand-primary); margin-bottom: 2px;">Circulation Metric</h3>
+                <span class="tp-caption">Daily Print Circulation Placeholder</span>
+              </div>
+
+              <div style="background-color: var(--color-surface-muted); padding: var(--space-md); border: 1px solid var(--color-border-light); text-align: center;">
+                <h3 class="tp-h2" style="color: var(--color-brand-primary); margin-bottom: 2px;">Digital Readers</h3>
+                <span class="tp-caption">Monthly Digital Readership Placeholder</span>
+              </div>
+
+              <div style="background-color: var(--color-surface-muted); padding: var(--space-md); border: 1px solid var(--color-border-light); text-align: center;">
+                <h3 class="tp-h2" style="color: var(--color-brand-primary); margin-bottom: 2px;">District Reach</h3>
+                <span class="tp-caption">All Telangana & Ap Districts Placeholder</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Media Kit / Inquiry Form -->
+          <div class="utility-card">
+            <h2 class="utility-card-title">ప్రకటనల విచారణ పత్రం (Media Kit Inquiry Form)</h2>
+            <form onsubmit="event.preventDefault();" style="display: flex; flex-direction: column; gap: var(--space-md);">
+              <div class="grid-2">
+                <div class="utility-form-group">
+                  <label class="utility-label" for="adCompany">సంస్థ/వ్యాపారం పేరు / Company Name *</label>
+                  <input type="text" id="adCompany" class="utility-input" placeholder="Organization Name Placeholder" required />
+                </div>
+                <div class="utility-form-group">
+                  <label class="utility-label" for="adContactPerson">సంప్రదించాల్సిన వ్యక్తి / Contact Person *</label>
+                  <input type="text" id="adContactPerson" class="utility-input" placeholder="Contact Person Name Placeholder" required />
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <div class="utility-form-group">
+                  <label class="utility-label" for="adEmail">ఈమెయిల్ / Email Address *</label>
+                  <input type="email" id="adEmail" class="utility-input" placeholder="Business Email Placeholder" required />
+                </div>
+                <div class="utility-form-group">
+                  <label class="utility-label" for="adType">ప్రకటన రకం / Ad Type *</label>
+                  <select id="adType" class="utility-select">
+                    <option value="">Select Ad Type Placeholder</option>
+                    <option value="print">PRINT NEWSPAPER AD / ప్రింట్ పేపర్</option>
+                    <option value="digital">DIGITAL WEBSITE AD / డిజిటల్ వెబ్‌సైట్</option>
+                    <option value="epaper">E-PAPER AD / ఈ-పేపర్</option>
+                    <option value="classified">CLASSIFIED AD / క్లాసిఫైడ్</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="utility-form-group">
+                <label class="utility-label" for="adRequirements">ప్రకటనల వివరాలు / Ad Details &amp; Budget *</label>
+                <textarea id="adRequirements" class="utility-textarea" rows="4" placeholder="" required></textarea>
+              </div>
+
+              <button type="submit" class="utility-btn-primary">Request Media Kit Placeholder</button>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- SIDEBAR COLUMN -->
+        <aside class="article-sidebar-column" role="complementary">
+          <div class="utility-card">
+            <h2 class="utility-card-title" style="font-size: 1.1rem;">ప్రకటనల డెస్క్ సంప్రదింపులు</h2>
+            <div style="display: flex; flex-direction: column; gap: var(--space-xs);">
+              <span class="footer-contact-label">ఈమెయిల్ / Email</span>
+              <span class="footer-contact-placeholder" style="font-size: 0.85rem; font-weight: 600;">Advertising Email Placeholder</span>
+              
+              <span class="footer-contact-label" style="margin-top: var(--space-xs);">ఫోన్ / Phone</span>
+              <span class="footer-contact-placeholder" style="font-size: 0.85rem; font-weight: 600;">Advertising Phone Placeholder</span>
+            </div>
+          </div>
+
+          <div class="ad-placeholder">
+            
+          </div>
+        </aside>
+
+      </div>
+
+    </main>
+
+    <!-- GLOBAL FOOTER SYSTEM -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="container">
+        <div class="footer-top-grid">
+          <!-- Col 1: Newspaper Identity & Social Media Placeholders -->
+          <div class="footer-col-brand">
+            <div class="footer-brand-title">మమేక మహోదయం</div>
+            <div class="footer-brand-subtitle">MAMEKA MAHODAYAM DAILY</div>
+            <p class="footer-tagline">తెలుగు ప్రజల విశ్వసనీయ దినపత్రిక | Independent Telugu Daily Newspaper</p>
+            <div class="footer-social-title">సోషల్ మీడియా వేదికలు / Social Handles</div>
+            <div class="footer-social-list">
+              <span class="social-btn-placeholder" title="Social handle placeholder">X (TWITTER) Placeholder</span>
+              <span class="social-btn-placeholder" title="Social handle placeholder">FACEBOOK Placeholder</span>
+              <span class="social-btn-placeholder" title="Social handle placeholder">YOUTUBE Placeholder</span>
+              <span class="social-btn-placeholder" title="Social handle placeholder">WHATSAPP Placeholder</span>
+            </div>
+          </div>
+
+          <!-- Col 2: News Sections -->
+          <div>
+            <h3 class="footer-col-title">వార్తా విభాగములు</h3>
+            <ul class="footer-nav-list">
+              <li><a href="category.html">రాష్ట్ర వార్తలు (State News)</a></li>
+              <li><a href="district.html">జిల్లాల సమాచారం (District News)</a></li>
+              <li><a href="category.html">రాజకీయాలు (Politics)</a></li>
+              <li><a href="category.html">జాతీయ / అంతర్జాతీయ (National &amp; Int)</a></li>
+              <li><a href="category.html">క్రీడలు (Sports)</a></li>
+              <li><a href="category.html">సినిమా / వినోదం (Cinema)</a></li>
+              <li><a href="category.html">విద్య &amp; ఉద్యోగాలు (Education)</a></li>
+              <li><a href="category.html">సంపాదకీయం (Editorial)</a></li>
+            </ul>
+          </div>
+
+          <!-- Col 3: About & Services -->
+          <div>
+            <h3 class="footer-col-title">మా సమాచారం</h3>
+            <ul class="footer-nav-list">
+              <li><a href="about.html">మన గురించి (About Us)</a></li>
+              <li><a href="editorial-team.html">సంపాదకీయ బృందం (Editorial Team)</a></li>
+              <li><a href="contact.html">సంప్రదించండి (Contact Us)</a></li>
+              <li><a href="advertise.html">ప్రకటనలు (Advertise)</a></li>
+              <li><a href="epaper.html">ఈ-పేపర్ (E-Paper)</a></li>
+            </ul>
+          </div>
+
+          <!-- Col 4: Legal & Policies -->
+          <div>
+            <h3 class="footer-col-title">నిబంధనలు &amp; హక్కులు</h3>
+            <ul class="footer-nav-list">
+              <li><a href="privacy.html">గోప్యతా విధానం (Privacy Policy)</a></li>
+              <li><a href="terms.html">నిబంధనలు &amp; షరతులు (Terms of Service)</a></li>
+              <li><a href="search.html">వార్తల శోధన (Search Archive)</a></li>
+              <li><span class="footer-contact-placeholder">RSS FEED Placeholder</span></li>
+              <li><span class="footer-contact-placeholder">SITEMAP Placeholder</span></li>
+            </ul>
+          </div>
+
+          <!-- Col 5: Contact Metadata Placeholders -->
+          <div>
+            <h3 class="footer-col-title">కార్యాలయ వివరాలు</h3>
+            <div class="footer-contact-block">
+              <div class="footer-contact-item">
+                <span class="footer-contact-label">ప్రధాన కార్యాలయం / Head Office</span>
+                <span class="footer-contact-value footer-contact-placeholder">Office Address Placeholder</span>
+              </div>
+              <div class="footer-contact-item">
+                <span class="footer-contact-label">ఈమెయిల్ / Email</span>
+                <span class="footer-contact-value footer-contact-placeholder">Editorial Email Placeholder</span>
+              </div>
+              <div class="footer-contact-item">
+                <span class="footer-contact-label">ఫోన్ / Phone</span>
+                <span class="footer-contact-value footer-contact-placeholder">+91 866 2456789</span>
+              </div>
+              <div class="footer-contact-item">
+                <span class="footer-contact-label">నమోదు / Registration</span>
+                <span class="footer-contact-value footer-contact-placeholder">APTEL/2026/89123</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="footer-bottom-bar">
+          <div>&copy; 2026 MAMEKA MAHODAYAM (మమేక మహోదయం). All rights reserved.</div>
+          <div style="display: flex; gap: var(--space-xs); flex-wrap: wrap;">
+            <span class="footer-meta-tag">RNI: APTEL/2026/89123</span>
+            <span class="footer-meta-tag">ISSN: ISSN: 2456-8910</span>
+            <span class="footer-meta-tag">TELUGU DAILY NEWSPAPER</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/i18n.js"></script>
+  </body>
+</html>

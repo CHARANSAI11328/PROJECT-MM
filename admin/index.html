@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="admin_portal_title">మమేక మహోదయం | CMS అడ్మిన్ ప్యానెల్</title>
+    <!-- Google Fonts & Master Styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mandali&family=Noto+Sans+Telugu:wght@400;600;700&family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/design-system.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+    <!-- 1. LOGIN VIEW -->
+    <div id="login-view" class="auth-container" style="display: none;">
+        <div class="auth-card-wrapper">
+            <div class="auth-card">
+                <!-- TOP BRAND MASTHEAD HEADER -->
+                <div class="auth-header text-center">
+                    <div class="auth-portal-badge">
+                        <span class="badge-dot"></span>
+                        <span class="badge-text">EDITORIAL CONTROL PORTAL</span>
+                    </div>
+
+                    <div class="auth-brand-masthead">
+                        <h1 class="auth-brand-logo">
+                            <span class="brand-stacked-wrap">
+                                <span class="brand-prefix-te">మమేక</span>
+                                <span class="brand-main-te">మహోదయం</span>
+                            </span>
+                        </h1>
+                        <div class="auth-brand-en">MAMEKA MAHODAYAM TELUGU DAILY</div>
+                        <div class="auth-slogan-pill">
+                            <span>అక్షరంలో ఆత్మీయత — వార్తల్లో వాస్తవం</span>
+                        </div>
+                    </div>
+
+                    <div class="auth-divider"></div>
+                    <h2 class="auth-title-te">అడ్మిన్ లాగిన్ / Secured CMS Access</h2>
+                </div>
+
+                <div id="login-alert" class="alert alert-error" style="display: none;"></div>
+
+                <form id="login-form" class="auth-form" onsubmit="return false;">
+                    <div class="form-group">
+                        <label for="username" class="form-label-custom">
+                            <span>వినియోగదారు పేరు (Username)</span>
+                        </label>
+                        <input type="text" id="username" class="form-control form-control-light" required placeholder="Enter admin username" autocomplete="username">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="form-label-custom">
+                            <span>పాస్‌వర్డ్ (Password)</span>
+                        </label>
+                        <div class="input-icon-wrapper">
+                            <input type="password" id="password" class="form-control form-control-light" required placeholder="Enter password" autocomplete="current-password">
+                            <button type="button" id="toggle-password-btn" class="toggle-pass-btn" title="Show/Hide Password">
+                                <svg class="eye-open-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                <svg class="eye-closed-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="login-btn" class="btn btn-primary-light btn-block">
+                        <span>లాగిన్ అవ్వండి / Log In to CMS</span>
+                    </button>
+                </form>
+
+                <div class="auth-card-footer">
+                    <a href="/INDEX.html" class="auth-back-link">
+                        <span>← పత్రిక ప్రధాన వెబ్‌సైట్ (Return to Main Website)</span>
+                    </a>
+                    <div class="auth-copy-text">© 2026 MAMEKA MAHODAYAM. All rights reserved.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN ADMIN APPLICATION WRAPPER (SIDEBAR + TOPBAR + CONTENT) -->
+    <div id="dashboard-view" class="admin-layout-wrapper" style="display: flex;">
+        <!-- TOP MASTHEAD HEADER -->
+        <header class="admin-top-masthead">
+            <div class="admin-header-content flex-between">
+                <div class="admin-brand-left">
+                    <button id="mobile-menu-toggle" class="btn-menu-toggle" aria-label="Toggle Navigation">☰</button>
+                    <a href="#/dashboard" class="admin-logo-link">
+                        <span class="brand-logo-3d-sm">మమేక మహోదయం</span>
+                        <span class="admin-cms-badge">CMS EDITORIAL CONTROL</span>
+                    </a>
+                </div>
+                <div class="admin-top-right">
+                    <div class="lang-switcher" role="region" aria-label="Language Selector">
+                        <button type="button" class="lang-btn active" data-lang-btn="te">తెలుగు</button>
+                        <span class="lang-divider">|</span>
+                        <button type="button" class="lang-btn" data-lang-btn="en">English</button>
+                    </div>
+                    <a href="/INDEX.html" target="_blank" class="btn-website-link">పత్రిక వెబ్‌సైట్ (Main Site) →</a>
+                    <div class="user-profile-badge">
+                        <strong id="admin-username-display">Admin Editor</strong>
+                    </div>
+                    <button id="logout-btn" class="btn-logout" title="Logout">నిర్గమించు (Logout)</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTAINER: SIDEBAR + VIEWS -->
+        <div class="admin-body-container">
+            <!-- SIDEBAR NAVIGATION -->
+            <aside class="admin-sidebar" id="admin-sidebar">
+                <nav class="sidebar-nav">
+                    <div class="nav-section-title">ప్రధాన విభాగాలు / Main Sections</div>
+                    <a href="#/dashboard" class="nav-item active" data-view="dashboard">
+                        <div class="nav-label-wrap">
+                            <span class="nav-title">డాష్‌బోర్డ్</span>
+                            <span class="nav-sub">Dashboard Overview</span>
+                        </div>
+                    </a>
+                    <a href="#/create-news" class="nav-item" data-view="create-news">
+                        <div class="nav-label-wrap">
+                            <span class="nav-title">కొత్త వార్త ప్రచురించు</span>
+                            <span class="nav-sub">Create News</span>
+                        </div>
+                        <span class="nav-badge-tag">+ కొత్తది</span>
+                    </a>
+                    <a href="#/upload" class="nav-item" data-view="upload">
+                        <div class="nav-label-wrap">
+                            <span class="nav-title">ఈ-పేపర్ PDF అప్‌లోడ్</span>
+                            <span class="nav-sub">Upload PDF Edition</span>
+                        </div>
+                    </a>
+                    <a href="#/articles" class="nav-item" data-view="articles">
+                        <div class="nav-label-wrap">
+                            <span class="nav-title">వార్తల నిర్వహణ</span>
+                            <span class="nav-sub">All News &amp; Articles</span>
+                        </div>
+                    </a>
+                    <a href="#/reporters" class="nav-item" data-view="reporters">
+                        <div class="nav-label-wrap">
+                            <span class="nav-title">రిపోర్టర్ల నిర్వహణ</span>
+                            <span class="nav-sub">Manage Reporters</span>
+                        </div>
+                    </a>
+                    <a href="#/media" class="nav-item" data-view="media">
+                        <div class="nav-label-wrap">
+                            <span class="nav-title">మీడియా లైబ్రరీ</span>
+                            <span class="nav-sub">Media Library</span>
+                        </div>
+                    </a>
+                    <a href="#/editions" class="nav-item" data-view="editions">
+                        <div class="nav-label-wrap">
+                            <span class="nav-title">ఈ-పేపర్ &amp; సంచికలు</span>
+                            <span class="nav-sub">E-Paper Archives</span>
+                        </div>
+                    </a>
+                    <a href="#/designer-package" class="nav-item" data-view="designer-package">
+                        <div class="nav-label-wrap">
+                            <span class="nav-title">డిజైనర్ ప్యాకేజ్</span>
+                            <span class="nav-sub">Designer Package</span>
+                        </div>
+                    </a>
+                    <a href="#/settings" class="nav-item" data-view="settings">
+                        <div class="nav-label-wrap">
+                            <span class="nav-title">సెట్టింగ్‌లు</span>
+                            <span class="nav-sub">Settings</span>
+                        </div>
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- MAIN DYNAMIC CONTENT AREA -->
+            <main class="admin-main-content">
+
+                <!-- SECTION 1: DASHBOARD VIEW -->
+                <section id="view-dashboard" class="view-section active">
+                    <!-- DASHBOARD HEADER BAR WITH QUICK ACTION SHORTCUTS -->
+                    <div class="page-title-bar flex-between" style="align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2>📊 డాష్‌బోర్డ్ ఓవర్‌వ్యూ (Dashboard Overview)</h2>
+                            <p class="page-subtitle">మమేక మహోదయం డిజిటల్ పత్రిక తాజా సమాచారం, గణాంకాలు మరియు తక్షణ నిర్వహణ.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <a href="#/create-news" class="btn btn-primary" style="text-decoration: none; padding: 10px 18px; display: inline-flex; align-items: center; gap: 8px;">
+                                ✍️ కొత్త వార్త రాయండి (Create News)
+                            </a>
+                            <a href="#/upload" class="btn btn-secondary" style="text-decoration: none; padding: 10px 18px; display: inline-flex; align-items: center; gap: 8px;">
+                                📤 దినపత్రిక PDF అప్‌లోడ్ (Upload E-Paper)
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 4 TOP METRIC CARDS GRID -->
+                    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 24px;">
+                        <div class="stat-card">
+                            <div class="stat-icon-box pink">📄</div>
+                            <div class="stat-details">
+                                <div class="stat-number" id="stat-total-editions">0</div>
+                                <div class="stat-label">మొత్తం ఈ-పేపర్‌లు (Total E-Papers)</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-box green">✓</div>
+                            <div class="stat-details">
+                                <div class="stat-number" id="stat-published-articles">0</div>
+                                <div class="stat-label">ప్రచురించిన వార్తలు (Published Articles)</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-box gold">⏳</div>
+                            <div class="stat-details">
+                                <div class="stat-number" id="stat-pending-articles">0</div>
+                                <div class="stat-label">ఖరారు కానివి (Drafts / Pending)</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon-box slate">🖼️</div>
+                            <div class="stat-details">
+                                <div class="stat-number" id="stat-total-media">0</div>
+                                <div class="stat-label">మీడియా ఫైళ్లు (Media Library)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2-COLUMN DASHBOARD MASTER WORKSPACE GRID -->
+                    <div class="dashboard-split-grid" style="display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start;">
+                        <!-- LEFT MAIN COLUMN (RECENT EDITIONS & RECENT ARTICLES) -->
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <!-- RECENT EDITIONS CARD -->
+                            <div class="card" style="margin: 0;">
+                                <div class="card-header flex-between">
+                                    <h3>📄 ఇటీవల అప్‌లోడ్ చేసిన ఈ-పేపర్ సంచికలు (Recent E-Paper Editions)</h3>
+                                    <a href="#/editions" class="btn btn-outline-sm">అన్నీ చూడండి (View All) →</a>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>తేదీ (Date)</th>
+                                                <th>సంచిక పేరు (Edition Name)</th>
+                                                <th>స్థితి (Status)</th>
+                                                <th>చర్య (Action)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dash-editions-table-body">
+                                            <tr class="empty-row"><td colspan="4">సంచికలు లోడ్ అవుతున్నాయి...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- RECENT ARTICLES CARD -->
+                            <div class="card" style="margin: 0;">
+                                <div class="card-header flex-between">
+                                    <h3>📰 తాజా ప్రచురించిన వార్తలు (Recent Articles Summary)</h3>
+                                    <a href="#/articles" class="btn btn-outline-sm">అన్ని వార్తలు నిర్వహించండి →</a>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>శీర్షిక (Headline)</th>
+                                                <th>విభాగం</th>
+                                                <th>జిల్లా</th>
+                                                <th>స్థితి</th>
+                                                <th>చర్యలు</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dash-articles-table-body">
+                                            <tr class="empty-row"><td colspan="5">వార్తలు లోడ్ అవుతున్నాయి...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT SIDEBAR COLUMN (QUICK ACTIONS & SYSTEM STATUS) -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <!-- QUICK ACTIONS SHORTCUTS WIDGET -->
+                            <div class="card" style="background: #ffffff; border: 1px solid var(--border-color);">
+                                <div class="card-header">
+                                    <h3>⚡ తక్షణ చర్యలు (Quick Actions)</h3>
+                                    <p class="page-subtitle">ప్రధాన విధులను వెంటనే నిర్వహించండి.</p>
+                                </div>
+                                 <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
+                                    <a href="#/create-news" class="btn btn-primary btn-block" style="text-decoration: none; text-align: center; padding: 12px; font-weight: 600;">
+                                        ✍️ కొత్త వార్త ప్రచురించు (Create News Article)
+                                    </a>
+                                    <a href="#/upload" class="btn btn-secondary btn-block" style="text-decoration: none; text-align: center; padding: 10px; font-weight: 600;">
+                                        📤 దినపత్రిక PDF అప్‌లోడ్ (Upload E-Paper)
+                                    </a>
+                                    <a href="#/articles" class="btn btn-secondary btn-block" style="text-decoration: none; text-align: center; padding: 10px; font-weight: 600;">
+                                        📝 వార్తల నిర్వహణ (All News)
+                                    </a>
+                                    <a href="#/media" class="btn btn-secondary btn-block" style="text-decoration: none; text-align: center; padding: 10px; font-weight: 600;">
+                                        📁 మీడియా లైబ్రరీ (Media Library)
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- LIVE WEBSITE STATUS & DIRECT LINK WIDGET -->
+                            <div class="card" style="background: #f8fafc; border: 1px solid var(--border-color);">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                    <span style="width: 10px; height: 10px; background: #16a34a; border-radius: 50%; display: inline-block;"></span>
+                                    <h4 style="margin: 0; font-size: 0.95rem; color: var(--text-main);">వెబ్‌సైట్ లైవ్ స్థితి (Live Web Status)</h4>
+                                </div>
+                                <p style="font-size: 0.85rem; color: #475569; line-height: 1.5; margin-bottom: 14px;">
+                                    మమేక మహోదయం డిజిటల్ దినపత్రిక ఆన్‌లైన్‌లో విజయవంతంగా రన్ అవుతోంది.
+                                </p>
+                                <a href="/" target="_blank" class="btn btn-outline-sm btn-block" style="text-decoration: none; text-align: center; display: block; padding: 8px;">
+                                    🌐 ప్రత్యక్ష వెబ్‌సైట్ చూడండి (View Main Website) ↗
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: CREATE NEWS VIEW (SINGLE ARTICLE PUBLISHER EDITORIAL DESK) -->
+                <section id="view-create-news" class="view-section" style="display: none;">
+                    <div id="create-news-alert" class="alert" style="display: none;"></div>
+
+                    <form id="create-news-form">
+                        <!-- TOP ACTION HEADER BAR FOR ONE-CLICK PUBLISH -->
+                        <div class="editor-top-actions-bar">
+                            <div>
+                                <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--text-main);">✍️ కొత్త వార్త ప్రచురించు (Create News Article)</h2>
+                                <p class="page-subtitle">వార్త శీర్షిక, పాఠం మరియు చిత్రం వివరాలను నమోదు చేసి నేరుగా ప్రచురించండి.</p>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <button type="reset" class="btn btn-secondary btn-outline-sm">ఫారమ్ క్లియర్</button>
+                                <button type="button" id="create-btn-save-draft" class="btn btn-secondary">💾 డ్రాఫ్ట్‌గా దాచు</button>
+                                <button type="submit" id="create-btn-publish" class="btn btn-primary btn-lg">
+                                    🚀 ప్రచురించు (Publish Article Live)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 2-COLUMN WORK-REDUCING EDITORIAL DESK -->
+                        <div class="editor-desk-container">
+                            <!-- LEFT COLUMN: MAIN ARTICLE STORY CANVAS -->
+                            <div class="editor-main-card">
+                                <div class="form-group">
+                                    <label for="create-title-te" class="form-label-editorial">తెలుగు శీర్షిక (Headline) *</label>
+                                    <input type="text" id="create-title-te" class="input-editorial-headline" required placeholder="ముఖ్యమైన వార్తా శీర్షికను ఇక్కడ టైప్ చేయండి...">
+                                </div>
+
+                                <div class="form-group" style="margin-top: 20px;">
+                                    <label for="create-content-te" class="form-label-editorial">పూర్తి వార్తా వివరాలు (Full Article Body Text) *</label>
+                                    <textarea id="create-content-te" class="textarea-editorial-body" required placeholder="వార్త సంపూర్ణ సమాచారాన్ని ఇక్కడ వివరణాత్మకంగా నమోదు చేయండి..."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT COLUMN: PUBLISHING CONTROLS & MEDIA PICKER -->
+                            <div class="editor-side-card">
+                                <div class="form-group">
+                                    <label for="create-category" class="form-label-editorial">విభాగం (Category) *</label>
+                                    <select id="create-category" class="form-control" required style="font-weight: 600; padding: 10px;"></select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="create-district" class="form-label-editorial">జిల్లా (AP District)</label>
+                                    <select id="create-district" class="form-control" style="padding: 10px;"></select>
+                                </div>
+
+                                <!-- IMAGE UPLOAD & CLIPBOARD PASTE ZONE -->
+                                <div class="form-group">
+                                    <label class="form-label-editorial">వార్తా చిత్రాలు (Article Photos - Multi Upload & Paste)</label>
+                                    <div class="image-drop-area" id="create-image-drop-area" tabindex="0" style="cursor: pointer; outline: none; border: 2px dashed #94a3b8; padding: 16px; text-align: center; border-radius: 8px; background: #f8fafc; transition: all 0.2s;">
+                                        <div style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
+                                            📷 Ctrl + V ద్వారా ఎంతైనా ఫొటోలు పేస్ట్ చేయండి
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: #64748b;">
+                                            (Paste Screenshots/Images via Ctrl+V, Drag & Drop, or Browse Multiple)
+                                        </div>
+                                        <input type="file" id="create-image-file" accept="image/*" multiple style="display: none;">
+                                        <button type="button" id="create-btn-trigger-upload" class="btn btn-outline-sm" style="margin-top: 10px; width: 100%;">
+                                            📤 ఫొటోలు ఎంచుకోండి (Browse Multiple Photos)
+                                        </button>
+                                    </div>
+                                    <div id="create-multi-images-grid" style="display: none; margin-top: 12px; gap: 10px; flex-wrap: wrap; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;"></div>
+                                    <div class="image-preview-box" id="create-img-preview-box" style="display: none; position: relative;">
+                                        <img id="create-img-preview" src="" alt="Selected Image Preview">
+                                        <button type="button" id="create-btn-remove-img" class="btn btn-danger-sm" style="display: none; margin-top: 6px; width: 100%;">
+                                            🗑️ తొలగించు (Remove Image)
+                                        </button>
+                                    </div>
+                                    <input type="text" id="create-image-url" class="form-control" placeholder="లేదా ఫొటో URL నమోదు చేయండి (/uploads/...)" style="margin-top: 8px; font-size: 0.825rem;">
+                                    <input type="text" id="create-image-caption" class="form-control" placeholder="ఫొటో శీర్షిక (Image Caption)..." style="margin-top: 6px; font-size: 0.825rem;">
+                                </div>
+
+                                <!-- DISPLAY TOGGLES -->
+                                <div class="form-group" style="display: flex; flex-direction: column; gap: 10px;">
+                                    <label class="form-label-editorial">ప్రదర్శన ఎంపికలు (Display Toggles)</label>
+                                    <div class="toggle-switch-group">
+                                        <span class="toggle-switch-label">బ్రేకింగ్ న్యూస్ (Breaking)</span>
+                                        <input type="checkbox" id="create-breaking" class="checkbox-custom" value="1">
+                                    </div>
+                                    <div class="toggle-switch-group">
+                                        <span class="toggle-switch-label">ముఖ్యాంశం (Featured Story)</span>
+                                        <input type="checkbox" id="create-featured" class="checkbox-custom" value="1">
+                                    </div>
+                                    <div class="toggle-switch-group">
+                                        <span class="toggle-switch-label">హోమ్‌పేజీ ప్రదర్శన (Homepage)</span>
+                                        <input type="checkbox" id="create-homepage" class="checkbox-custom" checked value="1">
+                                    </div>
+                                </div>
+
+                                <!-- AUTHOR & STATUS -->
+                                <div class="form-group">
+                                    <label for="create-author" class="form-label-editorial">రచయిత / డెస్క్ (Author)</label>
+                                    <input type="text" id="create-author" class="form-control" value="మమేక మహోదయం డెస్క్">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="create-status" class="form-label-editorial">ప్రచురణ స్థితి (Status) *</label>
+                                    <select id="create-status" class="form-control" required style="font-weight: 600;">
+                                        <option value="published" selected>ప్రచురించు (Publish Live)</option>
+                                        <option value="draft">డ్రాఫ్ట్‌గా దాచు (Save Draft)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- SECTION 2: EDITIONS LIST VIEW -->
+                <section id="view-editions" class="view-section" style="display: none;">
+                    <div class="page-title-bar flex-between">
+                        <div>
+                            <h2>📰 దినపత్రిక సంచికల జాబితా (Newspaper Editions)</h2>
+                            <p class="page-subtitle">అప్‌లోడ్ చేసిన అన్ని దినపత్రిక సంచికల వివరాలు మరియు నిర్వహణ.</p>
+                        </div>
+                        <div class="actions">
+                            <button id="refresh-editions-btn-2" class="btn btn-outline-sm">🔄 రిఫ్రెష్ (Refresh)</button>
+                            <a href="#/upload" class="btn btn-primary btn-outline-sm">+ కొత్త అప్‌లోడ్</a>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>సంచిక తేదీ</th>
+                                        <th>సంచిక పేరు</th>
+                                        <th>టైప్</th>
+                                        <th>ఫైల్ సైజ్</th>
+                                        <th>స్థితి (Status)</th>
+                                        <th>చర్యలు (Actions)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="editions-list-table-body">
+                                    <tr class="empty-row"><td colspan="6">సంచికలు లోడ్ అవుతున్నాయి...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 3: SINGLE EDITION DETAIL VIEW -->
+                <section id="view-edition-detail" class="view-section" style="display: none;">
+                    <div class="page-title-bar flex-between">
+                        <div>
+                            <button class="btn btn-outline-sm" onclick="location.hash='#/editions'">← సంచికల జాబితాకి తిరిగి వెళ్ళు</button>
+                            <h2 id="edition-detail-title" style="margin-top: 10px;">సంచిక వివరాలు (Edition Details)</h2>
+                        </div>
+                        <div id="edition-detail-actions" class="actions"></div>
+                    </div>
+
+                    <div class="dashboard-split-grid">
+                        <!-- PDF Preview Box -->
+                        <div class="card flex-1">
+                            <div class="card-header flex-between">
+                                <h3>📄 PDF పరిశీలన (PDF Viewer)</h3>
+                                <a id="edition-pdf-download-link" href="#" target="_blank" class="btn btn-outline-sm">📥 ఫైల్ డౌన్‌లోడ్</a>
+                            </div>
+                            <div id="edition-pdf-frame-container" style="height: 550px; background: #eee; border-radius: 4px; overflow: hidden;">
+                                <iframe id="edition-pdf-iframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+                            </div>
+                        </div>
+
+                        <!-- Edition Metadata & Process Trigger Panel -->
+                        <div class="card" style="width: 340px;">
+                            <div class="card-header">
+                                <h3>⚙️ సంచిక సదుపాయాలు</h3>
+                            </div>
+                            <div id="edition-meta-info" class="meta-list">
+                                <p>లోడ్ అవుతోంది...</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 4: UPLOAD & PUBLISH VIEW -->
+                <section id="view-upload" class="view-section" style="display: none;">
+                    <div class="page-title-bar">
+                        <h2>📤 దినపత్రిక PDF అప్‌లోడ్ (PDF E-Paper Upload)</h2>
+                        <p class="page-subtitle">దినపత్రిక PDF ఫైల్‌ను అప్‌లోడ్ చేసి వెబ్‌సైట్‌లో ఈ-పేపర్‌ను ప్రచురించండి.</p>
+                    </div>
+
+                    <!-- MODE 1: PDF EDITION UPLOAD -->
+                    <div id="mode-pdf-publish" class="card upload-card" style="max-width: 900px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <h3 style="color: var(--primary-color); margin: 0;">📰 దినపత్రిక PDF అప్‌లోడ్ & E-Paper ప్రచురణ</h3>
+                            <span class="status-badge badge-published" style="font-weight: 700; background: #16a34a; color: #fff;">Direct E-Paper PDF</span>
+                        </div>
+                        <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 16px; line-height: 1.5;">
+                            దినపత్రిక PDF ఫైల్‌ను ఇక్కడ అప్‌లోడ్ చేయండి. అప్‌లోడ్ చేసిన PDF నేరుగా ఈ-పేపర్ (E-Paper) సెక్షన్‌లో చదువుకోవడానికి మరియు డౌన్‌లోడ్ చేసుకోవడానికి అందుబాటులోకి వస్తుంది.
+                        </p>
+
+                        <div id="upload-alert-2" class="alert" style="display: none;"></div>
+
+                        <form id="upload-form-2" class="upload-form">
+                            <div class="form-row">
+                                <div class="form-group col">
+                                    <label for="edition-date-2">సంచిక తేదీ (Edition Date) *</label>
+                                    <input type="date" id="edition-date-2" class="form-control" required>
+                                </div>
+                                <div class="form-group col">
+                                    <label for="edition-name-2">సంచిక పేరు (Edition Name)</label>
+                                    <input type="text" id="edition-name-2" class="form-control" placeholder="ఉదా: మమేక మహోదయం ప్రధాన సంచిక">
+                                </div>
+                                <div class="form-group col">
+                                    <label for="edition-type-2">సంచిక టైప్ (Type)</label>
+                                    <select id="edition-type-2" class="form-control">
+                                        <option value="main">ప్రధాన సంచిక (Main Edition)</option>
+                                        <option value="district">జిల్లా సంచిక (District Edition)</option>
+                                        <option value="special">ప్రత్యేక సంచిక (Special Edition)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Sleek Small Rectangle PDF Drop Zone -->
+                            <div class="drop-zone" id="drop-zone-2" style="padding: 24px; border: 2px dashed var(--primary-light); background: #f8fafc; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                                <input type="file" id="pdf-file-input-2" accept=".pdf,application/pdf" style="display: none;">
+                                <div class="drop-zone-content" style="display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;">
+                                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 36px; height: 36px; color: var(--primary-color);">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    <div style="text-align: left;">
+                                        <strong style="color: var(--primary-color); font-size: 1.05rem; display: block;">దినపత్రిక PDF ఫైల్‌ను ఇక్కడ ఎంచుకోండి (Select Newspaper PDF)</strong>
+                                        <span class="file-hint" style="display: block; font-size: 0.85rem; color: #64748b;">(Click or drag PDF file up to 100MB)</span>
+                                    </div>
+                                    <div id="selected-file-name-2" class="selected-file" style="display: none; background: #dbeafe; color: #1e40af; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 0.9rem;"></div>
+                                </div>
+                            </div>
+
+                            <div id="upload-progress-container-2" class="progress-bar-container" style="display: none; margin-top: 14px;">
+                                <div class="progress-bar" id="upload-progress-bar-2"></div>
+                                <span class="progress-text" id="upload-progress-text-2">0%</span>
+                            </div>
+
+                            <div class="form-actions" style="margin-top: 18px; text-align: right;">
+                                <button type="submit" id="upload-btn-2" class="btn btn-primary btn-lg" disabled style="padding: 12px 24px;">
+                                    📤 దినపత్రిక PDF ని అప్‌లోడ్ చేయండి (Upload Edition)
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- INLINE POST-UPLOAD PREVIEW & PUBLISH PANEL -->
+                        <div id="upload-post-preview-container" class="card" style="max-width: 900px; margin-top: 24px; display: none;">
+                            <div class="card-header flex-between">
+                                <h3>📄 అప్‌లోడ్ చేసిన దినపత్రిక పరిశీలన (Uploaded Edition Verification)</h3>
+                                <a id="upload-preview-pdf-link" href="#" target="_blank" class="btn btn-outline-sm">📥 PDF పరిశీలించు (View Full PDF)</a>
+                            </div>
+                            
+                            <div id="upload-publish-alert" class="alert" style="display: none; margin-bottom: 16px;"></div>
+
+                            <!-- SPLIT PREVIEW LAYOUT -->
+                            <div class="dashboard-split-grid" style="margin-top: 16px;">
+                                <!-- PDF iframe Viewer -->
+                                <div class="card flex-1" style="padding: 0; overflow: hidden; border: 1px solid var(--border-color); border-radius: 6px;">
+                                    <div style="height: 480px; background: #334155;">
+                                        <iframe id="upload-preview-iframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+                                    </div>
+                                </div>
+
+                                <!-- Edition Meta Details -->
+                                <div class="card" style="width: 320px; background: #f8fafc; border: 1px solid var(--border-color);">
+                                    <h4>⚙️ సంచిక వివరాలు (Edition Details)</h4>
+                                    <div id="upload-preview-meta" style="font-size: 0.85rem; margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                                        <p>సంచిక డేటా లోడ్ అవుతోంది...</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PUBLISH ACTION BAR AT THE BOTTOM -->
+                            <div class="publish-action-bar flex-between" style="margin-top: 24px; padding-top: 16px; border-top: 2px solid var(--primary-light);">
+                                <a id="upload-view-full-edition-btn" href="#/editions" class="btn btn-outline-sm">👁️ సంచికల జాబితాలో చూడండి (View in Editions List)</a>
+                                <button type="button" id="upload-confirm-publish-btn" class="btn btn-primary btn-lg" style="background: #16a34a; border-color: #15803d;">
+                                    🚀 సంచికను ప్రచురించు (Publish Edition Live)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 5: ARTICLE MANAGEMENT VIEW -->
+                <section id="view-articles" class="view-section" style="display: none;">
+                    <div class="page-title-bar flex-between">
+                        <div>
+                            <h2>📝 వార్తల నిర్వహణ (Article Management)</h2>
+                            <p class="page-subtitle">సిస్టమ్‌లోని వార్తలను సమీక్షించండి, జిల్లా లేదా విభాగాన్ని మార్చండి, ప్రచురించండి.</p>
+                        </div>
+                        <button id="refresh-articles-btn" class="btn btn-outline-sm">🔄 రిఫ్రెష్ (Refresh)</button>
+                    </div>
+
+                    <!-- STATUS TABS BAR -->
+                    <div class="articles-status-tabs" style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+                        <button type="button" class="tab-btn active" data-status-tab="all">అన్నీ (<span id="count-art-all">0</span>)</button>
+                        <button type="button" class="tab-btn" data-status-tab="draft">Drafts (<span id="count-art-draft">0</span>)</button>
+                        <button type="button" class="tab-btn" data-status-tab="review_pending">Review Pending (<span id="count-art-review">0</span>)</button>
+                        <button type="button" class="tab-btn" data-status-tab="published">Published (<span id="count-art-published">0</span>)</button>
+                        <button type="button" class="tab-btn" data-status-tab="archived">Archived (<span id="count-art-archived">0</span>)</button>
+                    </div>
+
+                    <!-- FILTER BAR -->
+                    <div class="card filter-card" style="margin-bottom: 20px;">
+                        <div class="filter-row">
+                            <div class="form-group">
+                                <label>పరిశోధన (Search):</label>
+                                <input type="text" id="art-filter-search" class="form-control" placeholder="కీవర్డ్ సెర్చ్...">
+                            </div>
+                            <div class="form-group">
+                                <label>స్థితి (Status):</label>
+                                <select id="art-filter-status" class="form-control">
+                                    <option value="">అన్ని స్థితులు (All Statuses)</option>
+                                    <option value="published">Published (ప్రచురించినవి)</option>
+                                    <option value="draft">Draft (ఖరారు కానివి)</option>
+                                    <option value="review_pending">Review Pending (పరిశీలనలో ఉన్నవి)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>విభాగం (Category):</label>
+                                <select id="art-filter-category" class="form-control">
+                                    <option value="">అన్ని విభాగాలు (All Categories)</option>
+                                    <option value="state">రాష్ట్ర వార్తలు (State)</option>
+                                    <option value="district">జిల్లా వార్తలు (District)</option>
+                                    <option value="politics">రాజకీయాలు (Politics)</option>
+                                    <option value="national">జాతీయ వార్తలు (National & Intl)</option>
+                                    <option value="sports">క్రీడలు (Sports)</option>
+                                    <option value="cinema">సినిమా (Cinema)</option>
+                                    <option value="education-jobs">విద్య & ఉద్యోగాలు</option>
+                                    <option value="editorial">ఎడిటోరియల్ (Editorial)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>జిల్లా (District):</label>
+                                <select id="art-filter-district" class="form-control">
+                                    <option value="">అన్ని జిల్లాలు (All 26 Districts)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>శీర్షిక (Headline)</th>
+                                        <th>విభాగం</th>
+                                        <th>జిల్లా</th>
+                                        <th>తేదీ</th>
+                                        <th>స్థితి</th>
+                                        <th>చర్యలు</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="articles-management-table-body">
+                                    <tr class="empty-row"><td colspan="6">వార్తలు లోడ్ అవుతున్నాయి...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 6: ADMIN ARTICLE EDITOR SYSTEM -->
+                <section id="view-article-edit" class="view-section" style="display: none;">
+                    <div class="page-title-bar flex-between">
+                        <div>
+                            <button class="btn btn-outline-sm" onclick="location.hash='#/articles'">← వార్తల జాబితాకి తిరిగి వెళ్ళు</button>
+                            <h2 style="margin-top: 8px;">✏️ వార్తా సంపాదకుడు & ప్రచురణ (Article Editor)</h2>
+                            <p class="page-subtitle">వార్తా అంశాలను, చిత్రాలు మరియు ప్రచురణ వివరాలను సవరించి ప్రచురించండి.</p>
+                        </div>
+                        <div class="actions flex-between" style="gap:10px;">
+                            <button id="art-btn-save-draft" class="btn btn-outline-sm">💾 Save Draft</button>
+                            <button id="art-btn-preview" class="btn btn-outline-sm">👁️ Live Preview</button>
+                            <button id="art-btn-publish" class="btn btn-primary">🚀 Publish Article</button>
+                        </div>
+                    </div>
+
+                    <div id="art-edit-alert" class="alert" style="display: none;"></div>
+
+                    <!-- FULL WIDTH EDITOR CARD -->
+                    <div class="editor-full-container">
+                        <div class="card editor-panel">
+                            <div class="editor-header" style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">📝 వార్తా వివరాల సవరణ (Edit Article Details)</h3>
+                            </div>
+
+                            <form id="art-edit-form">
+                                <input type="hidden" id="art-edit-id">
+
+                                <!-- Headline & Subheadline -->
+                                <div class="form-group">
+                                    <label for="art-edit-title-te" class="form-label-editorial">తెలుగు శీర్షిక (Telugu Headline) *</label>
+                                    <input type="text" id="art-edit-title-te" class="form-control" required style="font-family: var(--font-heading); font-size: 1.15rem; font-weight:700;">
+                                </div>
+
+                                <!-- Metadata Row -->
+                                <div class="form-row" style="margin-top: 14px;">
+                                    <div class="form-group col">
+                                        <label for="art-edit-category" class="form-label-editorial">విభాగం (Category) *</label>
+                                        <select id="art-edit-category" class="form-control" required></select>
+                                    </div>
+                                    <div class="form-group col">
+                                        <label for="art-edit-district" class="form-label-editorial">జిల్లా (AP District)</label>
+                                        <select id="art-edit-district" class="form-control"></select>
+                                    </div>
+                                    <div class="form-group col">
+                                        <label for="art-edit-status" class="form-label-editorial">స్థితి (Status) *</label>
+                                        <select id="art-edit-status" class="form-control" required>
+                                            <option value="draft">Draft (ఖరారు కానిది)</option>
+                                            <option value="pending_review">Review Pending (పరిశీలనలో ఉన్నది)</option>
+                                            <option value="published">Published (ప్రచురించు)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row" style="margin-top: 14px;">
+                                    <div class="form-group col">
+                                        <label for="art-edit-author" class="form-label-editorial">రచయిత / డెస్క్ (Author / Byline)</label>
+                                        <input type="text" id="art-edit-author" class="form-control" value="మమేక మహోదయం డెస్క్">
+                                    </div>
+                                    <div class="form-group col">
+                                        <label for="art-edit-date" class="form-label-editorial">ప్రచురణ తేదీ (Date)</label>
+                                        <input type="date" id="art-edit-date" class="form-control">
+                                    </div>
+                                </div>
+
+                                <!-- IMAGE MANAGEMENT BOX -->
+                                <div class="card image-manager-card" style="margin-top: 16px; margin-bottom: 20px;">
+                                    <label class="form-label-editorial" style="margin-bottom:10px; display:block;">📷 వార్తా చిత్రాల నిర్వహణ (Multi-Photo Manager)</label>
+                                    <div class="image-preview-flex" style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+                                        <div class="img-preview-box" style="width: 120px; height: 90px; border-radius: 6px; overflow: hidden; background: #f1f5f9; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center;">
+                                            <img id="art-edit-img-preview" src="" alt="No Image" style="max-width:100%; max-height:100%; object-fit:cover; display:none;">
+                                            <span id="art-edit-img-placeholder" style="font-size:0.75rem; color:#64748b;">ఫొటో లేదు</span>
+                                        </div>
+                                        <div class="img-controls flex-1" style="display:flex; flex-direction:column; gap:8px; min-width:220px;">
+                                            <input type="text" id="art-edit-img-caption" class="form-control" placeholder="చిత్ర శీర్షిక (Image Caption)...">
+                                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                                <button type="button" id="art-btn-trigger-img-upload" class="btn btn-outline-sm">📤 ఫొటో(లు) అప్‌లోడ్</button>
+                                                <button type="button" id="art-btn-pick-edition-media" class="btn btn-outline-sm">🖼️ సంచిక ఫొటోలు</button>
+                                                <button type="button" id="art-btn-remove-img" class="btn btn-danger-sm">🗑️ అన్ని ఫొటోలు తొలగించు</button>
+                                                <input type="file" id="art-edit-image-file" accept="image/*" multiple style="display:none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="art-edit-multi-images-grid" style="display: none; margin-top: 12px; gap: 10px; flex-wrap: wrap; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;"></div>
+                                </div>
+
+                                <!-- Placement Flags -->
+                                <div class="checkbox-flags-card">
+                                    <label class="checkbox-flag-item">
+                                        <input type="checkbox" id="art-edit-homepage" value="1">
+                                        <span>హోమ్‌పేజీలో చూపించు (Show on Homepage)</span>
+                                    </label>
+                                    <label class="checkbox-flag-item">
+                                        <input type="checkbox" id="art-edit-featured" value="1">
+                                        <span>ముఖ్యాంశం (Featured News)</span>
+                                    </label>
+                                    <label class="checkbox-flag-item">
+                                        <input type="checkbox" id="art-edit-breaking" value="1">
+                                        <span>బ్రేకింగ్ న్యూస్ (Breaking News)</span>
+                                    </label>
+                                </div>
+
+                                <div id="container-edited-content" class="form-group" style="margin-top: 18px;">
+                                    <label for="art-edit-content-te" class="form-label-editorial">పూర్తి వార్తా వివరాలు (Telugu Full Content) *</label>
+                                    <textarea id="art-edit-content-te" class="form-control" rows="14" placeholder="పూర్తి వార్తా పాఠాన్ని ఇక్కడ నమోదు చేయండి..."></textarea>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: REPORTERS MANAGEMENT VIEW -->
+                <section id="view-reporters" class="view-section" style="display: none;">
+                    <div class="page-title-bar flex-between" style="align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2>👥 రిపోర్టర్ల నిర్వహణ (Manage Reporters &amp; Editorial Team)</h2>
+                            <p class="page-subtitle">జిల్లా బ్యూరో చీఫ్‌లు, సీనియర్ కరస్పాండెంట్‌లు మరియు మండల రిపోర్టర్ల వివరాలను చేర్చండి, సవరించండి లేదా తొలగించండి.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button type="button" id="btn-refresh-reporters" class="btn btn-outline-sm">🔄 రిఫ్రెష్ (Refresh)</button>
+                            <button type="button" id="btn-toggle-add-reporter" class="btn btn-primary">➕ కొత్త రిపోర్టర్‌ని చేర్చండి</button>
+                        </div>
+                    </div>
+
+                    <!-- REPORTERS STATS BAR -->
+                    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                        <div class="stat-card card" style="margin-bottom: 0; padding: 18px 20px;">
+                            <div class="stat-icon-box pink">👥</div>
+                            <div>
+                                <div class="stat-number" id="stat-rep-total">0</div>
+                                <div class="stat-label">మొత్తం రిపోర్టర్లు (Total Team)</div>
+                            </div>
+                        </div>
+                        <div class="stat-card card" style="margin-bottom: 0; padding: 18px 20px;">
+                            <div class="stat-icon-box gold">🏛️</div>
+                            <div>
+                                <div class="stat-number" id="stat-rep-bureau">0</div>
+                                <div class="stat-label">జిల్లా బ్యూరో చీఫ్‌లు (Bureau Chiefs)</div>
+                            </div>
+                        </div>
+                        <div class="stat-card card" style="margin-bottom: 0; padding: 18px 20px;">
+                            <div class="stat-icon-box slate">📍</div>
+                            <div>
+                                <div class="stat-number" id="stat-rep-mandal">0</div>
+                                <div class="stat-label">మండల రిపోర్టర్లు (Mandal Reporters)</div>
+                            </div>
+                        </div>
+                        <div class="stat-card card" style="margin-bottom: 0; padding: 18px 20px;">
+                            <div class="stat-icon-box green">✅</div>
+                            <div>
+                                <div class="stat-number" id="stat-rep-active" style="color: var(--success-text);">0</div>
+                                <div class="stat-label">యాక్టివ్ ప్రొఫైల్స్ (Active Status)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ALERT NOTIFICATION BOX -->
+                    <div id="reporters-alert" class="alert" style="display: none; margin-bottom: 20px;"></div>
+
+                    <!-- ADD / EDIT REPORTER FORM CARD -->
+                    <div id="card-reporter-form" class="card mb-4" style="margin-bottom: 24px; border-left: 4px solid var(--primary-color);">
+                        <div class="flex-between" style="align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+                            <h3 id="reporter-form-title" style="font-size: 1.15rem; color: var(--text-main);">➕ కొత్త రిపోర్టర్‌ని నమోదు చేయండి (Add New Reporter)</h3>
+                            <button type="button" id="btn-cancel-reporter-form" class="btn btn-outline-sm" style="display: none;">రద్దు (Cancel Edit)</button>
+                        </div>
+
+                        <form id="form-manage-reporter" onsubmit="return false;">
+                            <input type="hidden" id="rep-edit-id" value="">
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 18px;">
+                                <!-- Full Name -->
+                                <div class="form-group">
+                                    <label for="rep-name" class="form-label-editorial">రిపోర్టర్ పూర్తి పేరు (Full Name) *</label>
+                                    <input type="text" id="rep-name" class="form-control" required placeholder="ఉదా: వాకా శ్రీనివాసరావు లేదా ఎం. రమేష్ బాబు">
+                                </div>
+
+                                <!-- Designation / Position -->
+                                <div class="form-group">
+                                    <label for="rep-designation" class="form-label-editorial">హోదా / బాధ్యత (Designation / Position) *</label>
+                                    <input type="text" id="rep-designation" list="designation-suggestions" class="form-control" required placeholder="హోదా నమోదు చేయండి లేదా ఎంచుకోండి...">
+                                    <datalist id="designation-suggestions">
+                                        <option value="District Bureau Chief / జిల్లా బ్యూరో చీఫ్">
+                                        <option value="Senior Correspondent / సీనియర్ కరస్పాండెంట్">
+                                        <option value="Mandal Reporter / మండల రిపోర్టర్">
+                                        <option value="Staff Reporter / స్టాఫ్ రిపోర్టర్">
+                                        <option value="Desk Editor / డెస్క్ ఎడిటర్">
+                                        <option value="Special Correspondent / ప్రత్యేక ప్రతినిధి">
+                                        <option value="Photo Journalist / ఫోటో జర్నలిస్ట్">
+                                        <option value="Sub-Editor / ఉప సంపాదకులు">
+                                        <option value="Editor-in-Chief / ప్రధాన సంపాదకులు">
+                                        <option value="Associate Editor / అసోసియేట్ ఎడిటర్">
+                                    </datalist>
+                                </div>
+
+                                <!-- District -->
+                                <div class="form-group">
+                                    <label for="rep-district" class="form-label-editorial">కేటాయించిన జిల్లా (Assigned District)</label>
+                                    <select id="rep-district" class="form-control">
+                                        <option value="">జిల్లా ఎంచుకోండి...</option>
+                                    </select>
+                                </div>
+
+                                <!-- Mandal / Region -->
+                                <div class="form-group">
+                                    <label for="rep-mandal" class="form-label-editorial">మండలం / ప్రాంతం (Mandal / Region)</label>
+                                    <input type="text" id="rep-mandal" class="form-control" placeholder="ఉదా: తెనాలి, బాపట్ల రూరల్...">
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; margin-bottom: 18px;">
+                                <!-- Phone -->
+                                <div class="form-group">
+                                    <label for="rep-phone" class="form-label-editorial">ఫోన్ నంబర్ (Phone Number)</label>
+                                    <input type="tel" id="rep-phone" class="form-control" placeholder="+91 98480 XXXXX">
+                                </div>
+
+                                <!-- Email -->
+                                <div class="form-group">
+                                    <label for="rep-email" class="form-label-editorial">ఈమెయిల్ (Email Address)</label>
+                                    <input type="email" id="rep-email" class="form-control" placeholder="reporter@mamekamahodayam.com">
+                                </div>
+
+                                <!-- Status -->
+                                <div class="form-group">
+                                    <label for="rep-status" class="form-label-editorial">ప్రొఫైల్ స్థితి (Status)</label>
+                                    <select id="rep-status" class="form-control">
+                                        <option value="active">Active (ప్రదర్శించు - లైవ్)</option>
+                                        <option value="inactive">Inactive (దాచు - నిలిపివేత)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Display Priority -->
+                                <div class="form-group">
+                                    <label for="rep-display-order" class="form-label-editorial">ప్రదర్శన క్రమం (Priority Order)</label>
+                                    <input type="number" id="rep-display-order" class="form-control" value="0" min="0" placeholder="0 = ప్రామాణికం, 1, 2, 3...">
+                                </div>
+                            </div>
+
+                            <!-- Photo Upload & URL Area -->
+                            <div class="form-group" style="margin-bottom: 16px; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <label class="form-label-editorial">ప్రొఫైల్ చిత్రం (Profile Photo - Upload or URL)</label>
+                                <div style="display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
+                                    <div style="flex: 1; min-width: 240px;">
+                                        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                                            <input type="file" id="rep-photo-file" accept="image/*" style="display: none;">
+                                            <button type="button" id="btn-browse-rep-photo" class="btn btn-outline-sm">📁 ఫొటో ఎంచుకోండి (Browse Photo)</button>
+                                            <span id="rep-photo-file-name" style="font-size: 0.825rem; color: #64748b;">ఫైల్ ఎంచుకోలేదు</span>
+                                        </div>
+                                        <input type="text" id="rep-photo-url" class="form-control" placeholder="లేదా ఫొటో URL (/uploads/... లేదా వెబ్ లింక్) ఇక్కడ నమోదు చేయండి">
+                                    </div>
+                                    <div id="rep-photo-preview-wrap" style="width: 74px; height: 74px; border-radius: 50%; overflow: hidden; border: 2px solid #cbd5e1; background: #ffffff; display: flex; align-items: center; justify-content: center; position: relative;">
+                                        <img id="rep-photo-preview" src="" alt="Profile Preview" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                                        <span id="rep-photo-preview-placeholder" style="font-size: 2rem; color: #94a3b8;">👤</span>
+                                    </div>
+                                    <button type="button" id="btn-remove-rep-photo" class="btn btn-outline-sm" style="display: none; height: 32px; margin-top: 24px;">🗑️ తొలగించు</button>
+                                </div>
+                            </div>
+
+                            <!-- Bio / Description -->
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label for="rep-bio" class="form-label-editorial">రిపోర్టర్ సంక్షిప్త పరిచయం / అనుభవం (Bio / Description)</label>
+                                <textarea id="rep-bio" class="form-control" rows="3" placeholder="రిపోర్టర్ విలేఖర రంగ అనుభవం, ప్రత్యేకతలు, ఆసక్తులు మరియు బాధ్యతల గురించి రాయండి..."></textarea>
+                            </div>
+
+                            <!-- Social Links (Optional) -->
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                                <div class="form-group">
+                                    <label for="rep-twitter" class="form-label-editorial">X / Twitter లింక్ (Optional)</label>
+                                    <input type="url" id="rep-twitter" class="form-control" placeholder="https://x.com/username">
+                                </div>
+                                <div class="form-group">
+                                    <label for="rep-facebook" class="form-label-editorial">Facebook లింక్ (Optional)</label>
+                                    <input type="url" id="rep-facebook" class="form-control" placeholder="https://facebook.com/username">
+                                </div>
+                                <div class="form-group">
+                                    <label for="rep-linkedin" class="form-label-editorial">LinkedIn / ఇతర లింక్ (Optional)</label>
+                                    <input type="url" id="rep-linkedin" class="form-control" placeholder="https://linkedin.com/in/username">
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <button type="submit" id="btn-save-reporter" class="btn btn-primary btn-lg">
+                                    💾 రిపోర్టర్‌ని భద్రపరచు (Save Reporter)
+                                </button>
+                                <button type="reset" id="btn-reset-reporter-form" class="btn btn-secondary">
+                                    ఫారమ్ క్లియర్
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+
+
+                    <!-- REPORTERS DATA TABLE -->
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px;">ఫొటో</th>
+                                        <th>రిపోర్టర్ పేరు</th>
+                                        <th>హోదా (Position)</th>
+                                        <th>జిల్లా / మండలం</th>
+                                        <th>సంప్రదింపు</th>
+                                        <th style="width: 90px;">స్థితి</th>
+                                        <th style="width: 140px;">చర్యలు</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reporters-table-body">
+                                    <tr class="empty-row"><td colspan="7">రిపోర్టర్ల వివరాలు లోడ్ అవుతున్నాయి...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: MEDIA LIBRARY VIEW -->
+                <section id="view-media" class="view-section" style="display: none;">
+                    <div class="page-title-bar flex-between">
+                        <div>
+                            <h2>🖼️ ఒరిజినల్ మీడియా లైబ్రరీ (Original Photos & Media Assets)</h2>
+                            <p class="page-subtitle">పత్రిక మరియు వెబ్‌సైట్ కోసం అప్‌లోడ్ చేసిన ఒరిజినల్ హై-క్వాలిటీ చిత్రాల నిర్వహణ.</p>
+                        </div>
+                        <div>
+                            <input type="file" id="media-standalone-upload-input" accept="image/*" style="display: none;">
+                            <button type="button" id="btn-upload-standalone-media" class="btn btn-primary">+ కొత్త ఫొటో అప్‌లోడ్ చేయండి</button>
+                        </div>
+                    </div>
+
+                    <div id="media-library-alert" class="alert" style="display: none;"></div>
+
+                    <div class="card">
+                        <div id="media-library-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+                            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #64748b;">మీడియా ఫైళ్లు లోడ్ అవుతున్నాయి...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 9: SETTINGS VIEW -->
+                <section id="view-settings" class="view-section" style="display: none;">
+                    <div class="page-title-bar">
+                        <h2>⚙️ సిస్టమ్ సెట్టింగ్‌లు & పారామితులు (System Settings)</h2>
+                        <p class="page-subtitle">మమేక మహోదయం సర్వర్, డేటాబేస్ మరియు అకౌంట్ సమాచారం.</p>
+                    </div>
+
+                    <!-- PASSWORD CHANGE CARD -->
+                    <div class="card" style="max-width: 800px;">
+                        <h3 style="margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px;">🔐 అడ్మిన్ పాస్‌వర్డ్ మార్పు (Change Password)</h3>
+                        <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 16px;">మీ అడ్మిన్ అకౌంట్ భద్రత కొరకు నూతన పాస్‌వర్డ్‌ను ఇక్కడ నమోదు చేయండి (Minimum 8 characters).</p>
+                        
+                        <div id="change-pass-alert" class="alert" style="display: none; margin-bottom: 16px;"></div>
+
+                        <form id="change-password-form">
+                            <div class="form-group" style="margin-bottom: 14px;">
+                                <label for="current-password">ప్రస్తుత పాస్‌వర్డ్ (Current Password) *</label>
+                                <input type="password" id="current-password" class="form-control" required placeholder="ప్రస్తుత పాస్‌వర్డ్‌ను నమోదు చేయండి">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 14px;">
+                                <label for="new-password">నూతన పాస్‌వర్డ్ (New Password) *</label>
+                                <input type="password" id="new-password" class="form-control" required minlength="8" placeholder="కనీసం 8 అక్షరాలు ఉన్న పాస్‌వర్డ్">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 18px;">
+                                <label for="confirm-password">నూతన పాస్‌వర్డ్ ఖరారు (Confirm New Password) *</label>
+                                <input type="password" id="confirm-password" class="form-control" required minlength="8" placeholder="నూతన పాస్‌వర్డ్‌ను మళ్లీ నమోదు చేయండి">
+                            </div>
+                            <button type="submit" id="change-pass-btn" class="btn btn-primary" style="padding: 10px 20px;">
+                                🔒 పాస్‌వర్డ్‌ను భద్రపరచు (Update Password)
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- SECTION 9: DESIGNER PACKAGE GENERATOR VIEW -->
+                <section id="view-designer-package" class="view-section" style="display: none;">
+                    <div class="page-title-bar">
+                        <h2>📦 డిజైనర్ ప్యాకేజ్ (Designer Package Generator)</h2>
+                        <p class="page-subtitle">ప్రింట్ డిజైనర్ల కొరకు రోజువారీ వార్తలు, ఒరిజినల్ చిత్రాలు మరియు Manifest ని ZIP రూపంలో ప్యాకేజ్ చేయండి.</p>
+                    </div>
+
+                    <div class="card mb-4" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
+                        <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px;">
+                            <div>
+                                <label for="pkg-date-select" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; color: #1e293b;">సంచిక తేదీ ఎంచుకోండి (Publication Date):</label>
+                                <select id="pkg-date-select" class="form-control" style="min-width: 220px; height: 40px; padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                    <option value="">తేదీ ఎంచుకోండి...</option>
+                                </select>
+                            </div>
+                            <button type="button" id="btn-load-pkg-articles" class="btn btn-primary" style="height: 40px; padding: 0 20px;">
+                                🔍 వార్తలను లోడ్ చేయండి
+                            </button>
+                        </div>
+
+                        <!-- SELECTION CONTROL BAR -->
+                        <div id="pkg-controls-bar" style="display: none; background: #f8fafc; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 20px; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <button type="button" id="btn-pkg-select-all" class="btn btn-sm btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;">అన్నీ ఎంచుకోండి (Select All)</button>
+                                <button type="button" id="btn-pkg-deselect-all" class="btn btn-sm btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;">అన్నీ తొలగించండి (Deselect All)</button>
+                            </div>
+                            <div>
+                                <span style="font-weight: 600; font-size: 0.95rem; color: #0f172a;">ఎంచుకున్న వార్తలు: <span id="pkg-selected-count" style="color: #dc2626; font-size: 1.1rem; font-weight: bold;">0</span></span>
+                            </div>
+                        </div>
+
+                        <!-- ARTICLES SELECTION TABLE -->
+                        <div id="pkg-articles-container">
+                            <div style="text-align: center; color: #64748b; padding: 40px 0;">
+                                దయచేసి పైన ప్రచురణ తేదీని ఎంచుకుని వార్తలను లోడ్ చేయండి.
+                            </div>
+                        </div>
+
+                        <!-- WARNINGS / MESSAGES -->
+                        <div id="pkg-warnings-box" style="display: none; margin-top: 16px; padding: 12px 16px; background: #fffbeeb; border: 1px solid #fde68a; border-radius: 6px; color: #92400e; font-size: 0.9rem;"></div>
+
+                        <!-- GENERATE ACTION BAR -->
+                        <div id="pkg-generate-action-bar" style="display: none; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; text-align: right;">
+                            <button type="button" id="btn-generate-designer-pkg" class="btn btn-danger btn-lg" style="background-color: #dc2626; color: #fff; font-weight: 600; font-size: 1.05rem; padding: 10px 24px; border: none; border-radius: 6px; cursor: pointer;">
+                                🚀 Designer Package ZIP సృష్టించండి (Generate Package)
+                            </button>
+                        </div>
+
+                        <!-- SUCCESS DOWNLOAD CARD -->
+                        <div id="pkg-download-card" style="display: none; margin-top: 24px; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; text-align: center;">
+                            <h3 style="color: #166534; font-size: 1.2rem; margin-bottom: 8px;">✓ Designer Package సిద్ధంగా ఉంది! (Package Ready)</h3>
+                            <p id="pkg-download-desc" style="color: #15803d; font-size: 0.95rem; margin-bottom: 16px;"></p>
+                            <a id="btn-download-pkg-zip" href="#" class="btn btn-success btn-lg" style="background-color: #16a34a; color: #fff; font-weight: bold; text-decoration: none; padding: 10px 28px; border-radius: 6px; display: inline-block;">
+                                ⬇️ ZIP Package డౌన్‌లోడ్ చేయండి (.zip)
+                            </a>
+                        </div>
+
+                        <!-- CLEAN DESIGNER PACKAGE INFO CARD -->
+                        <div class="card mt-4" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-top: 24px;">
+                            <h3 style="margin: 0 0 12px 0; color: #1e293b; font-size: 1.05rem;">📄 ప్యాకేజ్‌లో ఉన్న ఫైళ్ల వివరాలు (Package Contents)</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; font-size: 0.88rem;">
+                                <div style="background: #fff; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                    <strong>1. DAILY_NEWS.docx</strong><br>
+                                    <span style="color: #64748b; font-size: 0.82rem;">ఎంచుకున్న రోజువారీ వార్తలన్నీ క్రమబద్ధీకరించిన వర్డ్ డాక్యుమెంట్.</span>
+                                </div>
+                                <div style="background: #fff; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                    <strong>2. ORIGINAL_IMAGES/</strong><br>
+                                    <span style="color: #64748b; font-size: 0.82rem;">ప్రింట్ క్వాలిటీ ఒరిజినల్ చిత్రాల ఫోల్డర్.</span>
+                                </div>
+                                <div style="background: #fff; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                    <strong>3. MANIFEST.json & README.txt</strong><br>
+                                    <span style="color: #64748b; font-size: 0.82rem;">డిజైనర్ల కొరకు శీర్షికల మ్యాపింగ్ మరియు మార్గదర్శకాలు.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL 1: PUBLIC ARTICLE LIVE PREVIEW MODAL -->
+    <div id="article-preview-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.8); z-index: 10000; overflow-y: auto; padding: 20px;">
+        <div class="modal-content" style="background: #fff; max-width: 750px; margin: 30px auto; border-radius: 8px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+            <div class="preview-modal-header flex-between" style="background: #0f172a; color: #fff; padding: 14px 24px; border-bottom: 3px solid var(--primary-color);">
+                <div style="font-weight: 700; font-size: 1rem;">📱 లైవ్ వెబ్ & మొబైల్ వార్తా పరిశీలన (Public Website Preview)</div>
+                <button type="button" id="close-preview-modal-btn" style="background: none; border: none; color: #fff; font-size: 1.6rem; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div id="preview-modal-body" style="padding: 24px; font-family: var(--font-heading);">
+                <!-- Dynamic Article Preview Content Rendered Here -->
+            </div>
+
+            <div class="preview-modal-footer flex-between" style="background: #f8fafc; padding: 16px 24px; border-top: 1px solid #e2e8f0;">
+                <button type="button" id="preview-back-btn" class="btn btn-outline-sm">← సవరణకి తిరిగి వెళ్ళు (Back to Editor)</button>
+                <button type="button" id="preview-publish-btn" class="btn btn-primary btn-lg">🚀 ప్రచురించు (Confirm & Publish Article)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: EDITION MEDIA ASSETS PICKER MODAL -->
+    <div id="media-picker-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.8); z-index: 10000; overflow-y: auto; padding: 20px;">
+        <div class="modal-content" style="background: #fff; max-width: 700px; margin: 50px auto; padding: 24px; border-radius: 8px;">
+            <div class="flex-between" style="margin-bottom: 16px;">
+                <h3>🖼️ ఈ సంచికలోని చిత్రాలు (Select Edition Image)</h3>
+                <button type="button" id="close-media-modal-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 16px;">ఈ పేజీలో ఉన్న ఇతర ఫొటోలలో ఒకదానిని ఎంచుకోండి:</p>
+            <div id="media-picker-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; max-height: 400px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <!-- SCRIPT INCLUDES -->
+    <script src="../js/categories-config.js"></script>
+    <script src="../js/districts-config.js"></script>
+    <script src="../js/i18n.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

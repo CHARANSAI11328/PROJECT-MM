@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="te">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>పాత్రికేయుని ప్రొఫైల్ - మమేక మహోదయం | Reporter Profile</title>
+    <meta name="description" content="మమేక మహోదయం దినపత్రిక పాత్రికేయుని వివరాలు మరియు ప్రచురించిన వార్తా కథనాలు" />
+    <link rel="stylesheet" href="styles/design-system.css" />
+    <style>
+      /* DISPLAY & PRINT HYBRID SYSTEM FOR PRESS ACCREDITATION PROFILES */
+      .print-only-card {
+        display: none !important;
+      }
+
+      @media print {
+        header,
+        nav,
+        footer,
+        .utility-bar,
+        .skip-link,
+        .breadcrumb-wrap,
+        #section-authored-articles,
+        .utility-card,
+        .no-print,
+        .on-screen-profile-hero {
+          display: none !important;
+        }
+
+        body, main, #main-content, #reporter-profile-hero {
+          background: #ffffff !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          box-shadow: none !important;
+          width: 100% !important;
+        }
+
+        .print-only-card {
+          display: block !important;
+          visibility: visible !important;
+          position: absolute !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 100% !important;
+          max-width: 650px !important;
+          margin: 10px auto !important;
+          border: 2px solid #be185d !important;
+          border-radius: 12px !important;
+          box-shadow: none !important;
+          page-break-inside: avoid !important;
+        }
+
+        .print-only-card * {
+          visibility: visible !important;
+        }
+
+        .typewriter-cursor {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link" data-i18n="skip_link">ముఖ్య నివిడికి వెళ్ళండి</a>
+
+    <!-- 1. HEADER / MASTHEAD -->
+    <header role="banner" class="masthead-container">
+      <!-- Top Utility Bar -->
+      <div class="utility-bar">
+        <div class="container-standard utility-bar-inner">
+          <div class="utility-bar-left">
+            <span id="header-date" data-i18n="top_date_placeholder">బుధవారం, 11 సెప్టెంబర్ 2026</span>
+            <span data-i18n="top_edition_placeholder">ఆంధ్రప్రదేశ్ &amp; తెలంగాణ</span>
+          </div>
+          <div class="utility-bar-right">
+            <span data-i18n="top_weather_placeholder">విజయవాడ: 31°C | తేమ: 68%</span>
+            <a href="epaper.html" style="color: inherit; text-decoration: underline;" data-i18n="top_epaper_link">ఈ-పేపర్</a> 
+            <span aria-hidden="true" style="opacity: 0.5;">|</span> 
+            <a href="editorial-team.html" class="top-special-link" data-i18n="nav_team">✨ మా సంపాదకీయ బృందం</a>
+            <span aria-hidden="true" style="opacity: 0.5;">|</span> 
+            <a href="admin/index.html" style="color: #ffcc00; text-decoration: underline; font-weight: bold;" data-i18n="top_admin_link">🔒 అడ్మిన్ లాగిన్</a>
+            
+            <!-- ONE-CLICK LANGUAGE SWITCHER -->
+            <div class="lang-switcher" role="region" aria-label="Language Selector">
+              <button type="button" class="lang-btn active" data-lang-btn="te" aria-label="తెలుగు">తెలుగు</button>
+              <span class="lang-divider" aria-hidden="true">|</span>
+              <button type="button" class="lang-btn" data-lang-btn="en" aria-label="English">English</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Masthead Brand Area -->
+      <div class="masthead-brand-area">
+        <div class="container-standard">
+          <div class="masthead-grid">
+            
+            <div class="masthead-left desktop-only"></div>
+
+            <div class="masthead-center">
+              <a href="INDEX.html" style="text-decoration: none;">
+                <h1 class="brand-logo-3d" aria-label="మమేక మహోదయం">
+                  <span class="brand-stacked-wrap">
+                    <span class="brand-prefix-stacked" data-i18n="brand_prefix_te">మమేక</span>
+                    <span class="brand-main-stacked" data-i18n="brand_main_te">మహోదయం</span>
+                  </span>
+                </h1>
+                <div class="brand-english-sub" data-i18n="brand_name_en">MAMEKA MAHODAYAM</div>
+                <div class="newspaper-tagline-green" data-i18n="brand_slogan">అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం</div>
+                <div class="newspaper-badge-purple" data-i18n="brand_tagline">తెలుగు దినపత్రిక</div>
+              </a>
+            </div>
+
+            <div class="masthead-right">
+              <form action="search.html" method="GET" class="search-bar-wrap" data-i18n-aria="search_bar_aria">
+                <input type="text" name="q" class="search-bar-input" data-i18n-placeholder="search_placeholder" placeholder="వార్తలను శోధించండి..." />
+                <button type="submit" class="search-bar-btn" data-i18n-aria="search_submit_aria" aria-label="శోధన సమర్పించండి">⌕</button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. MAIN NAVIGATION -->
+    <nav class="main-nav" role="navigation" aria-label="Main Navigation">
+      <div class="container-standard">
+        <ul class="nav-list">
+          <li><a href="INDEX.html" class="nav-item" data-i18n="nav_home">హోమ్</a></li>
+          <li><a href="category.html?c=latest" class="nav-item" data-i18n="nav_latest">తాజా వార్తలు</a></li>
+          <li><a href="category.html?c=state" class="nav-item" data-i18n="nav_state">ఆంధ్రప్రదేశ్</a></li>
+          <li><a href="district.html" class="nav-item" data-i18n="nav_district">జిల్లాల వార్తలు</a></li>
+          <li><a href="category.html?c=politics" class="nav-item" data-i18n="nav_politics">రాజకీయాలు</a></li>
+          <li><a href="category.html?c=national" class="nav-item" data-i18n="nav_national">దేశం &amp; ప్రపంచం</a></li>
+          <li><a href="category.html?c=tech" class="nav-item" data-i18n="nav_tech">టెక్నాలజీ</a></li>
+          <li><a href="category.html?c=business" class="nav-item" data-i18n="nav_business">బిజినెస్</a></li>
+          
+          <!-- MORE DROPDOWN FOR REMAINING CATEGORIES -->
+          <li class="nav-dropdown">
+            <button type="button" class="nav-dropdown-btn" aria-haspopup="true" aria-expanded="false" data-i18n="nav_more">
+              మరిన్ని ▾
+            </button>
+            <ul class="nav-dropdown-menu">
+              <li><a href="category.html?c=cinema" class="nav-dropdown-item" data-i18n="nav_cinema">సినిమా</a></li>
+              <li><a href="category.html?c=sports" class="nav-dropdown-item" data-i18n="nav_sports">క్రీడలు</a></li>
+              <li><a href="category.html?c=education" class="nav-dropdown-item" data-i18n="nav_education">విద్య &amp; ఉద్యోగాలు</a></li>
+              <li><a href="category.html?c=editorial" class="nav-dropdown-item" data-i18n="nav_editorial">సంపాదకీయం</a></li>
+              <li><a href="epaper.html" class="nav-dropdown-item" data-i18n="nav_epaper">ఈ-పేపర్</a></li>
+              <li><a href="search.html" class="nav-dropdown-item" data-i18n="nav_search">శోధన</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main id="main-content" role="main" class="container-standard" style="padding-top: var(--space-xl); padding-bottom: var(--space-3xl);">
+      
+      <!-- BREADCRUMBS -->
+      <nav class="breadcrumb-wrap" aria-label="Breadcrumb" style="margin-bottom: 24px;">
+        <a href="INDEX.html" data-i18n="nav_home">హోమ్</a>
+        <span>›</span>
+        <a href="editorial-team.html" data-i18n="nav_editorial_team">మా సంపాదకీయ బృందం</a>
+        <span>›</span>
+        <span id="breadcrumb-reporter-name">పాత్రికేయుని ప్రొఫైల్</span>
+      </nav>
+
+      <!-- REPORTER PROFILE HERO CARD (INJECTED DYNAMICALLY) -->
+      <div id="reporter-profile-hero" class="reporter-profile-card">
+        <div style="text-align: center; padding: 60px 20px;">
+          <div style="font-size: 2.5rem; margin-bottom: 12px; animation: pulse 1.5s infinite;">👤</div>
+          <p style="font-size: 1.1rem; color: var(--color-text-secondary); font-weight: 500;">
+            పాత్రికేయుని వివరాలు లోడ్ అవుతున్నాయి...
+          </p>
+        </div>
+      </div>
+
+      <!-- AUTHORED ARTICLES FEED SECTION -->
+      <section id="section-authored-articles" style="margin-top: var(--space-2xl);">
+        <div class="section-header-editorial" style="margin-bottom: 20px;">
+          <div class="section-header-left">
+            <span class="section-accent-tag"></span>
+            <h2 class="tp-h2" id="authored-articles-heading">ప్రచురించిన వార్తా కథనాలు &amp; వ్యాసాలు</h2>
+          </div>
+        </div>
+
+        <!-- Articles Grid Container -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch" id="reporter-articles-grid">
+          <!-- Dynamic Article Cards injected by reporter-profile.js -->
+        </div>
+      </section>
+
+      <!-- JOURNALISTIC ETHICS & INDEPENDENCE NOTE -->
+      <div class="utility-card" style="margin-top: var(--space-2xl);">
+        <h3 class="utility-card-title">జర్నలిజం విశిష్టత &amp; నిబద్ధత</h3>
+        <p style="font-size: 0.95rem; line-height: 1.6; color: var(--color-text-secondary); margin-top: 8px;">
+          మమేక మహోదయం దినపత్రిక విలేఖరులందరూ అత్యున్నత ప్రమాణాలతో కూడిన నిష్పాక్షికమైన సత్యసంధమైన వార్తలను ప్రజా హితమే పరమావధిగా ప్రచురిస్తారు.
+        </p>
+      </div>
+
+    </main>
+
+    <!-- GLOBAL FOOTER SYSTEM -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="container">
+        <div class="footer-top-grid">
+          <!-- Col 1: Newspaper Identity & Social Media -->
+          <div class="footer-col-brand">
+            <div class="footer-brand-title">మమేక మహోదయం</div>
+            <div class="footer-brand-subtitle">MAMEKA MAHODAYAM DAILY</div>
+            <p class="footer-tagline">తెలుగు ప్రజల విశ్వసనీయ దినపత్రిక | Independent Telugu Daily Newspaper</p>
+          </div>
+
+          <!-- Col 2: News Sections -->
+          <div>
+            <h3 class="footer-col-title">వార్తా విభాగములు</h3>
+            <ul class="footer-nav-list">
+              <li><a href="category.html?c=state">రాష్ట్ర వార్తలు (State News)</a></li>
+              <li><a href="district.html">జిల్లాల సమాచారం (District News)</a></li>
+              <li><a href="category.html?c=politics">రాజకీయాలు (Politics)</a></li>
+              <li><a href="category.html?c=national">జాతీయ / అంతర్జాతీయ</a></li>
+              <li><a href="category.html?c=sports">క్రీడలు (Sports)</a></li>
+              <li><a href="category.html?c=cinema">సినిమా / వినోదం (Cinema)</a></li>
+            </ul>
+          </div>
+
+          <!-- Col 3: About & Services -->
+          <div>
+            <h3 class="footer-col-title">మా సమాచారం</h3>
+            <ul class="footer-nav-list">
+              <li><a href="about.html">మన గురించి (About Us)</a></li>
+              <li><a href="editorial-team.html">సంపాదకీయ బృందం (Editorial Team)</a></li>
+              <li><a href="contact.html">సంప్రదించండి (Contact Us)</a></li>
+              <li><a href="advertise.html">ప్రకటనలు (Advertise)</a></li>
+              <li><a href="epaper.html">ఈ-పేపర్ (E-Paper)</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bottom-bar">
+          <div>© 2026 మమేక మహోదయం. సర్వ హక్కులూ ప్రత్యేకించబడ్డాయి.</div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- JS ENGINES -->
+    <script src="js/districts-config.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/reporter-profile.js"></script>
+  </body>
+</html>

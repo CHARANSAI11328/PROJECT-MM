@@ -1,0 +1,17 @@
+# Environment variables and secrets
+.env
+.env.local
+
+# Dependency directories
+node_modules/
+
+# Database & Uploads
+database.sqlite
+uploads/
+scratch/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="te">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>మమేక మహోదయం — MAMEKA MAHODAYAM | Official Telugu Newspaper</title>
+    <meta name="description" content="మమేక మహోదయం తెలుగు దినపత్రిక — Official Digital Editorial Newspaper Homepage" />
+    <link rel="stylesheet" href="/styles/design-system.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link" data-i18n="skip_link">ముఖ్య నివిడికి వెళ్ళండి</a>
+
+    <!-- 1. HEADER / MASTHEAD -->
+    <header role="banner" class="masthead-container">
+      <!-- Top Utility Bar -->
+      <div class="utility-bar">
+        <div class="container-standard utility-bar-inner">
+          <div class="utility-bar-left">
+            <span id="header-date" data-i18n="top_date_placeholder">బుధవారం, 11 సెప్టెంబర్ 2026</span>
+            <span data-i18n="top_edition_placeholder">ఆంధ్రప్రదేశ్ &amp; తెలంగాణ</span>
+          </div>
+          <div class="utility-bar-right">
+            <span data-i18n="top_weather_placeholder">విజయవాడ: 31°C | తేమ: 68%</span>
+            <a href="epaper.html" style="color: inherit; text-decoration: underline;" data-i18n="top_epaper_link">ఈ-పేపర్</a> 
+            <span aria-hidden="true" style="opacity: 0.5;">|</span> 
+            <a href="editorial-team.html" class="top-special-link" data-i18n="nav_team">✨ మా సంపాదకీయ బృందం</a>
+            <span aria-hidden="true" style="opacity: 0.5;">|</span> 
+            <a href="admin/index.html" style="color: #ffcc00; text-decoration: underline; font-weight: bold;" data-i18n="top_admin_link">🔒 అడ్మిన్ లాగిన్</a>
+            
+            <!-- ONE-CLICK LANGUAGE SWITCHER -->
+            <div class="lang-switcher" role="region" aria-label="Language Selector">
+              <button type="button" class="lang-btn active" data-lang-btn="te" aria-label="తెలుగు">తెలుగు</button>
+              <span class="lang-divider" aria-hidden="true">|</span>
+              <button type="button" class="lang-btn" data-lang-btn="en" aria-label="English">English</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Masthead Brand Area -->
+      <div class="masthead-brand-area">
+        <div class="container-standard">
+          <div class="masthead-grid">
+            
+            <div class="masthead-left desktop-only"></div>
+
+            <div class="masthead-center">
+              <a href="INDEX.html" onclick="navigateToHome(event)" style="text-decoration: none;">
+                <h1 class="brand-logo-3d" aria-label="మమేక మహోదయం">
+                  <span class="brand-stacked-wrap">
+                    <span class="brand-prefix-stacked" data-i18n="brand_prefix_te">మమేక</span>
+                    <span class="brand-main-stacked" data-i18n="brand_main_te">మహోదయం</span>
+                  </span>
+                </h1>
+                <div class="brand-english-sub" data-i18n="brand_name_en">MAMEKA MAHODAYAM</div>
+                <div class="newspaper-tagline-green" data-i18n="brand_slogan">అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం</div>
+                <div class="newspaper-badge-purple" data-i18n="brand_tagline">తెలుగు దినపత్రిక</div>
+              </a>
+            </div>
+
+            <div class="masthead-right">
+              <form action="search.html" method="GET" class="search-bar-wrap" data-i18n-aria="search_bar_aria">
+                <input type="text" name="q" class="search-bar-input" data-i18n-placeholder="search_placeholder" placeholder="వార్తలను శోధించండి..." />
+                <button type="submit" class="search-bar-btn" data-i18n-aria="search_submit_aria" aria-label="శోధన సమర్పించండి">⌕</button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. MAIN NAVIGATION -->
+    <nav class="main-nav" role="navigation" aria-label="Main Navigation">
+      <div class="container-standard">
+        <ul class="nav-list">
+          <li><a href="INDEX.html" onclick="navigateToHome(event)" class="nav-item active" data-i18n="nav_home">హోమ్</a></li>
+          <li><a href="category.html?c=latest" class="nav-item" data-i18n="nav_latest">తాజా వార్తలు</a></li>
+          <li><a href="category.html?c=state" class="nav-item" data-i18n="nav_state">ఆంధ్రప్రదేశ్</a></li>
+          <li><a href="district.html" class="nav-item" data-i18n="nav_district">జిల్లాల వార్తలు</a></li>
+          <li><a href="category.html?c=politics" class="nav-item" data-i18n="nav_politics">రాజకీయాలు</a></li>
+          <li><a href="category.html?c=national" class="nav-item" data-i18n="nav_national">దేశం &amp; ప్రపంచం</a></li>
+          <li><a href="category.html?c=tech" class="nav-item" data-i18n="nav_tech">టెక్నాలజీ</a></li>
+          <li><a href="category.html?c=business" class="nav-item" data-i18n="nav_business">బిజినెస్</a></li>
+          
+          <!-- MORE DROPDOWN FOR REMAINING CATEGORIES -->
+          <li class="nav-dropdown">
+            <button type="button" class="nav-dropdown-btn" aria-haspopup="true" aria-expanded="false" data-i18n="nav_more">
+              మరిన్ని ▾
+            </button>
+            <ul class="nav-dropdown-menu">
+              <li><a href="category.html?c=cinema" class="nav-dropdown-item" data-i18n="nav_cinema">సినిమా</a></li>
+              <li><a href="category.html?c=sports" class="nav-dropdown-item" data-i18n="nav_sports">క్రీడలు</a></li>
+              <li><a href="category.html?c=education" class="nav-dropdown-item" data-i18n="nav_education">విద్య &amp; ఉద్యోగాలు</a></li>
+              <li><a href="category.html?c=editorial" class="nav-dropdown-item" data-i18n="nav_editorial">సంపాదకీయం</a></li>
+              <li><a href="epaper.html" class="nav-dropdown-item" data-i18n="nav_epaper">ఈ-పేపర్</a></li>
+              <li><a href="search.html" class="nav-dropdown-item" data-i18n="nav_search">శోధన</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- 3. BREAKING NEWS STRIP -->
+    <div id="section-breaking" class="breaking-news-bar" role="region" style="display: none;" data-i18n-aria="breaking_news">
+      <div class="container-standard breaking-news-inner">
+        <div class="breaking-news-header">
+          <span class="breaking-news-indicator" aria-hidden="true"></span>
+          <span class="breaking-news-badge" data-i18n="breaking_news">ముఖ్య వార్తలు</span>
+        </div>
+        <div class="breaking-news-body" id="breaking-news-items"></div>
+      </div>
+    </div>
+
+    <!-- MAIN EDITORIAL CONTENT LAYOUT -->
+    <main id="main-content" role="main" class="container-standard" style="padding-top: var(--space-xl); padding-bottom: var(--space-3xl);">
+
+      <!-- 4. HERO NEWS AREA -->
+      <section id="section-hero" class="section-hero" style="display: none; margin-bottom: var(--space-2xl);">
+        <div class="hero-layout-grid" id="hero-layout-grid"></div>
+      </section>
+
+      <hr id="divider-hero" class="divider-single" style="display: none;" />
+
+      <!-- 5. LATEST NEWS -->
+      <section id="section-latest" class="section-latest" style="margin-bottom: var(--space-2xl);">
+        <div class="section-header-editorial">
+          <div class="section-header-left">
+            <span class="section-accent-tag"></span>
+            <h2 class="tp-h2" data-i18n="latest_news">తాజా వార్తలు</h2>
+          </div>
+          <a href="category.html?c=latest" class="btn-text" data-i18n="view_all">అన్నీ చూడండి →</a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch grid-4" id="latest-news-grid"></div>
+      </section>
+
+      <hr class="divider-single" />
+
+      <!-- 6. STATE NEWS -->
+      <section id="state" class="section-state" style="margin-bottom: var(--space-2xl);">
+        <div class="section-header-editorial">
+          <div class="section-header-left">
+            <span class="section-accent-tag"></span>
+            <h2 class="tp-h2" data-i18n="state_news">ఆంధ్రప్రదేశ్ & తెలంగాణ వార్తలు</h2>
+          </div>
+          <a href="category.html?c=state" class="btn-text" data-i18n="view_all">అన్నీ చూడండి →</a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch grid-4" id="state-news-grid"></div>
+      </section>
+
+      <hr class="divider-single" />
+
+      <!-- 7. DISTRICT NEWS -->
+      <section id="district" class="section-district" style="margin-bottom: var(--space-2xl);">
+        <div class="section-header-editorial">
+          <div class="section-header-left">
+            <span class="section-accent-tag"></span>
+            <h2 class="tp-h2" data-i18n="district_news">ఆంధ్రప్రదేశ్ 26 జిల్లాల వార్తలు</h2>
+          </div>
+          <a href="district.html" class="btn-text" data-i18n="view_all">అన్నీ చూడండి →</a>
+        </div>
+
+        <!-- District Selector Dropdown -->
+        <div class="district-selector-bar" style="margin-bottom: 16px;">
+          <select class="district-select-dropdown" aria-label="Select AP District" style="padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; background: #fff;">
+            <option value="all">అన్ని జిల్లాలు (All 26 Districts)</option>
+            <option value="visakhapatnam">విశాఖపట్నం (Visakhapatnam)</option>
+            <option value="vijayawada">విజయవాడ / ఎన్టీఆర్ (Vijayawada / NTR)</option>
+            <option value="guntur">గుంటూరు (Guntur)</option>
+            <option value="tirupati">తిరుపతి (Tirupati)</option>
+            <option value="kurnool">కర్నూలు (Kurnool)</option>
+            <option value="kakinada">కాకినాడ (Kakinada)</option>
+            <option value="rajamahendravaram">రాజమహేంద్రవరం (Rajamahendravaram)</option>
+            <option value="eluru">ఏలూరు (Eluru)</option>
+            <option value="nellore">నెల్లూరు (Nellore)</option>
+            <option value="kadapa">కడప / వైఎస్సార్ (Kadapa / YSR)</option>
+            <option value="anantapur">అనంతపురం (Anantapur)</option>
+            <option value="vizianagaram">విజయనగరం (Vizianagaram)</option>
+            <option value="srikakulam">శ్రీకాకుళం (Srikakulam)</option>
+            <option value="prakasam">ప్రకాశం (Prakasam)</option>
+            <option value="bapatla">బాపట్ల (Bapatla)</option>
+            <option value="palnadu">పల్నాడు (Palnadu)</option>
+            <option value="asr">అల్లూరి సీతారామరాజు (ASR)</option>
+            <option value="anakapalli">అనకాపల్లి (Anakapalli)</option>
+            <option value="konaseema">కోనసీమ (Konaseema)</option>
+            <option value="west-godavari">పశ్చిమ గోదావరి (West Godavari)</option>
+            <option value="nandyal">నంద్యాల (Nandyal)</option>
+            <option value="sri-sathya-sai">శ్రీ సత్యసాయి (Sri Sathya Sai)</option>
+            <option value="annamayya">అన్నమయ్య (Annamayya)</option>
+            <option value="chittoor">చిత్తూరు (Chittoor)</option>
+            <option value="manyam">పార్వతీపురం మన్యం (Manyam)</option>
+            <option value="hyderabad">హైదరాబాద్ / తెలంగాణ (Hyderabad)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch grid-4" id="district-news-grid"></div>
+      </section>
+
+
+      <!-- 8. E-PAPER SECTION PROMO -->
+      <section id="epaper" class="section-epaper" style="margin-bottom: var(--space-2xl);">
+        <div class="epaper-promo-card" id="epaper-promo-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; text-align: center;">
+          <div style="font-size: 2.5rem; color: #dc2626; margin-bottom: 8px;">📰</div>
+          <h2 class="tp-h2" style="margin-bottom: 8px;" data-i18n="epaper_title">మమేక మహోదయం డిజిటల్ ఈ-పేపర్</h2>
+          <p class="tp-body" style="margin-bottom: 16px; color: #475569;" data-i18n="epaper_subtitle">
+            ఈనాటి ప్రింట్ దినపత్రిక పిడిఎఫ్ డిజిటల్ సంచిక
+          </p>
+          <div>
+            <a href="epaper.html" class="btn btn-primary" style="padding: 10px 24px; background-color: #dc2626; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold;" data-i18n="read_epaper">📖 ఈ-పేపర్ చదవండి</a>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 5. FOOTER -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="container-standard" style="padding-top: 32px; padding-bottom: 32px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; border-bottom: 1px solid #334155; padding-bottom: 24px; margin-bottom: 16px;">
+          <div>
+            <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 8px;" data-i18n="footer_about_title">మమేక మహోదయం</h3>
+            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.6;" data-i18n="footer_about_desc">
+              సమాజ హితమే ధ్యేయంగా, నిష్పాక్షిక వార్తా కథనాలతో పాఠకులకు విశ్వసనీయ సమాచారాన్ని అందిస్తున్న తెలుగు దినపత్రిక.
+            </p>
+          </div>
+          <div>
+            <h4 style="color: #f1f5f9; font-size: 1rem; margin-bottom: 12px;" data-i18n="footer_quick_links">త్వరిత లింకులు</h4>
+            <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.88rem; line-height: 2; color: #cbd5e1;">
+              <li><a href="/" style="color: inherit; text-decoration: none;" data-i18n="nav_home">హోమ్</a></li>
+              <li><a href="category.html?c=state" style="color: inherit; text-decoration: none;" data-i18n="nav_state">ఆంధ్రప్రదేశ్</a></li>
+              <li><a href="district.html" style="color: inherit; text-decoration: none;" data-i18n="nav_district">జిల్లాల వార్తలు</a></li>
+              <li><a href="epaper.html" style="color: inherit; text-decoration: none;" data-i18n="nav_epaper">ఈ-పేపర్</a></li>
+            </ul>
+          </div>
+        </div>
+        <div style="text-align: center; color: #94a3b8; font-size: 0.85rem;">
+          &copy; 2026 MAMEKA MAHODAYAM (మమేక మహోదయం). <span data-i18n="footer_copyright">సర్వ హక్కులూ ప్రత్యేకించబడ్డాయి.</span>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/js/categories-config.js"></script>
+    <script src="/js/districts-config.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/js/content-api.js"></script>
+  </body>
+</html>

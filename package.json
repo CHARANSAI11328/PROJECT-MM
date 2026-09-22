@@ -1,0 +1,30 @@
+{
+  "name": "mameka-mahodayam-cms",
+  "version": "1.0.0",
+  "description": "MAMEKA MAHODAYAM Daily Newspaper Edition Ingestion CMS & Web Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.65",
+    "adm-zip": "^0.6.1",
+    "archiver": "^8.0.0",
+    "async": "^3.2.6",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "docx": "^9.7.1",
+    "dotenv": "^18.0.2",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "^1.1.1",
+    "pdf-to-img": "^7.0.0",
+    "pdfjs-dist": "^4.10.38",
+    "pg": "^8.23.0",
+    "qrcode": "^1.5.4",
+    "sqlite3": "^5.1.7",
+    "tesseract.js": "^7.0.0"
+  }
+}

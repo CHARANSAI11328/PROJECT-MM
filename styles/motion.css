@@ -1,0 +1,264 @@
+/* ==========================================================================
+   MAMEKA MAHODAYAM - Centralized Premium Motion & Micro-Interaction System
+   Apple-level motion discipline for modern Telugu editorial newspaper
+   ========================================================================== */
+
+:root {
+  /* Motion Duration System */
+  --motion-fast: 180ms;
+  --motion-normal: 280ms;
+  --motion-slow: 450ms;
+
+  /* Apple-standard Smooth Easing Curves */
+  --ease-apple: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Transition Shortcuts */
+  --transition-fast: all var(--motion-fast) var(--ease-apple);
+  --transition-normal: all var(--motion-normal) var(--ease-apple);
+  --transition-slow: all var(--motion-slow) var(--ease-apple);
+  --transition-transform: transform var(--motion-normal) var(--ease-apple);
+  --transition-opacity: opacity var(--motion-normal) var(--ease-apple);
+}
+
+/* --------------------------------------------------------------------------
+   1. GLOBAL NATIVE SMOOTH SCROLLING & FADE-IN
+   -------------------------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  animation: applePageFadeIn var(--motion-slow) var(--ease-apple) forwards;
+}
+
+@keyframes applePageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. HEADER & NAVIGATION MICRO-INTERACTIONS
+   -------------------------------------------------------------------------- */
+.nav-list a,
+.utility-bar a,
+.lang-btn,
+.nav-item,
+.sidebar-nav .nav-item,
+.btn-website-link,
+.user-profile-badge {
+  transition: color var(--motion-fast) var(--ease-apple),
+              background-color var(--motion-fast) var(--ease-apple),
+              border-color var(--motion-fast) var(--ease-apple),
+              opacity var(--motion-fast) var(--ease-apple),
+              box-shadow var(--motion-fast) var(--ease-apple);
+}
+
+.nav-list a:hover,
+.utility-bar a:hover {
+  opacity: 0.88;
+}
+
+.lang-btn {
+  transition: all var(--motion-fast) var(--ease-apple);
+}
+
+/* --------------------------------------------------------------------------
+   3. BUTTON MICRO-INTERACTIONS (SUBTLE Apple TACTILE FEEL)
+   -------------------------------------------------------------------------- */
+.btn,
+button:not(.lang-btn):not(.btn-menu-toggle),
+.search-bar-btn,
+.btn-primary,
+.btn-secondary,
+.btn-outline,
+.btn-outline-sm,
+.btn-danger-sm,
+.btn-logout {
+  transition: transform var(--motion-fast) var(--ease-apple),
+              background-color var(--motion-fast) var(--ease-apple),
+              border-color var(--motion-fast) var(--ease-apple),
+              box-shadow var(--motion-fast) var(--ease-apple),
+              color var(--motion-fast) var(--ease-apple);
+  will-change: transform;
+}
+
+.btn:hover,
+button:not(.lang-btn):not(.btn-menu-toggle):hover,
+.search-bar-btn:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-outline:hover,
+.btn-outline-sm:hover,
+.btn-logout:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active,
+button:not(.lang-btn):not(.btn-menu-toggle):active,
+.search-bar-btn:active,
+.btn-primary:active,
+.btn-secondary:active,
+.btn-outline:active,
+.btn-outline-sm:active,
+.btn-logout:active {
+  transform: scale(0.98) translateY(0);
+  transition-duration: 100ms;
+}
+
+/* --------------------------------------------------------------------------
+   4. EDITORIAL NEWS CARD & IMAGE MICRO-INTERACTIONS
+   -------------------------------------------------------------------------- */
+.card-standard,
+.card-hero,
+.card-horizontal,
+.card-mini,
+.stat-card,
+.archive-card,
+.editor-main-card,
+.editor-side-card,
+.image-manager-card,
+.checkbox-flags-card {
+  transition: transform var(--motion-normal) var(--ease-apple),
+              box-shadow var(--motion-normal) var(--ease-apple),
+              border-color var(--motion-normal) var(--ease-apple);
+  will-change: transform;
+}
+
+.card-standard:hover,
+.card-hero:hover,
+.card-horizontal:hover,
+.stat-card:hover,
+.archive-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Prevent image overflow during subtle zoom */
+.card-standard .img-wrap,
+.card-hero .img-wrap,
+.card-horizontal .img-wrap,
+.card-thumb,
+.media-thumb,
+.epaper-cover-lg {
+  overflow: hidden;
+}
+
+.card-standard img,
+.card-hero img,
+.card-horizontal img,
+.card-thumb img,
+.media-thumb img {
+  transition: transform var(--motion-slow) var(--ease-apple),
+              opacity var(--motion-normal) var(--ease-apple);
+  will-change: transform;
+}
+
+.card-standard:hover img,
+.card-hero:hover img,
+.card-horizontal:hover img {
+  transform: scale(1.02);
+}
+
+/* --------------------------------------------------------------------------
+   5. SEARCH BAR & FORM INPUT INTERACTION SMOOTHNESS
+   -------------------------------------------------------------------------- */
+.search-bar-input,
+.form-control,
+input[type="text"],
+input[type="date"],
+select,
+textarea {
+  transition: border-color var(--motion-fast) var(--ease-apple),
+              box-shadow var(--motion-fast) var(--ease-apple),
+              background-color var(--motion-fast) var(--ease-apple);
+}
+
+.search-bar-input:focus,
+.form-control:focus,
+input[type="text"]:focus,
+input[type="date"]:focus,
+select:focus,
+textarea:focus {
+  box-shadow: 0 0 0 3px rgba(216, 27, 122, 0.12);
+}
+
+/* --------------------------------------------------------------------------
+   6. IMAGE LOAD SMOOTH FADE-IN
+   -------------------------------------------------------------------------- */
+img.smooth-image-loading {
+  opacity: 0;
+  transition: opacity var(--motion-slow) var(--ease-apple);
+}
+
+img.smooth-image-loaded {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   7. SINGLE-PASS REVEAL ANIMATIONS (IntersectionObserver)
+   -------------------------------------------------------------------------- */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity var(--motion-slow) var(--ease-apple),
+              transform var(--motion-slow) var(--ease-apple);
+  will-change: opacity, transform;
+}
+
+.reveal-on-scroll.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --------------------------------------------------------------------------
+   8. MODAL, DROPDOWN & DIALOG MOTION
+   -------------------------------------------------------------------------- */
+.dropdown-menu,
+.modal-content,
+.lightbox-content,
+.admin-sidebar {
+  transition: opacity var(--motion-normal) var(--ease-apple),
+              transform var(--motion-normal) var(--ease-apple),
+              left var(--motion-normal) var(--ease-apple);
+}
+
+/* --------------------------------------------------------------------------
+   9. ACCESSIBILITY — REDUCED MOTION SUPPORT
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  body {
+    animation: none !important;
+  }
+
+  .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .card-standard:hover,
+  .card-hero:hover,
+  .card-horizontal:hover,
+  .stat-card:hover,
+  .archive-card:hover,
+  .btn:hover,
+  button:hover {
+    transform: none !important;
+  }
+}
