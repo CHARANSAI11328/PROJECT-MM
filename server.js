@@ -2130,19 +2130,23 @@ app.use((err, req, res, next) => {
 
 // Initialize Database Schema & Start Server
 initDatabase().then(() => {
-  app.listen(PORT, () => {
-    console.log(`=======================================================`);
-    console.log(` MAMEKA MAHODAYAM CMS Backend Server Running           `);
-    console.log(` Public Website: http://localhost:${PORT}/             `);
-    console.log(` Admin Portal:   http://localhost:${PORT}/admin/        `);
-    console.log(`=======================================================`);
-    
-    // Background pre-generation of image thumbnails & QR Codes (non-destructive)
-    const { pregenerateAllThumbnails } = require('./services/image-optimizer');
-    pregenerateAllThumbnails().catch(e => console.warn('Thumbnail pregen error:', e.message));
-    generateAllQRCodes().catch(e => console.warn('QR Code pregen error:', e.message));
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+      console.log(`=======================================================`);
+      console.log(` MAMEKA MAHODAYAM CMS Backend Server Running           `);
+      console.log(` Public Website: http://localhost:${PORT}/             `);
+      console.log(` Admin Portal:   http://localhost:${PORT}/admin/        `);
+      console.log(`=======================================================`);
+      
+      // Background pre-generation of image thumbnails & QR Codes (non-destructive)
+      const { pregenerateAllThumbnails } = require('./services/image-optimizer');
+      pregenerateAllThumbnails().catch(e => console.warn('Thumbnail pregen error:', e.message));
+      generateAllQRCodes().catch(e => console.warn('QR Code pregen error:', e.message));
+    });
+  }
 }).catch(err => {
   console.error('Database initialization failed:', err);
-  process.exit(1);
+  if (!process.env.VERCEL) process.exit(1);
 });
+
+module.exports = app;
