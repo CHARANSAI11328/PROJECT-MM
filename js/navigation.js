@@ -144,7 +144,7 @@
    */
   function navigateToHome(e) {
     const pathname = window.location.pathname.toLowerCase();
-    const isHomePath = pathname === '/' || pathname.endsWith('/index.html') || pathname.endsWith('index.html');
+    const isHomePath = pathname === '/' || pathname.endsWith('/index.html') || pathname.endsWith('index.html') || pathname.endsWith('/');
 
     // Reset selected article state
     window.__SELECTED_ARTICLE__ = null;
@@ -155,7 +155,7 @@
       if (e && typeof e.preventDefault === 'function') {
         e.preventDefault();
       }
-      window.location.href = '/';
+      window.location.href = 'index.html';
       return;
     }
 

@@ -50,26 +50,27 @@ if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
 if (!fs.existsSync(reportersUploadDir)) fs.mkdirSync(reportersUploadDir, { recursive: true });
 if (!fs.existsSync(qrUploadDir)) fs.mkdirSync(qrUploadDir, { recursive: true });
 
+function getBaseServerUrl(reqOrBaseUrl) {
+  let baseUrl = process.env.APP_BASE_URL || process.env.PUBLIC_URL;
+  if (!baseUrl && reqOrBaseUrl) {
+    if (typeof reqOrBaseUrl === 'string') {
+      baseUrl = reqOrBaseUrl;
+    } else if (reqOrBaseUrl.get && reqOrBaseUrl.protocol) {
+      baseUrl = `${reqOrBaseUrl.protocol}://${reqOrBaseUrl.get('host')}`;
+    }
+  }
+  return baseUrl ? baseUrl.replace(/\/$/, '') : `http://localhost:${PORT}`;
+}
+
 async function generateReporterQRCode(reporter, reqOrBaseUrl) {
   if (!reporter || !reporter.id || !reporter.name) return;
   try {
     const cleanName = reporter.name.replace(/[\\/:*?"<>|]/g, '_').trim();
-    const qrFilename = `${cleanName}_QR.png`;
+    const qrFilename = `Reporter_${cleanName}_QR.png`;
     const qrPath = path.join(qrUploadDir, qrFilename);
+    const baseUrl = getBaseServerUrl(reqOrBaseUrl);
 
-    let baseUrl = process.env.APP_BASE_URL || process.env.PUBLIC_URL;
-    if (!baseUrl && reqOrBaseUrl) {
-      if (typeof reqOrBaseUrl === 'string') {
-        baseUrl = reqOrBaseUrl;
-      } else if (reqOrBaseUrl.get && reqOrBaseUrl.protocol) {
-        baseUrl = `${reqOrBaseUrl.protocol}://${reqOrBaseUrl.get('host')}`;
-      }
-    }
-    if (!baseUrl) {
-      baseUrl = 'http://localhost:3000';
-    }
-
-    const profileUrl = `${baseUrl.replace(/\/$/, '')}/reporter-profile.html?id=${encodeURIComponent(reporter.id)}`;
+    const profileUrl = `${baseUrl}/reporter-profile.html?id=${encodeURIComponent(reporter.id)}`;
 
     await qrcode.toFile(qrPath, profileUrl, {
       width: 500,
@@ -79,10 +80,84 @@ async function generateReporterQRCode(reporter, reqOrBaseUrl) {
         light: '#ffffff'
       }
     });
-    console.log(`✓ [QR GENERATOR] Created ID Card QR: ${qrFilename} -> ${profileUrl}`);
-    return `/uploads/qr_codes/${qrFilename}`;
+    const qrRelativeUrl = `/uploads/qr_codes/${qrFilename}`;
+    await dbRun('UPDATE reporters SET qr_code_url = ? WHERE id = ?', [qrRelativeUrl, reporter.id]);
+    console.log(`✓ [QR GENERATOR] Created Reporter ID Card QR: ${qrFilename} -> ${profileUrl}`);
+    return qrRelativeUrl;
   } catch (err) {
     console.error('Failed to generate reporter QR code:', err);
+  }
+}
+
+async function generateEditionQRCode(edition, reqOrBaseUrl) {
+  if (!edition || !edition.id) return;
+  try {
+    const qrFilename = `Edition_${edition.id}_QR.png`;
+    const qrPath = path.join(qrUploadDir, qrFilename);
+    const baseUrl = getBaseServerUrl(reqOrBaseUrl);
+
+    const epaperUrl = `${baseUrl}/epaper.html?id=${encodeURIComponent(edition.id)}`;
+
+    await qrcode.toFile(qrPath, epaperUrl, {
+      width: 500,
+      margin: 2,
+      color: {
+        dark: '#1e293b',
+        light: '#ffffff'
+      }
+    });
+    const qrRelativeUrl = `/uploads/qr_codes/${qrFilename}`;
+    await dbRun('UPDATE editions SET qr_code_url = ? WHERE id = ?', [qrRelativeUrl, edition.id]);
+    console.log(`✓ [QR GENERATOR] Created Edition QR: ${qrFilename} -> ${epaperUrl}`);
+    return qrRelativeUrl;
+  } catch (err) {
+    console.error('Failed to generate edition QR code:', err);
+  }
+}
+
+async function generateArticleQRCode(article, reqOrBaseUrl) {
+  if (!article || !article.id) return;
+  try {
+    const qrFilename = `Article_${article.id}_QR.png`;
+    const qrPath = path.join(qrUploadDir, qrFilename);
+    const baseUrl = getBaseServerUrl(reqOrBaseUrl);
+
+    const articleUrl = article.slug ? `${baseUrl}/news/${article.slug}` : `${baseUrl}/article.html?id=${encodeURIComponent(article.id)}`;
+
+    await qrcode.toFile(qrPath, articleUrl, {
+      width: 500,
+      margin: 2,
+      color: {
+        dark: '#0f172a',
+        light: '#ffffff'
+      }
+    });
+    const qrRelativeUrl = `/uploads/qr_codes/${qrFilename}`;
+    await dbRun('UPDATE articles SET qr_code_url = ? WHERE id = ?', [qrRelativeUrl, article.id]);
+    console.log(`✓ [QR GENERATOR] Created Article QR: ${qrFilename} -> ${articleUrl}`);
+    return qrRelativeUrl;
+  } catch (err) {
+    console.error('Failed to generate article QR code:', err);
+  }
+}
+
+async function generateAllQRCodes() {
+  try {
+    const reporters = await dbAll('SELECT * FROM reporters');
+    for (const rep of reporters) {
+      await generateReporterQRCode(rep);
+    }
+    const editions = await dbAll('SELECT * FROM editions');
+    for (const ed of editions) {
+      await generateEditionQRCode(ed);
+    }
+    const articles = await dbAll('SELECT * FROM articles WHERE status = "published" OR status = "approved"');
+    for (const art of articles) {
+      await generateArticleQRCode(art);
+    }
+    console.log(`✓ [QR GENERATOR] Pre-generated QR codes for ${reporters.length} reporters, ${editions.length} editions, ${articles.length} articles.`);
+  } catch (err) {
+    console.warn('QR Codes batch generation notice:', err.message);
   }
 }
 
@@ -332,6 +407,7 @@ app.post(['/api/editions/upload', '/api/admin/editions/upload'], authenticateTok
       `, [name, type, pdfFilename, pdfPath, fileSize, title || null, description || null, pubStatus, existing.id]);
 
       const updatedEdition = await dbGet('SELECT * FROM editions WHERE id = ?', [existing.id]);
+      await generateEditionQRCode(updatedEdition, req);
       return res.status(200).json({
         success: true,
         message: 'Newspaper edition replaced successfully.',
@@ -355,6 +431,7 @@ app.post(['/api/editions/upload', '/api/admin/editions/upload'], authenticateTok
     });
 
     const newEdition = await dbGet('SELECT * FROM editions WHERE id = ?', [editionId]);
+    await generateEditionQRCode(newEdition, req);
     return res.status(201).json({
       success: true,
       message: 'Newspaper PDF edition uploaded and published successfully.',
@@ -2060,9 +2137,10 @@ initDatabase().then(() => {
     console.log(` Admin Portal:   http://localhost:${PORT}/admin/        `);
     console.log(`=======================================================`);
     
-    // Background pre-generation of image thumbnails (non-destructive)
+    // Background pre-generation of image thumbnails & QR Codes (non-destructive)
     const { pregenerateAllThumbnails } = require('./services/image-optimizer');
     pregenerateAllThumbnails().catch(e => console.warn('Thumbnail pregen error:', e.message));
+    generateAllQRCodes().catch(e => console.warn('QR Code pregen error:', e.message));
   });
 }).catch(err => {
   console.error('Database initialization failed:', err);

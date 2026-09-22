@@ -66,6 +66,16 @@
     return `article.html?${param}`;
   }
 
+  function getApiBaseUrl() {
+    if (window.API_BASE_URL) return window.API_BASE_URL.replace(/\/$/, '');
+    const saved = localStorage.getItem('mm_api_base_url');
+    if (saved && saved.trim()) return saved.trim().replace(/\/$/, '');
+    if (window.location.protocol === 'file:' || !window.location.host || window.location.origin === 'null') {
+      return 'http://localhost:3000';
+    }
+    return '';
+  }
+
   async function fetchArticles(params = {}) {
     try {
       const query = new URLSearchParams();
@@ -74,7 +84,8 @@
           query.append(k, params[k]);
         }
       });
-      const response = await fetch(`/api/public/articles?${query.toString()}`);
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/public/articles?${query.toString()}`);
       if (!response.ok) return [];
       const data = await response.json();
       return data.articles || [];
@@ -942,7 +953,7 @@
       }
 
       // Fetch Archives (List all uploaded editions)
-      const archRes = await fetch('/api/public/epaper/archive');
+      const archRes = await fetch(`${getApiBaseUrl()}/api/public/epaper/archive`);
       if (archRes.ok && archiveGrid) {
         const archData = await archRes.json();
         const editions = archData.editions || [];

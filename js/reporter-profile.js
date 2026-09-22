@@ -143,6 +143,21 @@
                 🏛️ అధికారిక గుర్తింపు కార్డ్ (Official Accreditation)
               </span>
             </div>
+            <!-- OFFICIAL VERIFICATION QR CODE BOX -->
+            <div style="margin-top: 14px; text-align: center; background: #ffffff; padding: 12px; border: 1px dashed #be185d; border-radius: 12px; box-shadow: 0 4px 12px rgba(190, 24, 93, 0.06);">
+              <div style="font-size: 0.75rem; font-weight: 800; color: #be185d; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.04em;">
+                📱 డిజిటల్ ధృవీకరణ QR Code
+              </div>
+              <img 
+                src="${resolvePhotoUrl(r.qr_code_url || `/uploads/qr_codes/Reporter_${(r.name || '').replace(/[\\/:*?"<>|]/g, '_').trim()}_QR.png`)}" 
+                alt="Accredited Press ID QR Code" 
+                style="width: 145px; height: 145px; display: block; margin: 0 auto; border: 1px solid #cbd5e1; border-radius: 8px; padding: 4px; background: #ffffff;"
+                onerror="this.onerror=null; this.parentElement.style.display='none';"
+              />
+              <span style="display: block; font-size: 0.72rem; color: #64748b; margin-top: 6px; font-weight: 600;">
+                స్కాన్ చేసి ప్రొఫైల్ వివరాలు తనిఖీ చేయండి
+              </span>
+            </div>
           </div>
 
           <!-- RIGHT COLUMN: TYPEWRITER NAME & HIGHLIGHTED CREDENTIALS -->

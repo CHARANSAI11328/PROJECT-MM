@@ -1,0 +1,4 @@
+# Netlify API Proxy & SPA Fallback Redirect Rules
+# Proxy API calls to deployed Node backend (update URL if deploying backend to Render/Railway)
+/api/*  https://mameka-backend.onrender.com/api/:splat  200!
+/*      /index.html                                     200

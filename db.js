@@ -314,9 +314,12 @@ async function initDatabase() {
     "ALTER TABLE articles ADD COLUMN byline TEXT",
     "ALTER TABLE articles ADD COLUMN published_at DATETIME",
     "ALTER TABLE articles ADD COLUMN reporter_id TEXT",
+    "ALTER TABLE articles ADD COLUMN qr_code_url TEXT",
+    "ALTER TABLE editions ADD COLUMN qr_code_url TEXT",
     "ALTER TABLE reporters ADD COLUMN updated_at DATETIME",
     "ALTER TABLE reporters ADD COLUMN display_order INTEGER DEFAULT 0",
     "ALTER TABLE reporters ADD COLUMN social_links TEXT",
+    "ALTER TABLE reporters ADD COLUMN qr_code_url TEXT",
     "CREATE INDEX IF NOT EXISTS idx_reporters_status ON reporters(status)",
     "CREATE INDEX IF NOT EXISTS idx_reporters_district ON reporters(district)"
   ];

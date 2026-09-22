@@ -38,6 +38,43 @@ function initAdminApp() {
         });
     }
 
+    function getApiBaseUrl() {
+        if (window.API_BASE_URL) return window.API_BASE_URL.replace(/\/$/, '');
+        const saved = localStorage.getItem('mm_api_base_url');
+        if (saved && saved.trim()) return saved.trim().replace(/\/$/, '');
+        if (window.location.protocol === 'file:' || !window.location.host || window.location.origin === 'null') {
+            return 'http://localhost:3000';
+        }
+        return '';
+    }
+
+    // Initialize API Base URL input if present on DOM
+    const apiUrlInput = document.getElementById('api-base-url-input');
+    const apiStatusBadge = document.getElementById('api-status-badge');
+    if (apiUrlInput) {
+        apiUrlInput.value = localStorage.getItem('mm_api_base_url') || (window.location.hostname.includes('github.io') ? 'http://localhost:3000' : getApiBaseUrl());
+        if (apiStatusBadge) {
+            const currentApi = getApiBaseUrl();
+            apiStatusBadge.textContent = currentApi ? 'Custom' : (window.location.hostname.includes('github.io') ? 'Needs API Host' : 'Same Origin');
+            apiStatusBadge.style.background = currentApi ? '#dcfce7' : (window.location.hostname.includes('github.io') ? '#fef3c7' : '#e2e8f0');
+            apiStatusBadge.style.color = currentApi ? '#15803d' : (window.location.hostname.includes('github.io') ? '#b45309' : '#475569');
+        }
+        apiUrlInput.addEventListener('input', () => {
+            const val = apiUrlInput.value.trim();
+            if (val) {
+                localStorage.setItem('mm_api_base_url', val);
+            } else {
+                localStorage.removeItem('mm_api_base_url');
+            }
+            if (apiStatusBadge) {
+                const updatedApi = getApiBaseUrl();
+                apiStatusBadge.textContent = updatedApi ? 'Configured' : 'Auto';
+                apiStatusBadge.style.background = updatedApi ? '#dcfce7' : '#e2e8f0';
+                apiStatusBadge.style.color = updatedApi ? '#15803d' : '#475569';
+            }
+        });
+    }
+
     // Centralized API Fetch Wrapper with 401/403 Auto-Logout Interceptor
     async function apiFetch(url, options = {}) {
         const token = localStorage.getItem('admin_token');
@@ -47,16 +84,24 @@ function initAdminApp() {
         }
         options.headers = headers;
 
+        const baseUrl = getApiBaseUrl();
+        const fullUrl = (url.startsWith('http://') || url.startsWith('https://'))
+            ? url
+            : `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+
         try {
-            const response = await fetch(url, options);
+            const response = await fetch(fullUrl, options);
             if (response.status === 401 || response.status === 403) {
-                localStorage.removeItem('admin_token');
-                localStorage.removeItem('admin_username');
-                checkAuth();
+                // Ignore 401/403 on login endpoint to allow login error message display
+                if (!url.includes('/api/auth/login')) {
+                    localStorage.removeItem('admin_token');
+                    localStorage.removeItem('admin_username');
+                    checkAuth();
+                }
             }
             return response;
         } catch (err) {
-            console.error(`API Fetch Error for ${url}:`, err);
+            console.error(`API Fetch Error for ${fullUrl}:`, err);
             throw err;
         }
     }
@@ -211,25 +256,52 @@ function initAdminApp() {
             loginBtn.innerHTML = '<span>పరిశీలిస్తోంది... (Authenticating...)</span>';
 
             try {
-                const response = await fetch('/api/auth/login', {
+                const response = await apiFetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
 
-                const data = await response.json();
+                const contentType = response.headers.get('content-type') || '';
+                let data = {};
+                if (contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    console.error('Non-JSON server response on login:', text);
+                }
 
                 if (response.ok && data.token) {
                     localStorage.setItem('admin_token', data.token);
-                    localStorage.setItem('admin_username', data.user.username);
+                    localStorage.setItem('admin_username', data.user ? data.user.username : username);
                     checkAuth();
                 } else {
-                    loginAlert.textContent = data.error || 'లాగిన్ విఫలమైంది / Invalid credentials';
+                    const isStaticHost = window.location.hostname.includes('github.io') || window.location.hostname.includes('netlify.app');
+                    if (response.status === 404 && isStaticHost && !getApiBaseUrl()) {
+                        loginAlert.innerHTML = `
+                            <div><strong>సర్వర్ కనెక్షన్ లభించలేదు (Static Host Notice)</strong></div>
+                            <div style="font-size: 0.8rem; margin-top: 4px;">
+                                Static hosts like Netlify/GitHub Pages require a running Node API server. Please enter your API Backend URL (e.g. <code>http://localhost:3000</code> or Render URL) in the Backend API Host box below.
+                            </div>
+                        `;
+                    } else {
+                        loginAlert.textContent = data.error || (response.status === 404 ? 'API Backend not reachable at specified URL.' : 'లాగిన్ విఫలమైంది / Invalid credentials');
+                    }
                     loginAlert.style.display = 'block';
                 }
             } catch (err) {
                 console.error('Login error:', err);
-                loginAlert.textContent = 'సర్వర్ కనెక్షన్ లోపం / Server connection failed';
+                const isStaticHost = window.location.hostname.includes('github.io') || window.location.hostname.includes('netlify.app');
+                if (isStaticHost && !getApiBaseUrl()) {
+                    loginAlert.innerHTML = `
+                        <div><strong>సర్వర్ కనెక్షన్ లోపం / Static Host Notice</strong></div>
+                        <div style="font-size: 0.8rem; margin-top: 4px;">
+                            Static hosts like Netlify/GitHub Pages cannot execute backend code directly. Specify your running Node backend URL in the <strong>Backend API Host</strong> box below.
+                        </div>
+                    `;
+                } else {
+                    loginAlert.textContent = 'సర్వర్ కనెక్షన్ లోపం / Server connection failed';
+                }
                 loginAlert.style.display = 'block';
             } finally {
                 loginBtn.disabled = false;

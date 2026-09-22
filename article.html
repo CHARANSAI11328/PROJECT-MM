@@ -146,7 +146,7 @@
           మీరు వెతుకుతున్న వార్తా వ్యాసం ప్రచురించబడలేదు, రద్దు చేయబడింది లేదా తొలగించబడింది.<br />
           (The requested news article is not published, unavailable, or does not exist.)
         </p>
-        <a href="/" onclick="navigateToHome(event)" class="btn btn-primary" style="padding: 10px 24px; text-decoration: none;">ముఖ్య పుట (Back to Home)</a>
+        <a href="index.html" onclick="navigateToHome(event)" class="btn btn-primary" style="padding: 10px 24px; text-decoration: none;">ముఖ్య పుట (Back to Home)</a>
       </div>
 
       <!-- 3. REAL DYNAMIC ARTICLE CONTAINER -->
@@ -154,16 +154,16 @@
 
         <!-- BACK TO HOME FEED BAR -->
         <div class="article-back-bar" style="margin-bottom: var(--space-sm);">
-          <a href="/" id="btn-back-to-feed" class="btn-back-home" onclick="navigateToHome(event)" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 0.85rem; color: #dc2626; background-color: #fef2f2; border: 1px solid #fecaca; transition: all 0.2s ease;">
+          <a href="index.html" id="btn-back-to-feed" class="btn-back-home" onclick="navigateToHome(event)" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 0.85rem; color: #dc2626; background-color: #fef2f2; border: 1px solid #fecaca; transition: all 0.2s ease;">
             <span>←</span> <span>ముఖ్య పుటకు వెళ్ళండి (Back to Home Feed)</span>
           </a>
         </div>
 
         <!-- BREADCRUMB NAVIGATION -->
         <nav class="breadcrumb-wrap" id="article-breadcrumb" aria-label="Breadcrumb">
-          <a href="/" onclick="navigateToHome(event)">HOME</a>
+          <a href="index.html" onclick="navigateToHome(event)">HOME</a>
           <span>›</span>
-          <span id="breadcrumb-category"><a href="/" onclick="navigateToHome(event)">NEWS</a></span>
+          <span id="breadcrumb-category"><a href="index.html" onclick="navigateToHome(event)">NEWS</a></span>
           <span id="breadcrumb-district-wrap" style="display: none;">› <span id="breadcrumb-district"></span></span>
           <span>›</span>
           <span id="breadcrumb-title" style="color: var(--color-text-primary); font-weight: 600;"></span>
@@ -355,6 +355,7 @@
       </div>
     </footer>
 
+    <script src="js/config.js"></script>
     <script src="js/categories-config.js"></script>
     <script src="js/districts-config.js"></script>
     <script src="js/i18n.js"></script>
