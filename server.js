@@ -52,29 +52,71 @@ if (!fs.existsSync(qrUploadDir)) fs.mkdirSync(qrUploadDir, { recursive: true });
 
 function getBaseServerUrl(reqOrBaseUrl) {
   let baseUrl = process.env.APP_BASE_URL || process.env.PUBLIC_URL;
+  if (!baseUrl && process.env.RAILWAY_PUBLIC_DOMAIN) {
+    baseUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  } else if (!baseUrl && process.env.RAILWAY_STATIC_URL) {
+    baseUrl = `https://${process.env.RAILWAY_STATIC_URL}`;
+  }
   if (!baseUrl && reqOrBaseUrl) {
     if (typeof reqOrBaseUrl === 'string') {
       baseUrl = reqOrBaseUrl;
     } else if (reqOrBaseUrl.get && reqOrBaseUrl.protocol) {
-      baseUrl = `${reqOrBaseUrl.protocol}://${reqOrBaseUrl.get('host')}`;
+      const proto = reqOrBaseUrl.headers && reqOrBaseUrl.headers['x-forwarded-proto'] ? reqOrBaseUrl.headers['x-forwarded-proto'] : reqOrBaseUrl.protocol;
+      baseUrl = `${proto}://${reqOrBaseUrl.get('host')}`;
     }
   }
   return baseUrl ? baseUrl.replace(/\/$/, '') : `http://localhost:${PORT}`;
 }
 
+async function cleanupOrphanQRCodes() {
+  try {
+    if (!fs.existsSync(qrUploadDir)) return;
+    const files = fs.readdirSync(qrUploadDir);
+    const validReporters = new Set((await dbAll('SELECT id FROM reporters')).map(r => String(r.id)));
+    const validEditions = new Set((await dbAll('SELECT id FROM editions')).map(e => String(e.id)));
+    const validArticles = new Set((await dbAll('SELECT id FROM articles')).map(a => String(a.id)));
+
+    for (const f of files) {
+      if (!f.endsWith('.png')) continue;
+      let shouldKeep = false;
+      const repMatch = f.match(/^Reporter_(.+)_QR\.png$/i);
+      const edMatch = f.match(/^Edition_(.+)_QR\.png$/i);
+      const artMatch = f.match(/^Article_(.+)_QR\.png$/i);
+
+      if (repMatch) {
+        if (validReporters.has(repMatch[1])) shouldKeep = true;
+      } else if (edMatch) {
+        if (validEditions.has(edMatch[1])) shouldKeep = true;
+      } else if (artMatch) {
+        if (validArticles.has(artMatch[1])) shouldKeep = true;
+      }
+
+      if (!shouldKeep) {
+        try {
+          fs.unlinkSync(path.join(qrUploadDir, f));
+          console.log(`✓ [QR CLEANUP] Cleaned orphan QR file: ${f}`);
+        } catch (e) {}
+      }
+    }
+  } catch (err) {
+    console.warn('QR cleanup notice:', err.message);
+  }
+}
+
 async function generateReporterQRCode(reporter, reqOrBaseUrl) {
   if (!reporter || !reporter.id || !reporter.name) return;
   try {
-    const cleanName = reporter.name.replace(/[\\/:*?"<>|]/g, '_').trim();
-    const qrFilename = `Reporter_${cleanName}_QR.png`;
+    const qrFilename = `Reporter_${reporter.id}_QR.png`;
     const qrPath = path.join(qrUploadDir, qrFilename);
     const baseUrl = getBaseServerUrl(reqOrBaseUrl);
 
     const profileUrl = `${baseUrl}/reporter-profile.html?id=${encodeURIComponent(reporter.id)}`;
 
+    // High-Resolution 1000px with Level H (30% error correction) for PVC ID Card Printing
     await qrcode.toFile(qrPath, profileUrl, {
-      width: 500,
+      width: 1000,
       margin: 2,
+      errorCorrectionLevel: 'H',
       color: {
         dark: '#be185d',
         light: '#ffffff'
@@ -82,7 +124,7 @@ async function generateReporterQRCode(reporter, reqOrBaseUrl) {
     });
     const qrRelativeUrl = `/uploads/qr_codes/${qrFilename}`;
     await dbRun('UPDATE reporters SET qr_code_url = ? WHERE id = ?', [qrRelativeUrl, reporter.id]);
-    console.log(`✓ [QR GENERATOR] Created Reporter ID Card QR: ${qrFilename} -> ${profileUrl}`);
+    console.log(`✓ [QR GENERATOR] Created High-Res ID Card QR (300 DPI): ${qrFilename} -> ${profileUrl}`);
     return qrRelativeUrl;
   } catch (err) {
     console.error('Failed to generate reporter QR code:', err);
@@ -141,19 +183,20 @@ async function generateArticleQRCode(article, reqOrBaseUrl) {
   }
 }
 
-async function generateAllQRCodes() {
+async function generateAllQRCodes(customBaseUrl) {
   try {
+    await cleanupOrphanQRCodes();
     const reporters = await dbAll('SELECT * FROM reporters');
     for (const rep of reporters) {
-      await generateReporterQRCode(rep);
+      await generateReporterQRCode(rep, customBaseUrl);
     }
     const editions = await dbAll('SELECT * FROM editions');
     for (const ed of editions) {
-      await generateEditionQRCode(ed);
+      await generateEditionQRCode(ed, customBaseUrl);
     }
-    const articles = await dbAll('SELECT * FROM articles WHERE status = "published" OR status = "approved"');
+    const articles = await dbAll("SELECT * FROM articles WHERE status = 'published' OR status = 'approved'");
     for (const art of articles) {
-      await generateArticleQRCode(art);
+      await generateArticleQRCode(art, customBaseUrl);
     }
     console.log(`✓ [QR GENERATOR] Pre-generated QR codes for ${reporters.length} reporters, ${editions.length} editions, ${articles.length} articles.`);
   } catch (err) {
@@ -245,8 +288,23 @@ function isValidPdfBuffer(filePath) {
   }
 }
 
-// Authentication Middleware for Protected Admin API Routes (Direct Admin Access Enabled)
+// Authentication Middleware for Protected Admin API Routes (Supports Bearer JWT with Direct Admin Fallback)
 const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      if (decoded && (decoded.id || decoded.username)) {
+        req.user = decoded;
+        return next();
+      }
+    } catch (err) {
+      // Token invalid or expired, continue to fallback
+    }
+  }
+
   req.user = { id: 'usr_admin', username: 'admin', role: 'superadmin' };
   next();
 };
@@ -310,16 +368,25 @@ app.post(['/api/admin/change-password', '/api/auth/change-password'], authentica
       return res.status(400).json({ success: false, error: 'Current password, new password, and confirmation are required.' });
     }
 
-    if (String(new_password).length < 8) {
-      return res.status(400).json({ success: false, error: 'New password must be at least 8 characters long.' });
+    if (String(new_password).length < 4) {
+      return res.status(400).json({ success: false, error: 'పాస్‌వర్డ్ కనీసం 4 అక్షరాలు ఉండాలి. (New password must be at least 4 characters long.)' });
     }
 
     if (new_password !== confirm_password) {
       return res.status(400).json({ success: false, error: 'New password and confirmation do not match.' });
     }
 
-    const userId = req.user.id;
-    const user = await dbGet('SELECT * FROM users WHERE id = ?', [userId]);
+    // Resolve target admin user record from database
+    let user = null;
+    if (req.user && req.user.id && req.user.id !== 'usr_admin') {
+      user = await dbGet('SELECT * FROM users WHERE id = ?', [req.user.id]);
+    }
+    if (!user && req.user && req.user.username) {
+      user = await dbGet('SELECT * FROM users WHERE username = ?', [req.user.username]);
+    }
+    if (!user) {
+      user = await dbGet("SELECT * FROM users WHERE username = 'admin' OR role = 'superadmin' LIMIT 1");
+    }
 
     if (!user) {
       return res.status(404).json({ success: false, error: 'User profile not found.' });
@@ -327,13 +394,30 @@ app.post(['/api/admin/change-password', '/api/auth/change-password'], authentica
 
     const isValid = await bcrypt.compare(current_password, user.password_hash);
     if (!isValid) {
-      return res.status(400).json({ success: false, error: 'Current password is incorrect.' });
+      return res.status(400).json({ success: false, error: 'ప్రస్తుత పాస్‌వర్డ్ సరైనది కాదు. (Current password is incorrect.)' });
     }
 
     const newHash = await bcrypt.hash(new_password, 10);
-    await dbRun('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, userId]);
+    // Update target user's password
+    await dbRun('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, user.id]);
 
-    res.json({ success: true, message: 'Password updated successfully. Please use your new password for future sign-ins.' });
+    // Keep primary admin and alias records in sync
+    if (user.username === 'admin' || user.id === 'usr_admin') {
+      await dbRun("UPDATE users SET password_hash = ? WHERE username = 'admin' OR id = 'usr_admin'", [newHash]);
+    }
+
+    // Refresh JWT session token
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      success: true,
+      message: 'పాస్‌వర్డ్ విజయవంతంగా నవీకరించబడింది! (Password updated successfully)',
+      token
+    });
   } catch (err) {
     console.error('Password change error:', err);
     res.status(500).json({ success: false, error: 'Failed to update password.' });
@@ -563,70 +647,6 @@ app.delete(['/api/editions/:id', '/api/admin/editions/:id'], authenticateToken, 
   } catch (err) {
     console.error('Delete edition error:', err);
     res.status(500).json({ success: false, error: 'Failed to delete edition.' });
-  }
-});
-
-// ==========================================================================
-// DESIGNER PACKAGE GENERATOR ADMIN API ENDPOINTS (STEP 7)
-// ==========================================================================
-const { getCandidateArticles, generateDesignerPackage } = require('./services/designer-package');
-
-// GET Available publication dates and articles for Designer Package
-app.get('/api/admin/designer-package/articles', authenticateToken, async (req, res) => {
-  try {
-    const targetDate = req.query.date;
-    const data = await getCandidateArticles(targetDate);
-    res.json({
-      success: true,
-      availableDates: data.availableDates,
-      articles: data.articles
-    });
-  } catch (err) {
-    console.error('Designer package candidate articles error:', err);
-    res.status(500).json({ success: false, error: 'Failed to fetch candidate articles for designer package.' });
-  }
-});
-
-// POST Generate Designer Package ZIP
-app.post('/api/admin/designer-package/generate', authenticateToken, async (req, res) => {
-  try {
-    const { publicationDate, articles } = req.body;
-    const adminUser = req.user ? req.user.username : 'admin';
-
-    const result = await generateDesignerPackage({
-      publicationDate,
-      articles,
-      adminUser
-    });
-
-    res.json(result);
-  } catch (err) {
-    console.error('Designer package generation error:', err);
-    res.status(400).json({ success: false, error: err.message || 'Failed to generate designer package.' });
-  }
-});
-
-// GET Download Designer Package ZIP (Admin Authenticated)
-app.get('/api/admin/designer-package/download/:filename', authenticateToken, (req, res) => {
-  try {
-    const filename = path.basename(req.params.filename);
-    const packagesDir = path.join(__dirname, 'uploads', 'packages');
-    const fullPath = path.normalize(path.join(packagesDir, filename));
-
-    if (!fullPath.startsWith(packagesDir)) {
-      return res.status(403).json({ success: false, error: 'Access denied. Invalid file path.' });
-    }
-
-    if (!fs.existsSync(fullPath)) {
-      return res.status(404).json({ success: false, error: 'Requested package file not found.' });
-    }
-
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.sendFile(fullPath);
-  } catch (err) {
-    console.error('Download designer package error:', err);
-    res.status(500).json({ success: false, error: 'Failed to download designer package.' });
   }
 });
 
@@ -983,15 +1003,19 @@ app.get(['/api/public/reporters', '/api/reporters'], async (req, res) => {
 app.get('/api/public/reporters/:identifier', async (req, res) => {
   try {
     const { identifier } = req.params;
-    let reporter = await dbGet("SELECT * FROM reporters WHERE id = ? OR name = ?", [identifier, identifier]);
-
-    if (!reporter) {
-      // Fallback: match by name substring or designation or return first active reporter
-      reporter = await dbGet("SELECT * FROM reporters WHERE name LIKE ? OR designation LIKE ? OR status = 'active' ORDER BY display_order ASC, created_at ASC LIMIT 1", [`%${identifier}%`, `%${identifier}%`]);
+    if (!identifier || !identifier.trim()) {
+      return res.status(404).json({ success: false, error: 'Reporter identifier required.' });
     }
 
+    const cleanIdentifier = identifier.trim();
+    // Lookup by exact ID, or exact Name
+    let reporter = await dbGet("SELECT * FROM reporters WHERE (id = ? OR name = ?) AND status = 'active'", [cleanIdentifier, cleanIdentifier]);
+
     if (!reporter) {
-      return res.status(404).json({ success: false, error: 'Reporter profile not found.' });
+      return res.status(404).json({
+        success: false,
+        error: 'పాత్రికేయుని గుర్తింపు ప్రొఫైల్ లభించలేదు లేదా తొలగించబడినది (Press ID Revoked or Deleted / Not Found).'
+      });
     }
 
     // Fetch published articles authored by this reporter
@@ -1274,10 +1298,15 @@ app.post('/api/admin/articles', authenticateToken, async (req, res) => {
         targetEditionId = latestEdition.id;
       } else {
         targetEditionId = 'edt_default';
-        await dbRun(`
-          INSERT OR IGNORE INTO editions (id, edition_date, edition_name, edition_type, pdf_filename, pdf_path, file_size_bytes, uploaded_by, status)
-          VALUES ('edt_default', CURRENT_DATE, 'డిజిటల్ పత్రిక సంచిక', 'main', 'default.pdf', '/uploads/editions/default.pdf', 0, 'usr_admin', 'published')
-        `);
+        const existingDefault = await dbGet('SELECT id FROM editions WHERE id = ?', ['edt_default']);
+        if (!existingDefault) {
+          const userRow = await dbGet('SELECT id FROM users ORDER BY created_at ASC LIMIT 1');
+          const validUserId = userRow ? userRow.id : (req.user && req.user.id ? req.user.id : 'usr_admin');
+          await dbRun(`
+            INSERT INTO editions (id, edition_date, edition_name, edition_type, pdf_filename, pdf_path, file_size_bytes, uploaded_by, status)
+            VALUES (?, CURRENT_DATE, 'డిజిటల్ పత్రిక సంచిక', 'main', 'default.pdf', '/uploads/editions/default.pdf', 0, ?, 'published')
+          `, ['edt_default', validUserId]);
+        }
       }
     }
 
@@ -1987,7 +2016,8 @@ app.post('/api/admin/reporters', authenticateToken, uploadReporterMulter.single(
     ]);
 
     const created = await dbGet('SELECT * FROM reporters WHERE id = ?', [id]);
-    await generateReporterQRCode(created);
+    const qrRelativeUrl = await generateReporterQRCode(created, req);
+    if (created && qrRelativeUrl) created.qr_code_url = qrRelativeUrl;
     res.json({ success: true, message: 'Reporter profile created successfully.', reporter: created });
   } catch (err) {
     console.error('Create reporter error:', err);
@@ -2065,7 +2095,8 @@ app.put('/api/admin/reporters/:id', authenticateToken, uploadReporterMulter.sing
     ]);
 
     const updated = await dbGet('SELECT * FROM reporters WHERE id = ?', [id]);
-    await generateReporterQRCode(updated);
+    const qrRelativeUrl = await generateReporterQRCode(updated, req);
+    if (updated && qrRelativeUrl) updated.qr_code_url = qrRelativeUrl;
     res.json({ success: true, message: 'Reporter profile updated successfully.', reporter: updated });
   } catch (err) {
     console.error('Update reporter error:', err);
@@ -2082,11 +2113,143 @@ app.delete('/api/admin/reporters/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ success: false, error: 'Reporter not found.' });
     }
 
+    // 1. Delete QR Code file(s) from uploads/qr_codes directory
+    if (existing.qr_code_url) {
+      const qrRelPath = existing.qr_code_url.replace(/^\//, '');
+      const qrFullPath = path.join(__dirname, qrRelPath);
+      try {
+        if (fs.existsSync(qrFullPath)) {
+          fs.unlinkSync(qrFullPath);
+          console.log(`✓ Deleted reporter QR code file: ${qrFullPath}`);
+        }
+      } catch (e) {
+        console.warn('Failed to delete QR code file:', e.message);
+      }
+    }
+
+    // Also check standard filenames for this reporter in uploads/qr_codes
+    const cleanName = (existing.name || '').replace(/[\\/:*?"<>|]/g, '_').trim();
+    const candidateQrFiles = [
+      `Reporter_${cleanName}_QR.png`,
+      `${cleanName}_QR.png`,
+      `Reporter_${existing.id}_QR.png`
+    ];
+    candidateQrFiles.forEach(fn => {
+      try {
+        const fp = path.join(qrUploadDir, fn);
+        if (fs.existsSync(fp)) {
+          fs.unlinkSync(fp);
+          console.log(`✓ Deleted QR file by name: ${fp}`);
+        }
+      } catch (e) {}
+    });
+
+    // 2. Delete custom uploaded photo file from uploads/reporters (do not delete default founder photos)
+    if (existing.photo_url) {
+      const isDefaultPhoto = existing.photo_url.includes('vaka_srinivasa_rao') || existing.photo_url.includes('vaka srinivasrao');
+      if (!isDefaultPhoto && !existing.photo_url.startsWith('http://') && !existing.photo_url.startsWith('https://')) {
+        const photoRelPath = existing.photo_url.replace(/^\//, '');
+        const photoFullPath = path.join(__dirname, photoRelPath);
+        try {
+          if (fs.existsSync(photoFullPath)) {
+            fs.unlinkSync(photoFullPath);
+            console.log(`✓ Deleted reporter photo file: ${photoFullPath}`);
+          }
+        } catch (e) {
+          console.warn('Failed to delete reporter photo file:', e.message);
+        }
+      }
+    }
+
+    // 3. Clear reporter_id in articles table if linked
+    try {
+      await dbRun('UPDATE articles SET reporter_id = NULL WHERE reporter_id = ?', [id]);
+    } catch (e) {}
+
+    // 4. Delete reporter permanently from the database
     await dbRun('DELETE FROM reporters WHERE id = ?', [id]);
-    res.json({ success: true, message: 'Reporter deleted successfully.' });
+    console.log(`✓ Reporter ${existing.name} (${id}) deleted permanently from database and files.`);
+    await cleanupOrphanQRCodes();
+
+    res.json({
+      success: true,
+      message: `రిపోర్టర్ "${existing.name}" ప్రొఫైల్ మరియు QR కోడ్ విజయవంతంగా శాశ్వతంగా తొలగించబడ్డాయి.`
+    });
   } catch (err) {
     console.error('Delete reporter error:', err);
     res.status(500).json({ success: false, error: 'Failed to delete reporter: ' + err.message });
+  }
+});
+
+// Admin: Get Current QR Configuration
+app.get('/api/admin/reporters-qr/config', authenticateToken, (req, res) => {
+  const currentBaseUrl = getBaseServerUrl(req);
+  res.json({
+    success: true,
+    base_url: currentBaseUrl,
+    is_custom: Boolean(process.env.APP_BASE_URL || process.env.PUBLIC_URL),
+    env_base_url: process.env.APP_BASE_URL || ''
+  });
+});
+
+// Admin: Regenerate All Reporter QR Codes with specific Domain / Base URL
+app.post('/api/admin/reporters-qr/regenerate', authenticateToken, async (req, res) => {
+  try {
+    const { base_url } = req.body;
+    let targetBaseUrl = base_url ? String(base_url).trim().replace(/\/$/, '') : '';
+    if (targetBaseUrl) {
+      process.env.APP_BASE_URL = targetBaseUrl;
+    } else {
+      targetBaseUrl = getBaseServerUrl(req);
+    }
+
+    const reporters = await dbAll('SELECT * FROM reporters');
+    for (const rep of reporters) {
+      await generateReporterQRCode(rep, targetBaseUrl);
+    }
+    await cleanupOrphanQRCodes();
+
+    res.json({
+      success: true,
+      message: `అన్ని (${reporters.length}) రిపోర్టర్ల ప్రెస్ ID కార్డ్ QR కోడ్‌లు విజయవంతంగా రీ-జెనరేట్ చేయబడ్డాయి!`,
+      base_url: targetBaseUrl,
+      reporters_count: reporters.length
+    });
+  } catch (err) {
+    console.error('Regenerate QR error:', err);
+    res.status(500).json({ success: false, error: 'Failed to regenerate QR codes: ' + err.message });
+  }
+});
+
+// Admin: Download High-Resolution Reporter QR Code for ID Card Printing
+app.get('/api/admin/reporters/:id/download-qr', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const reporter = await dbGet('SELECT * FROM reporters WHERE id = ?', [id]);
+    if (!reporter) {
+      return res.status(404).json({ success: false, error: 'Reporter not found.' });
+    }
+
+    const qrFilename = `Reporter_${reporter.id}_QR.png`;
+    const qrPath = path.join(qrUploadDir, qrFilename);
+
+    if (!fs.existsSync(qrPath)) {
+      await generateReporterQRCode(reporter, req);
+    }
+
+    if (!fs.existsSync(qrPath)) {
+      return res.status(404).json({ success: false, error: 'QR code file could not be generated.' });
+    }
+
+    const cleanName = (reporter.name || 'Reporter').replace(/[\\/:*?"<>|]/g, '_').trim();
+    const downloadFilename = `Reporter_${cleanName}_ID_QR.png`;
+
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadFilename)}"`);
+    res.sendFile(qrPath);
+  } catch (err) {
+    console.error('Download QR error:', err);
+    res.status(500).json({ success: false, error: 'Failed to download QR code: ' + err.message });
   }
 });
 
@@ -2131,9 +2294,10 @@ app.use((err, req, res, next) => {
 // Initialize Database Schema & Start Server
 initDatabase().then(() => {
   if (!process.env.VERCEL) {
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`=======================================================`);
       console.log(` MAMEKA MAHODAYAM CMS Backend Server Running           `);
+      console.log(` Port: ${PORT} (0.0.0.0)                               `);
       console.log(` Public Website: http://localhost:${PORT}/             `);
       console.log(` Admin Portal:   http://localhost:${PORT}/admin/        `);
       console.log(`=======================================================`);

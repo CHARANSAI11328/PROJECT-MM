@@ -43,12 +43,23 @@
       .replace(/'/g, '&#039;');
   }
 
+  function getApiBaseUrl() {
+    if (window.API_BASE_URL) return window.API_BASE_URL.replace(/\/$/, '');
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('mm_api_base_url') : null;
+    if (saved && saved.trim()) return saved.trim().replace(/\/$/, '');
+    if (window.location.protocol === 'file:' || !window.location.host || window.location.origin === 'null') {
+      return 'http://localhost:3000';
+    }
+    if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '3000') {
+      return 'http://localhost:3000';
+    }
+    return '';
+  }
+
   function resolvePhotoUrl(url) {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-    const base = (window.location.protocol === 'file:' || !window.location.host || window.location.origin === 'null')
-      ? 'http://localhost:3000'
-      : '';
+    const base = getApiBaseUrl();
     return base + (url.startsWith('/') ? '' : '/') + url;
   }
 
@@ -66,9 +77,8 @@
     `;
 
     try {
-      const targetUrl = (window.location.protocol === 'file:' || !window.location.host)
-        ? 'http://localhost:3000/api/public/reporters'
-        : '/api/public/reporters';
+      const baseUrl = getApiBaseUrl();
+      const targetUrl = `${baseUrl}/api/public/reporters`;
 
       const response = await fetch(targetUrl);
       if (!response.ok) throw new Error('Network response was not ok');
@@ -179,13 +189,19 @@
 
       const distName = getDistrictName(founder.district);
       const locationText = [distName, founder.mandal].filter(Boolean).join(', ');
-      const rawPhoto = founder.photo_url || '/uploads/reporters/vaka srinivasrao.jpeg';
-      const photoSrc = resolvePhotoUrl(rawPhoto);
+      const hasFounderPhoto = Boolean(founder.photo_url && founder.photo_url.trim());
+      const rawPhoto = hasFounderPhoto
+        ? founder.photo_url
+        : (founder.name && founder.name.includes('శ్రీనివాస') ? '/uploads/reporters/vaka srinivasrao.jpeg' : '');
+      const photoSrc = rawPhoto ? resolvePhotoUrl(rawPhoto) : '';
+      const founderInitial = escapeHtml((founder.name || 'F').charAt(0));
 
       founderCard.innerHTML = `
         <!-- LEFT SIDE IMAGE FRAME (FULL IMAGE) -->
         <div class="founder-left-image-frame" style="width: 200px; height: 240px; flex-shrink: 0; border-radius: 10px; overflow: hidden; box-shadow: 0 6px 16px rgba(0,0,0,0.08); border: 2px solid #ffffff; outline: 1px solid #cbd5e1; background: #ffffff; display: flex; align-items: center; justify-content: center;">
-          <img src="${escapeHtml(photoSrc)}" alt="${escapeHtml(founder.name)}" style="width: 100%; height: 100%; object-fit: contain; display: block;" onerror="this.onerror=null; this.src='${resolvePhotoUrl('/uploads/reporters/vaka srinivasrao.jpeg')}';">
+          ${photoSrc
+            ? `<img src="${escapeHtml(photoSrc)}" alt="${escapeHtml(founder.name)}" style="width: 100%; height: 100%; object-fit: contain; display: block;" onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#fdf2f8;color:#be185d;font-size:3rem;font-weight:800;\\'>${founderInitial}</div>';">`
+            : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #fdf2f8; color: #be185d; font-size: 3rem; font-weight: 800;">${founderInitial}</div>`}
         </div>
 
         <!-- RIGHT SIDE CONTENT (TYPEWRITER NAME TOP + ELEVATED FADE-IN DETAILS BELOW) -->

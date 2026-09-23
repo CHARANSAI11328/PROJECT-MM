@@ -20,7 +20,6 @@ function initAdminApp() {
         upload: document.getElementById('view-upload'),
         articles: document.getElementById('view-articles'),
         'article-edit': document.getElementById('view-article-edit'),
-        'designer-package': document.getElementById('view-designer-package'),
         reporters: document.getElementById('view-reporters'),
         settings: document.getElementById('view-settings')
     };
@@ -169,11 +168,6 @@ function initAdminApp() {
                     if (views.articles) views.articles.style.display = 'block';
                     loadArticlesListView();
                 }
-                break;
-
-            case 'designer-package':
-                if (views['designer-package']) views['designer-package'].style.display = 'block';
-                loadDesignerPackageView();
                 break;
 
             case 'reporters':
@@ -2201,8 +2195,8 @@ function initAdminApp() {
             const new_password = document.getElementById('new-password').value;
             const confirm_password = document.getElementById('confirm-password').value;
 
-            if (new_password.length < 8) {
-                showAlert(alertBox, 'పాస్‌వర్డ్ కనీసం 8 అక్షరాలు ఉండాలి. (Password must be at least 8 characters)', 'error');
+            if (new_password.length < 4) {
+                showAlert(alertBox, 'పాస్‌వర్డ్ కనీసం 4 అక్షరాలు ఉండాలి. (Password must be at least 4 characters)', 'error');
                 return;
             }
             if (new_password !== confirm_password) {
@@ -2220,6 +2214,9 @@ function initAdminApp() {
 
                 const data = await res.json();
                 if (res.ok && data.success) {
+                    if (data.token) {
+                        localStorage.setItem('admin_token', data.token);
+                    }
                     showAlert(alertBox, '✓ ' + (data.message || 'పాస్‌వర్డ్ విజయవంతంగా మార్చబడింది!'), 'success');
                     changePassForm.reset();
                 } else {
@@ -2266,261 +2263,6 @@ function initAdminApp() {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
-    }
-    // ----------------------------------------------------------------------
-    // DESIGNER PACKAGE GENERATOR VIEW ENGINE (STEP 7)
-    // ----------------------------------------------------------------------
-    let currentPkgArticles = [];
-
-    async function loadDesignerPackageView() {
-        const dateSelect = document.getElementById('pkg-date-select');
-        const loadBtn = document.getElementById('btn-load-pkg-articles');
-        const container = document.getElementById('pkg-articles-container');
-        const controlsBar = document.getElementById('pkg-controls-bar');
-        const generateBar = document.getElementById('pkg-generate-action-bar');
-        const warningsBox = document.getElementById('pkg-warnings-box');
-        const downloadCard = document.getElementById('pkg-download-card');
-        const generateBtn = document.getElementById('btn-generate-designer-pkg');
-
-        if (!dateSelect) return;
-
-        // Reset UI states
-        if (warningsBox) warningsBox.style.display = 'none';
-        if (downloadCard) downloadCard.style.display = 'none';
-
-        // Fetch available publication dates
-        try {
-            const res = await apiFetch('/api/admin/designer-package/articles');
-            if (res.ok) {
-                const data = await res.json();
-                const availableDates = data.availableDates || [];
-
-                dateSelect.innerHTML = '<option value="">సంచిక తేదీ ఎంచుకోండి (Publication Date)...</option>' +
-                    availableDates.map(d => `<option value="${d.edition_date}">${d.edition_date} (${d.article_count} వార్తలు)</option>`).join('');
-                
-                if (availableDates.length > 0 && !dateSelect.value) {
-                    dateSelect.value = availableDates[0].edition_date;
-                }
-            }
-        } catch (e) {
-            console.warn('Failed to load designer package dates:', e);
-        }
-
-        async function fetchArticlesForSelectedDate() {
-            const selectedDate = dateSelect.value;
-            if (!selectedDate) {
-                container.innerHTML = '<div style="text-align: center; color: #64748b; padding: 40px 0;">దయచేసి పైన ప్రచురణ తేదీని ఎంచుకోండి.</div>';
-                if (controlsBar) controlsBar.style.display = 'none';
-                if (generateBar) generateBar.style.display = 'none';
-                return;
-            }
-
-            container.innerHTML = '<div style="text-align: center; color: #64748b; padding: 40px 0;">⏳ వార్తలను పొందుతోంది...</div>';
-
-            try {
-                const res = await apiFetch(`/api/admin/designer-package/articles?date=${encodeURIComponent(selectedDate)}`);
-                if (!res.ok) throw new Error('API request failed');
-                const data = await res.json();
-                currentPkgArticles = data.articles || [];
-
-                if (currentPkgArticles.length === 0) {
-                    container.innerHTML = `<div style="text-align: center; color: #64748b; padding: 40px 0;">ఎంచుకున్న తేదీ (${selectedDate}) లో ఎటువంటి వార్తలు కనుగొనబడలేదు.</div>`;
-                    if (controlsBar) controlsBar.style.display = 'none';
-                    if (generateBar) generateBar.style.display = 'none';
-                    return;
-                }
-
-                if (controlsBar) controlsBar.style.display = 'flex';
-                if (generateBar) generateBar.style.display = 'block';
-
-                renderPkgArticlesTable(currentPkgArticles);
-            } catch (err) {
-                console.error('Error fetching designer package articles:', err);
-                container.innerHTML = '<div style="text-align: center; color: #dc2626; padding: 40px 0;">వార్తలను పొందుటలో విఫలమైంది. మళ్లీ ప్రయత్నించండి.</div>';
-            }
-        }
-
-        if (loadBtn) {
-            loadBtn.onclick = fetchArticlesForSelectedDate;
-        }
-
-        if (dateSelect) {
-            dateSelect.onchange = fetchArticlesForSelectedDate;
-        }
-
-        // Trigger load for initial selected date
-        if (dateSelect.value) {
-            fetchArticlesForSelectedDate();
-        }
-
-        // Attach Select All / Deselect All
-        const selectAllBtn = document.getElementById('btn-pkg-select-all');
-        const deselectAllBtn = document.getElementById('btn-pkg-deselect-all');
-
-        if (selectAllBtn) {
-            selectAllBtn.onclick = () => {
-                document.querySelectorAll('.pkg-article-cb').forEach(cb => cb.checked = true);
-                updateSelectedCount();
-            };
-        }
-
-        if (deselectAllBtn) {
-            deselectAllBtn.onclick = () => {
-                document.querySelectorAll('.pkg-article-cb').forEach(cb => cb.checked = false);
-                updateSelectedCount();
-            };
-        }
-
-        // Attach Generate Package click
-        if (generateBtn) {
-            generateBtn.onclick = async () => {
-                const selectedDate = dateSelect.value;
-                if (!selectedDate) {
-                    alert('దయచేసి ప్రచురణ తేదీని ఎంచుకోండి!');
-                    return;
-                }
-
-                const selectedItems = [];
-                document.querySelectorAll('.pkg-article-row').forEach(row => {
-                    const cb = row.querySelector('.pkg-article-cb');
-                    const orderInput = row.querySelector('.pkg-article-order');
-                    if (cb && cb.checked) {
-                        const artId = cb.getAttribute('data-id');
-                        const orderVal = parseInt(orderInput ? orderInput.value : '0', 10) || 1;
-                        selectedItems.push({ articleId: artId, order: orderVal });
-                    }
-                });
-
-                if (selectedItems.length === 0) {
-                    alert('దయచేసి కనీసం ఒక వార్తను ఎంచుకోండి!');
-                    return;
-                }
-
-                generateBtn.disabled = true;
-                generateBtn.innerHTML = '⏳ Package సృష్టిస్తోంది... దయచేసి వేచి ఉండండి...';
-                if (warningsBox) warningsBox.style.display = 'none';
-                if (downloadCard) downloadCard.style.display = 'none';
-
-                try {
-                    const res = await apiFetch('/api/admin/designer-package/generate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            publicationDate: selectedDate,
-                            articles: selectedItems
-                        })
-                    });
-
-                    const resData = await res.json();
-
-                    if (!res.ok || !resData.success) {
-                        throw new Error(resData.error || 'Package generation failed.');
-                    }
-
-                    // Display warnings if any
-                    if (resData.warnings && resData.warnings.length > 0 && warningsBox) {
-                        warningsBox.innerHTML = '<strong>⚠️ గమనిక (Warnings):</strong><br>' +
-                            resData.warnings.map(w => `• ${escapeHTML(w)}`).join('<br>');
-                        warningsBox.style.display = 'block';
-                    }
-
-                    // Display Download Card
-                    if (downloadCard) {
-                        const desc = document.getElementById('pkg-download-desc');
-                        const zipBtn = document.getElementById('btn-download-pkg-zip');
-                        if (desc) {
-                            desc.textContent = `తేదీ: ${resData.publicationDate} | ఎంచుకున్న వార్తలు: ${resData.articleCount} | ఒరిజినల్ చిత్రాలు: ${resData.imageCount}`;
-                        }
-                        if (zipBtn) {
-                            zipBtn.href = resData.downloadUrl;
-                        }
-                        downloadCard.style.display = 'block';
-                        downloadCard.scrollIntoView({ behavior: 'smooth' });
-                    }
-                } catch (err) {
-                    console.error('Error generating package:', err);
-                    alert('Package సృష్టిలో లోపం: ' + err.message);
-                } finally {
-                    generateBtn.disabled = false;
-                    generateBtn.innerHTML = '🚀 Designer Package ZIP సృష్టించండి (Generate Package)';
-                }
-            };
-        }
-    }
-
-    function renderPkgArticlesTable(articles) {
-        const container = document.getElementById('pkg-articles-container');
-        if (!container) return;
-
-        let tableHtml = `
-            <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                <thead>
-                    <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1; text-align: left; font-size: 0.85rem; color: #475569;">
-                        <th style="padding: 10px 12px; width: 40px; text-align: center;">ఎంపిక</th>
-                        <th style="padding: 10px 12px; width: 70px; text-align: center;">క్రమ సంఖ్య</th>
-                        <th style="padding: 10px 12px;">వార్తా శీర్షిక (Headline)</th>
-                        <th style="padding: 10px 12px;">విభాగం</th>
-                        <th style="padding: 10px 12px;">జిల్లా</th>
-                        <th style="padding: 10px 12px;">రచయిత</th>
-                        <th style="padding: 10px 12px; text-align: center;">చిత్రాలు</th>
-                        <th style="padding: 10px 12px; text-align: center;">స్థితి</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        articles.forEach((art, index) => {
-            const isDraft = art.status === 'draft';
-            const statusBadge = isDraft
-                ? '<span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem;">DRAFT</span>'
-                : '<span style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem;">PUBLISHED</span>';
-
-            const imgBadge = art.image_count > 0
-                ? `<span style="color: #2563eb; font-weight: 600; font-size: 0.85rem;">🖼️ ${art.image_count}</span>`
-                : '<span style="color: #94a3b8; font-size: 0.85rem;">0</span>';
-
-            tableHtml += `
-                <tr class="pkg-article-row" style="border-bottom: 1px solid #e2e8f0; font-size: 0.9rem;">
-                    <td style="padding: 10px 12px; text-align: center;">
-                        <input type="checkbox" class="pkg-article-cb" data-id="${art.id}" ${!isDraft ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
-                    </td>
-                    <td style="padding: 10px 12px; text-align: center;">
-                        <input type="number" class="pkg-article-order" data-id="${art.id}" value="${index + 1}" min="1" max="999" style="width: 55px; text-align: center; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px;">
-                    </td>
-                    <td style="padding: 10px 12px; font-weight: 600; color: #0f172a;">
-                        ${escapeHTML(art.headline)}
-                        <div style="font-size: 0.75rem; color: #64748b; font-weight: normal; font-family: monospace;">ID: ${art.id}</div>
-                    </td>
-                    <td style="padding: 10px 12px; color: #475569;">${escapeHTML(art.category)}</td>
-                    <td style="padding: 10px 12px; color: #475569;">${escapeHTML(art.district || '-')}</td>
-                    <td style="padding: 10px 12px; color: #475569;">${escapeHTML(art.author)}</td>
-                    <td style="padding: 10px 12px; text-align: center;">${imgBadge}</td>
-                    <td style="padding: 10px 12px; text-align: center;">${statusBadge}</td>
-                </tr>
-            `;
-        });
-
-        tableHtml += `
-                </tbody>
-            </table>
-        `;
-
-        container.innerHTML = tableHtml;
-
-        // Attach checkbox change listeners to update count
-        container.querySelectorAll('.pkg-article-cb').forEach(cb => {
-            cb.onchange = updateSelectedCount;
-        });
-
-        updateSelectedCount();
-    }
-
-    function updateSelectedCount() {
-        const selectedCount = document.querySelectorAll('.pkg-article-cb:checked').length;
-        const display = document.getElementById('pkg-selected-count');
-        if (display) {
-            display.textContent = selectedCount;
-        }
     }
 
     // ----------------------------------------------------------------------
@@ -2589,10 +2331,26 @@ function initAdminApp() {
                 statActive.textContent = allReportersCache.filter(r => r.status === 'active').length;
             }
 
+            // Load QR Domain Configuration
+            try {
+                const qrConfRes = await apiFetch('/api/admin/reporters-qr/config');
+                if (qrConfRes && qrConfRes.ok) {
+                    const qrConf = await qrConfRes.json();
+                    const domainDisplay = document.getElementById('current-qr-domain-display');
+                    const domainInput = document.getElementById('input-qr-base-domain');
+                    if (domainDisplay && qrConf.base_url) {
+                        domainDisplay.textContent = qrConf.base_url;
+                    }
+                    if (domainInput && qrConf.base_url && !domainInput.value) {
+                        domainInput.value = qrConf.env_base_url || qrConf.base_url;
+                    }
+                }
+            } catch (e) {}
+
             renderReportersTable(allReportersCache);
         } catch (err) {
             console.error('Error loading reporters:', err);
-            if (tableBody) tableBody.innerHTML = '<tr class="empty-row"><td colspan="7" style="color:#cc0000; text-align:center;">రిపోర్టర్ల వివరాలు లోడ్ చేయడం విఫలమైంది. దయచేసి రీఫ్రెష్ చేయండి.</td></tr>';
+            if (tableBody) tableBody.innerHTML = '<tr class="empty-row"><td colspan="8" style="color:#cc0000; text-align:center;">రిపోర్టర్ల వివరాలు లోడ్ చేయడం విఫలమైంది. దయచేసి రీఫ్రెష్ చేయండి.</td></tr>';
         }
     }
 
@@ -2601,7 +2359,7 @@ function initAdminApp() {
         if (!tableBody) return;
 
         if (!reporters || reporters.length === 0) {
-            tableBody.innerHTML = '<tr class="empty-row"><td colspan="7" style="text-align: center; padding: 28px; color: #64748b;">రిపోర్టర్లేవీ అందుబాటులో లేవు. నూతన రిపోర్టర్‌ని నమోదు చేయడానికి పై ఫారమ్‌ని ఉపయోగించండి.</td></tr>';
+            tableBody.innerHTML = '<tr class="empty-row"><td colspan="8" style="text-align: center; padding: 28px; color: #64748b;">రిపోర్టర్లేవీ అందుబాటులో లేవు. నూతన రిపోర్టర్‌ని నమోదు చేయడానికి పై ఫారమ్‌ని ఉపయోగించండి.</td></tr>';
             return;
         }
 
@@ -2636,6 +2394,25 @@ function initAdminApp() {
             if (r.email) contactItems.push(`✉️ ${escapeHTML(r.email)}`);
             const contactHtml = contactItems.length > 0 ? contactItems.join('<br>') : '<span style="color:#94a3b8; font-size:0.8rem;">-</span>';
 
+            // QR Code & ID Card Print Actions
+            const qrUrl = r.qr_code_url || `/uploads/qr_codes/Reporter_${r.id}_QR.png`;
+            const profilePageUrl = `/reporter-profile.html?id=${encodeURIComponent(r.id)}`;
+            const qrHtml = `
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <a href="${escapeHTML(qrUrl)}" target="_blank" title="పెద్దగా చూడండి (View High-Res QR)">
+                        <img src="${escapeHTML(qrUrl)}" alt="QR" style="width: 40px; height: 40px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px; background: #fff;" onerror="this.style.display='none';">
+                    </a>
+                    <div style="display: flex; gap: 4px;">
+                        <a href="/api/admin/reporters/${encodeURIComponent(r.id)}/download-qr" download class="btn btn-outline-sm" style="padding: 2px 6px; font-size: 0.72rem; text-decoration: none;" title="PVC ID కార్డ్ ప్రింటింగ్ కోసం హై-రెస్ PNG డౌన్‌లోడ్ చేయండి">
+                            📥 PNG
+                        </a>
+                        <a href="${profilePageUrl}" target="_blank" class="btn btn-outline-sm" style="padding: 2px 6px; font-size: 0.72rem; text-decoration: none;" title="లైవ్ ప్రొఫైల్ పేజీ చూడండి">
+                            👁️
+                        </a>
+                    </div>
+                </div>
+            `;
+
             tr.innerHTML = `
                 <td style="text-align:center; vertical-align:middle;">${photoHtml}</td>
                 <td>
@@ -2653,6 +2430,7 @@ function initAdminApp() {
                 </td>
                 <td style="font-size:0.825rem;">${contactHtml}</td>
                 <td>${statusBadge}</td>
+                <td style="text-align:center; vertical-align:middle;">${qrHtml}</td>
                 <td>
                     <div style="display:flex; gap:6px;">
                         <button type="button" class="btn btn-outline-sm btn-edit-reporter" data-id="${escapeHTML(r.id)}" title="సవరించు">✏️ సవరించు</button>
@@ -2787,6 +2565,40 @@ function initAdminApp() {
             form.onsubmit = async (e) => {
                 e.preventDefault();
                 await saveReporterForm();
+            };
+        }
+
+        // Regenerate All QR Codes with Production Domain Button
+        const regenQrBtn = document.getElementById('btn-regenerate-all-qr');
+        const domainInput = document.getElementById('input-qr-base-domain');
+        if (regenQrBtn) {
+            regenQrBtn.onclick = async () => {
+                const targetDomain = domainInput ? domainInput.value.trim() : '';
+                const promptDomain = targetDomain || 'https://mamekamahodayam.com';
+                if (!confirm(`అన్ని రిపోర్టర్ల ID కార్డ్ QR కోడ్‌లను "${promptDomain}" డొమైన్‌తో రీ-జెనరేట్ చేయాలా?`)) {
+                    return;
+                }
+                try {
+                    regenQrBtn.disabled = true;
+                    regenQrBtn.textContent = '⏳ రీ-జెనరేట్ అవుతోంది...';
+                    const res = await apiFetch('/api/admin/reporters-qr/regenerate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ base_url: targetDomain })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        showAlert(alertBox, `✓ ${data.message} (డొమైన్: ${data.base_url})`, 'success');
+                        await loadReportersView();
+                    } else {
+                        showAlert(alertBox, (data && data.error) || 'QR రీ-జెనరేషన్ విఫలమైంది', 'error');
+                    }
+                } catch (e) {
+                    showAlert(alertBox, 'సర్వర్ లోపం ఏర్పడింది: ' + e.message, 'error');
+                } finally {
+                    regenQrBtn.disabled = false;
+                    regenQrBtn.textContent = '🔄 అన్ని QR కోడ్‌లను రీ-జెనరేట్ చేయి';
+                }
             };
         }
 

@@ -9,12 +9,9 @@
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.65",
-    "adm-zip": "^0.6.1",
-    "archiver": "^8.0.0",
     "async": "^3.2.6",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "docx": "^9.7.1",
     "dotenv": "^18.0.2",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",

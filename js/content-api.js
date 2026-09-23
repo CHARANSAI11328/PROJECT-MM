@@ -68,12 +68,22 @@
 
   function getApiBaseUrl() {
     if (window.API_BASE_URL) return window.API_BASE_URL.replace(/\/$/, '');
-    const saved = localStorage.getItem('mm_api_base_url');
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('mm_api_base_url') : null;
     if (saved && saved.trim()) return saved.trim().replace(/\/$/, '');
     if (window.location.protocol === 'file:' || !window.location.host || window.location.origin === 'null') {
       return 'http://localhost:3000';
     }
+    if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '3000') {
+      return 'http://localhost:3000';
+    }
     return '';
+  }
+
+  function resolvePhotoUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    const base = getApiBaseUrl();
+    return base + (url.startsWith('/') ? '' : '/') + url;
   }
 
   async function fetchArticles(params = {}) {
@@ -360,9 +370,8 @@
     if (!grid) return;
 
     try {
-      const targetUrl = (window.location.protocol === 'file:' || !window.location.host)
-        ? 'http://localhost:3000/api/public/reporters'
-        : '/api/public/reporters';
+      const baseUrl = getApiBaseUrl();
+      const targetUrl = `${baseUrl}/api/public/reporters`;
 
       const res = await fetch(targetUrl);
       if (!res.ok) throw new Error('Failed to fetch reporters');
@@ -375,18 +384,24 @@
       }
 
       if (section) section.style.display = 'block';
-      grid.innerHTML = reporters.slice(0, 6).map(r => {
-        const photo = r.photo_url || '/uploads/reporters/vaka_srinivasa_rao.png';
+      grid.innerHTML = reporters.slice(0, 8).map(r => {
+        const hasPhoto = Boolean(r.photo_url && r.photo_url.trim());
+        const photoUrl = hasPhoto ? resolvePhotoUrl(r.photo_url) : '';
+        const initialLetter = escapeText((r.name || 'R').trim().charAt(0).toUpperCase());
         const profileUrl = `reporter-profile.html?id=${encodeURIComponent(r.id)}`;
         const locationText = [r.district, r.mandal].filter(Boolean).join(' | ');
 
+        const photoHtml = hasPhoto
+          ? `<img src="${escapeText(photoUrl)}" alt="${escapeText(r.name || 'Reporter')}" style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid #be185d; flex-shrink: 0;" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'width:56px;height:56px;border-radius:50%;background:#be185d;color:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.3rem;flex-shrink:0;\\'>${initialLetter}</div>';" />`
+          : `<div style="width: 56px; height: 56px; border-radius: 50%; background: #be185d; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.3rem; flex-shrink: 0; box-shadow: 0 2px 6px rgba(190,24,93,0.2);">${initialLetter}</div>`;
+
         return `
-          <div class="homepage-reporter-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.03);" onclick="window.location.href='${profileUrl}'">
-            <img src="${photo}" alt="${r.name || 'Reporter'}" style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid #be185d; flex-shrink: 0;" onerror="this.onerror=null; this.src='/uploads/reporters/vaka_srinivasa_rao.png';" />
+          <div class="homepage-reporter-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.04);" onclick="window.location.href='${profileUrl}'">
+            ${photoHtml}
             <div style="min-width: 0; flex: 1;">
-              <span style="display: inline-block; font-size: 0.7rem; font-weight: 700; color: #be185d; background: #fff1f2; border: 1px solid #fecdd3; padding: 1px 6px; border-radius: 4px; margin-bottom: 3px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.designation || 'రిపోర్టర్'}</span>
-              <strong style="display: block; font-size: 0.925rem; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.name}</strong>
-              ${locationText ? `<span style="font-size: 0.775rem; color: #64748b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">📍 ${locationText}</span>` : ''}
+              <span style="display: inline-block; font-size: 0.72rem; font-weight: 700; color: #be185d; background: #fff1f2; border: 1px solid #fecdd3; padding: 2px 8px; border-radius: 12px; margin-bottom: 4px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeText(r.designation || 'జర్నలిస్ట్')}</span>
+              <strong style="display: block; font-size: 0.95rem; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeText(r.name)}</strong>
+              ${locationText ? `<span style="font-size: 0.78rem; color: #64748b; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">📍 ${escapeText(locationText)}</span>` : ''}
             </div>
           </div>
         `;

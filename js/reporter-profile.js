@@ -35,12 +35,23 @@
       .replace(/'/g, '&#039;');
   }
 
+  function getApiBaseUrl() {
+    if (window.API_BASE_URL) return window.API_BASE_URL.replace(/\/$/, '');
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('mm_api_base_url') : null;
+    if (saved && saved.trim()) return saved.trim().replace(/\/$/, '');
+    if (window.location.protocol === 'file:' || !window.location.host || window.location.origin === 'null') {
+      return 'http://localhost:3000';
+    }
+    if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '3000') {
+      return 'http://localhost:3000';
+    }
+    return '';
+  }
+
   function resolvePhotoUrl(url) {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-    const base = (window.location.protocol === 'file:' || !window.location.host || window.location.origin === 'null')
-      ? 'http://localhost:3000'
-      : '';
+    const base = getApiBaseUrl();
     return base + (url.startsWith('/') ? '' : '/') + url;
   }
 
@@ -52,9 +63,8 @@
     const reporterId = urlParams.get('id') || 'rep_1';
 
     try {
-      const targetUrl = (window.location.protocol === 'file:' || !window.location.host)
-        ? `http://localhost:3000/api/public/reporters/${encodeURIComponent(reporterId)}`
-        : `/api/public/reporters/${encodeURIComponent(reporterId)}`;
+      const baseUrl = getApiBaseUrl();
+      const targetUrl = `${baseUrl}/api/public/reporters/${encodeURIComponent(reporterId)}`;
 
       const response = await fetch(targetUrl);
       if (!response.ok) throw new Error('Reporter profile not found');
@@ -87,8 +97,9 @@
   }
 
   function renderReporterPressIDHero(r) {
-    const rawPhoto = r.photo_url || '/uploads/reporters/vaka srinivasrao.jpeg';
-    const photoUrl = resolvePhotoUrl(rawPhoto);
+    const hasPhoto = Boolean(r.photo_url && r.photo_url.trim());
+    const photoUrl = hasPhoto ? resolvePhotoUrl(r.photo_url) : '';
+    const initialLetter = escapeHtml((r.name || 'R').trim().charAt(0).toUpperCase());
     const districtName = getDistrictName(r.district) || 'ఆంధ్రప్రదేశ్';
     const mandalText = r.mandal ? ` (${escapeHtml(r.mandal)})` : '';
     const fullLocation = [districtName, r.mandal].filter(Boolean).join(' | ');
@@ -100,6 +111,26 @@
 
     const pressIdNumber = r.press_id || `MM-PRESS-2026-${String(r.id || '001').replace(/\D/g, '').padStart(3, '0')}`;
     const bioQuote = r.bio || 'సత్యమే ఆధారం... ప్రజాహితమే మా ధ్యేయం! మమేక మహోదయం దినపత్రిక ద్వారా సమాజంలో మంచి మార్పు కోసం నిరంతరం ప్రజా సమస్యలను వెలికితీస్తూ, స్వతంత్ర, నిష్పాక్షికమైన జర్నలిజానికి కట్టుబడి ఉన్నాం.';
+
+    // Safe On-Screen Portrait HTML (never falls back to another reporter's photo)
+    const onScreenPhotoContent = hasPhoto
+      ? `<img 
+          src="${escapeHtml(photoUrl)}" 
+          alt="${escapeHtml(r.name)}" 
+          style="width: 100%; height: 340px; display: block; object-fit: contain; background: #ffffff; padding: 4px;"
+          onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'width:100%;height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(145deg, #fdf2f8 0%, #f1f5f9 100%);padding:20px;box-sizing:border-box;\\'><div style=\\'width:110px;height:110px;border-radius:50%;background:#be185d;color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:3rem;font-weight:800;font-family:Georgia,serif;border:4px solid #ffffff;box-shadow:0 8px 24px rgba(190,24,93,0.25);\\'>${initialLetter}</div><div style=\\'font-size:0.95rem;font-weight:800;color:#be185d;margin-top:14px;text-transform:uppercase;\\'>అధికారిక పాత్రికేయుడు</div><div style=\\'font-size:0.8rem;color:#64748b;font-weight:600;margin-top:2px;\\'>Accredited Journalist</div></div>';"
+        />`
+      : `<div style="width: 100%; height: 340px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(145deg, #fdf2f8 0%, #f1f5f9 100%); padding: 20px; box-sizing: border-box;">
+          <div style="width: 110px; height: 110px; border-radius: 50%; background: #be185d; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 800; font-family: Georgia, serif; border: 4px solid #ffffff; box-shadow: 0 8px 24px rgba(190,24,93,0.25); margin-bottom: 14px;">
+            ${initialLetter}
+          </div>
+          <div style="font-size: 0.95rem; font-weight: 800; color: #be185d; text-transform: uppercase; letter-spacing: 0.05em; text-align: center;">
+            అధికారిక పాత్రికేయుడు
+          </div>
+          <div style="font-size: 0.8rem; font-weight: 600; color: #64748b; text-align: center; margin-top: 2px;">
+            (ACCREDITED JOURNALIST)
+          </div>
+        </div>`;
 
     heroContainer.innerHTML = `
       <!-- ========================================================================= -->
@@ -128,34 +159,14 @@
         <!-- MAIN FLEX LAYOUT: LEFT BIGGER PORTRAIT PHOTO | RIGHT TYPEWRITER NAME & HIGHLIGHTS -->
         <div style="display: flex; flex-direction: row; gap: 36px; align-items: flex-start;" class="profile-hero-flex-wrap">
           
-          <!-- LEFT COLUMN: BIGGER PORTRAIT PHOTO FRAME -->
+          <!-- LEFT COLUMN: BIGGER PORTRAIT PHOTO FRAME (NO ON-PAGE QR BOX) -->
           <div style="width: 270px; flex-shrink: 0; margin: 0 auto;" class="profile-hero-image-col">
             <div style="width: 100%; border-radius: 14px; overflow: hidden; box-shadow: 0 14px 30px rgba(0,0,0,0.12); border: 4px solid #ffffff; outline: 1px solid #cbd5e1; background: #ffffff;">
-              <img 
-                src="${escapeHtml(photoUrl)}" 
-                alt="${escapeHtml(r.name)}" 
-                style="width: 100%; height: 340px; display: block; object-fit: contain; background: #ffffff; padding: 4px;"
-                onerror="this.onerror=null; this.src='${resolvePhotoUrl('/uploads/reporters/vaka srinivasrao.jpeg')}';"
-              />
+              ${onScreenPhotoContent}
             </div>
-            <div style="margin-top: 12px; text-align: center;">
-              <span style="display: inline-block; background: #fdfbf7; border: 1px solid #fecdd3; color: #be185d; font-size: 0.8rem; font-weight: 800; padding: 4px 14px; border-radius: 14px;">
+            <div style="margin-top: 14px; text-align: center;">
+              <span style="display: inline-block; background: #fdfbf7; border: 1px solid #fecdd3; color: #be185d; font-size: 0.82rem; font-weight: 800; padding: 6px 16px; border-radius: 16px;">
                 🏛️ అధికారిక గుర్తింపు కార్డ్ (Official Accreditation)
-              </span>
-            </div>
-            <!-- OFFICIAL VERIFICATION QR CODE BOX -->
-            <div style="margin-top: 14px; text-align: center; background: #ffffff; padding: 12px; border: 1px dashed #be185d; border-radius: 12px; box-shadow: 0 4px 12px rgba(190, 24, 93, 0.06);">
-              <div style="font-size: 0.75rem; font-weight: 800; color: #be185d; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.04em;">
-                📱 డిజిటల్ ధృవీకరణ QR Code
-              </div>
-              <img 
-                src="${resolvePhotoUrl(r.qr_code_url || `/uploads/qr_codes/Reporter_${(r.name || '').replace(/[\\/:*?"<>|]/g, '_').trim()}_QR.png`)}" 
-                alt="Accredited Press ID QR Code" 
-                style="width: 145px; height: 145px; display: block; margin: 0 auto; border: 1px solid #cbd5e1; border-radius: 8px; padding: 4px; background: #ffffff;"
-                onerror="this.onerror=null; this.parentElement.style.display='none';"
-              />
-              <span style="display: block; font-size: 0.72rem; color: #64748b; margin-top: 6px; font-weight: 600;">
-                స్కాన్ చేసి ప్రొఫైల్ వివరాలు తనిఖీ చేయండి
               </span>
             </div>
           </div>
@@ -262,12 +273,21 @@
           <!-- LEFT PHOTO FRAME -->
           <div style="width: 170px; flex-shrink: 0; text-align: center;">
             <div style="width: 160px; height: 195px; border-radius: 8px; border: 3px solid #be185d; overflow: hidden; background: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 0 auto; display: flex; align-items: center; justify-content: center;">
-              <img 
-                src="${escapeHtml(photoUrl)}" 
-                alt="${escapeHtml(r.name)}" 
-                style="width: 100%; height: 100%; object-fit: contain; display: block;"
-                onerror="this.onerror=null; this.src='${resolvePhotoUrl('/uploads/reporters/vaka srinivasrao.jpeg')}';"
-              />
+              ${hasPhoto
+                ? `<img 
+                    src="${escapeHtml(photoUrl)}" 
+                    alt="${escapeHtml(r.name)}" 
+                    style="width: 100%; height: 100%; object-fit: contain; display: block;"
+                    onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#fdf2f8;\\'><div style=\\'width:72px;height:72px;border-radius:50%;background:#be185d;color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:800;font-family:Georgia,serif;\\'>${initialLetter}</div></div>';"
+                  />`
+                : `<div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fdf2f8;">
+                    <div style="width: 72px; height: 72px; border-radius: 50%; background: #be185d; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; font-family: Georgia, serif;">
+                      ${initialLetter}
+                    </div>
+                    <div style="font-size: 0.72rem; font-weight: 700; color: #be185d; margin-top: 6px;">
+                      ACCREDITED
+                    </div>
+                  </div>`}
             </div>
             <div style="margin-top: 8px; font-size: 0.75rem; font-weight: 800; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 3px 10px; border-radius: 12px; display: inline-block;">
               ✓ ACTIVE ACCREDITED

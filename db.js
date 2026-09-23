@@ -12,8 +12,12 @@ const reportersDir = path.join(uploadsDir, 'reporters');
 
 // Ensure required upload directories exist
 [uploadsDir, editionsDir, pagesDir, mediaDir, reportersDir].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (e) {
+    // Safe fallback for read-only serverless filesystems (e.g., Vercel Lambda)
   }
 });
 
@@ -45,7 +49,14 @@ if (isPostgres) {
 function translateSqlForPostgres(sql) {
   let paramIndex = 1;
   // Convert double-quoted string literals in WHERE clauses to single quotes for Postgres
-  const sanitizedSql = sql.replace(/=\s*"([^"]+)"/g, "= '$1'").replace(/!=\s*"([^"]+)"/g, "!= '$1'");
+  let sanitizedSql = sql.replace(/=\s*"([^"]+)"/g, "= '$1'").replace(/!=\s*"([^"]+)"/g, "!= '$1'");
+  // Safely translate SQLite INSERT OR IGNORE INTO for PostgreSQL
+  if (/INSERT\s+OR\s+IGNORE\s+INTO/i.test(sanitizedSql)) {
+    sanitizedSql = sanitizedSql.replace(/INSERT\s+OR\s+IGNORE\s+INTO/i, 'INSERT INTO');
+    if (!/ON\s+CONFLICT/i.test(sanitizedSql)) {
+      sanitizedSql = sanitizedSql.trim() + ' ON CONFLICT DO NOTHING';
+    }
+  }
   return sanitizedSql.replace(/\?/g, () => `$${paramIndex++}`);
 }
 
@@ -329,7 +340,7 @@ async function initDatabase() {
   // Seed Initial Admin User if Users Table is Empty
   const existingUser = await dbGet('SELECT * FROM users LIMIT 1');
   if (!existingUser) {
-    const adminId = 'usr_admin_' + Date.now();
+    const adminId = 'usr_admin';
     const defaultPassword = 'admin';
     const passwordHash = await bcrypt.hash(defaultPassword, 10);
     
@@ -338,6 +349,15 @@ async function initDatabase() {
       [adminId, 'admin', 'editor@mamekamahodayam.com', passwordHash, 'superadmin']
     );
     console.log('✓ Initial Admin Account Seeded: username="admin", password="admin"');
+  } else {
+    // Ensure 'usr_admin' exists so foreign keys referencing 'usr_admin' are always satisfied
+    const adminById = await dbGet('SELECT id FROM users WHERE id = ?', ['usr_admin']);
+    if (!adminById) {
+      await dbRun(
+        `INSERT INTO users (id, username, email, password_hash, role) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
+        ['usr_admin', 'admin_sys', 'admin@mamekamahodayam.com', existingUser.password_hash || '$2a$10$dummy', 'superadmin']
+      ).catch(() => {});
+    }
   }
 
   // Seed Hierarchical Editorial Team / Reporters if Table is Empty
