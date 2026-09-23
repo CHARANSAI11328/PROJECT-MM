@@ -2253,6 +2253,44 @@ app.get('/api/admin/reporters/:id/download-qr', authenticateToken, async (req, r
   }
 });
 
+// Public Dynamic QR Code Image Endpoint (Generates High-Res On-The-Fly if needed)
+app.get(['/api/public/reporters/:id/qr.png', '/api/public/reporters/:id/qr'], async (req, res) => {
+  try {
+    const { id } = req.params;
+    const reporter = await dbGet('SELECT * FROM reporters WHERE id = ?', [id]);
+    if (!reporter) {
+      return res.status(404).send('Reporter profile not found.');
+    }
+
+    const qrFilename = `Reporter_${reporter.id}_QR.png`;
+    const qrPath = path.join(qrUploadDir, qrFilename);
+
+    if (fs.existsSync(qrPath)) {
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.sendFile(qrPath);
+    }
+
+    // Generate dynamically on-the-fly if file was not on disk
+    const baseUrl = getBaseServerUrl(req);
+    const profileUrl = `${baseUrl}/reporter-profile.html?id=${encodeURIComponent(reporter.id)}`;
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    qrcode.toFileStream(res, profileUrl, {
+      width: 1000,
+      margin: 2,
+      errorCorrectionLevel: 'H',
+      color: {
+        dark: '#be185d',
+        light: '#ffffff'
+      }
+    });
+  } catch (err) {
+    console.error('Public QR generation error:', err);
+    res.status(500).send('Failed to generate QR code.');
+  }
+});
+
 // Admin Portal Clean SPA Routing
 app.get(['/admin', '/admin/*'], (req, res) => {
   res.sendFile(path.join(__dirname, 'admin', 'index.html'));
