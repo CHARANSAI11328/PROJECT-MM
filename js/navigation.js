@@ -248,6 +248,36 @@
       });
     });
 
+    // Touch & Click Dropdown Toggle for Mobile Navigation
+    document.querySelectorAll('.nav-dropdown-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const parent = btn.closest('.nav-dropdown');
+        if (parent) {
+          const isOpen = parent.classList.toggle('open');
+          btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      document.querySelectorAll('.nav-dropdown.open').forEach(dd => {
+        if (!dd.contains(e.target)) {
+          dd.classList.remove('open');
+          const btn = dd.querySelector('.nav-dropdown-btn');
+          if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    });
+
+    // Auto-scroll active nav item into view horizontally on mobile/tablet
+    setTimeout(() => {
+      const activeNavItem = document.querySelector('.nav-list .nav-item.active');
+      if (activeNavItem && window.innerWidth <= 768) {
+        activeNavItem.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }, 150);
+
     // Listen for browser Back/Forward navigation (popstate)
     window.addEventListener('popstate', () => {
       const pathname = window.location.pathname.toLowerCase();

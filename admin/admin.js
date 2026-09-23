@@ -30,10 +30,43 @@ function initAdminApp() {
     let currentArticleData = null;
     let currentZoomScale = 1.0;
 
-    // Mobile Menu Toggle
-    if (mobileMenuToggle && adminSidebar) {
-        mobileMenuToggle.addEventListener('click', () => {
-            adminSidebar.classList.toggle('active');
+    // Mobile Drawer Controller
+    const sidebarBackdrop = document.getElementById('admin-sidebar-backdrop');
+    function toggleMobileSidebar(open) {
+        if (!adminSidebar) return;
+        const shouldOpen = (open !== undefined) ? open : !adminSidebar.classList.contains('mobile-open');
+        if (shouldOpen) {
+            adminSidebar.classList.add('mobile-open');
+            if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
+            document.body.classList.add('sidebar-open-lock');
+        } else {
+            adminSidebar.classList.remove('mobile-open');
+            if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+            document.body.classList.remove('sidebar-open-lock');
+        }
+    }
+
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMobileSidebar();
+        });
+    }
+
+    if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener('click', () => {
+            toggleMobileSidebar(false);
+        });
+    }
+
+    // Auto-close sidebar on mobile when any sidebar navigation link is clicked
+    if (adminSidebar) {
+        adminSidebar.querySelectorAll('.sidebar-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 992) {
+                    toggleMobileSidebar(false);
+                }
+            });
         });
     }
 
@@ -81,19 +114,6 @@ function initAdminApp() {
     // Check Auth Token & Verify Session on Initialization
     checkAuth();
     window.addEventListener('hashchange', handleRoute);
-
-    const mobileMenuBtn = document.getElementById('mobile-menu-toggle');
-    if (mobileMenuBtn && adminSidebar) {
-        mobileMenuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            adminSidebar.classList.toggle('mobile-open');
-        });
-        document.addEventListener('click', (e) => {
-            if (!adminSidebar.contains(e.target) && e.target !== mobileMenuBtn) {
-                adminSidebar.classList.remove('mobile-open');
-            }
-        });
-    }
 
     async function checkAuth() {
         const token = localStorage.getItem('admin_token');
@@ -186,10 +206,7 @@ function initAdminApp() {
                 break;
         }
 
-        if (adminSidebar) {
-            adminSidebar.classList.remove('active');
-            adminSidebar.classList.remove('mobile-open');
-        }
+        toggleMobileSidebar(false);
     }
 
     // ----------------------------------------------------------------------

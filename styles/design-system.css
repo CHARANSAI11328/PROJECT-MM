@@ -374,7 +374,7 @@
   top: 0;
   z-index: 1000;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  overflow: visible !important;
+  overflow: visible;
 }
 
 .main-nav-inner {
@@ -382,7 +382,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 2px 0;
-  overflow: visible !important;
+  overflow: visible;
 }
 
 .nav-list {
@@ -395,7 +395,7 @@
   margin: 0;
   padding: 0;
   white-space: nowrap;
-  overflow: visible !important;
+  overflow: visible;
 }
 
 .nav-item {
@@ -2745,124 +2745,492 @@ body {
   width: 100%;
 }
 
+/* Base Body & Container Fixes to Guarantee Zero Horizontal Scroll */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  -webkit-text-size-adjust: 100%;
+  box-sizing: border-box;
+}
+
 .container,
+.container-standard,
 .container-narrow {
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
 /* --------------------------------------------------------------------------
-   A. TABLET BREAKPOINT (max-width: 768px)
+   A. TABLET & MOBILE RESPONSIVE MASTER OVERHAUL (max-width: 768px)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
-  .container {
-    padding-left: var(--space-md);
-    padding-right: var(--space-md);
+  /* Container Padding */
+  .container,
+  .container-standard,
+  .container-narrow {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
-  /* Navigation Momentum Scroll */
+  /* 1. TOP UTILITY BAR */
+  .utility-bar {
+    padding: 6px 0 !important;
+  }
+
+  .utility-bar-inner {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 6px !important;
+    padding: 2px 0 !important;
+  }
+
+  .utility-bar-left,
+  .utility-bar-right {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .top-special-link {
+    font-size: 0.72rem !important;
+    padding: 2px 8px !important;
+  }
+
+  .lang-switcher .lang-btn {
+    font-size: 0.74rem !important;
+    padding: 2px 6px !important;
+  }
+
+  /* 2. PRINT NEWSPAPER BRAND MASTHEAD (ELIMINATES HORIZONTAL OVERFLOW) */
+  .masthead-brand-area {
+    padding: 14px 0 10px 0 !important;
+  }
+
+  .masthead-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .masthead-left.desktop-only {
+    display: none !important;
+  }
+
+  .masthead-center {
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .brand-logo-3d {
+    display: inline-block !important;
+    margin: 0 auto !important;
+  }
+
+  .brand-stacked-wrap {
+    margin: 0 auto !important;
+    align-items: center !important;
+  }
+
+  .brand-prefix-stacked {
+    font-size: clamp(0.7rem, 2.8vw, 0.95rem) !important;
+    margin-left: 0 !important;
+    margin-bottom: -0.2em !important;
+  }
+
+  .brand-main-stacked {
+    font-size: clamp(2.3rem, 7.5vw, 3.4rem) !important;
+    line-height: 1.0 !important;
+    text-shadow: 
+      1px 1px 0px #ffcc00,
+      2px 2px 0px #8a084b,
+      3px 3px 4px rgba(0,0,0,0.25) !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .brand-english-sub {
+    font-size: 0.75rem !important;
+    letter-spacing: 0.18em !important;
+    margin-top: 3px !important;
+  }
+
+  .newspaper-tagline-green {
+    font-size: 0.78rem !important;
+    margin-top: 3px !important;
+  }
+
+  .newspaper-badge-purple {
+    font-size: 0.7rem !important;
+    padding: 2px 10px !important;
+    margin-top: 4px !important;
+  }
+
+  .masthead-right {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  .search-bar-wrap {
+    width: 100% !important;
+    max-width: 320px !important;
+    margin: 4px auto 0 auto !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 3. NAVIGATION BAR (TOUCH MOMENTUM SCROLL + SAFE FIXED DROPDOWN) */
   .main-nav {
-    border-top: 1px solid var(--color-border-light);
-    border-bottom: 2px solid var(--color-border-dark);
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+    border-top: 1px solid var(--color-border-light) !important;
+    border-bottom: 2px solid var(--color-brand-magenta) !important;
+    background: var(--color-surface) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .main-nav-inner {
+    width: 100% !important;
+    overflow: hidden !important;
+    padding: 2px 0 !important;
   }
 
   .nav-list {
-    display: flex;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding: var(--space-xs) 0;
+    display: flex !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    padding: 6px 12px !important;
+    gap: 6px !important;
   }
 
   .nav-list::-webkit-scrollbar {
-    display: none;
+    display: none !important;
   }
 
   .nav-item {
-    font-size: 0.88rem;
-    padding: 8px 12px;
-    display: inline-flex;
-    align-items: center;
+    font-size: 0.86rem !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-bottom: 2px solid transparent !important;
+    flex-shrink: 0 !important;
   }
 
-  /* Section Spacing & Layout Stacking */
+  .nav-item.active {
+    background: #fef0f6 !important;
+    color: var(--color-brand-magenta) !important;
+    border-color: #fbcfe8 !important;
+    border-bottom: 2px solid var(--color-brand-magenta) !important;
+    font-weight: 700 !important;
+  }
+
+  .nav-dropdown {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-dropdown-btn {
+    font-size: 0.86rem !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    background: #fdf2f8 !important;
+    border: 1px solid #fbcfe8 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .nav-dropdown-menu {
+    position: fixed !important;
+    top: 48px !important;
+    right: 10px !important;
+    left: auto !important;
+    width: 240px !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: 75vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3) !important;
+    border-radius: 8px !important;
+    z-index: 999999 !important;
+    border: 1px solid var(--color-border) !important;
+    background-color: #ffffff !important;
+  }
+
+  .nav-dropdown-item {
+    font-size: 0.92rem !important;
+    padding: 10px 16px !important;
+  }
+
+  /* 4. BREAKING NEWS STRIP */
+  .breaking-news-inner {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+  }
+
+  .breaking-news-header {
+    gap: 6px !important;
+  }
+
+  .breaking-news-badge {
+    font-size: 0.72rem !important;
+    padding: 3px 8px !important;
+  }
+
+  .breaking-news-item {
+    font-size: 0.85rem !important;
+  }
+
+  /* 5. EDITORIAL SECTIONS & HEADINGS */
   section {
     margin-bottom: var(--space-xl) !important;
   }
 
   .section-header-editorial {
-    flex-wrap: wrap;
-    gap: var(--space-xs);
-    margin-bottom: var(--space-md);
+    flex-wrap: wrap !important;
+    gap: var(--space-xs) !important;
+    margin-bottom: var(--space-md) !important;
   }
 
   .section-header-editorial h2 {
-    font-size: 1.25rem;
+    font-size: 1.25rem !important;
   }
 
-  /* Card Grid Adaptations */
+  /* 6. CONTENT GRIDS ADAPTATIONS */
   .grid-2,
   .grid-3,
   .grid-4,
   .hero-layout-grid,
   .subsection-split,
   .article-layout-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-md);
+    grid-template-columns: 1fr !important;
+    gap: var(--space-md) !important;
   }
 
-  /* Hero Featured Story Headlines */
   .card-featured .card-title {
-    font-size: 1.35rem;
-    line-height: 1.35;
+    font-size: 1.35rem !important;
+    line-height: 1.35 !important;
   }
 
   .card-featured {
-    padding: var(--space-md);
+    padding: var(--space-md) !important;
   }
 
-  /* Card Horizontal Adaptation */
   .card-horizontal {
-    grid-template-columns: 90px 1fr;
-    gap: var(--space-sm);
-    padding: var(--space-sm);
+    grid-template-columns: 90px 1fr !important;
+    gap: var(--space-sm) !important;
+    padding: var(--space-sm) !important;
   }
 
   .card-horizontal .card-title {
-    font-size: 0.92rem;
-    line-height: 1.35;
+    font-size: 0.92rem !important;
+    line-height: 1.35 !important;
   }
 
-  /* Article Page Mobile Typography */
+  .card-standard img,
+  .card-hero img,
+  .card-horizontal img,
+  .tp-article-card img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* 7. DISTRICT SELECTOR */
+  .district-selector-bar {
+    width: 100% !important;
+  }
+
+  .district-select-dropdown {
+    width: 100% !important;
+    font-size: 0.92rem !important;
+    padding: 10px 14px !important;
+  }
+
+  /* 8. ARTICLE DETAIL PAGE MOBILE REFINEMENTS */
+  #article-headline {
+    font-size: clamp(1.4rem, 5.5vw, 2.2rem) !important;
+    line-height: 1.3 !important;
+  }
+
   .article-body-container {
-    font-size: 1.05rem;
-    line-height: 1.75;
+    font-size: 1.02rem !important;
+    line-height: 1.7 !important;
+    max-width: 100% !important;
   }
 
   .article-deck {
-    font-size: 1rem;
-    line-height: 1.5;
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
   }
 
   .share-bar {
-    justify-content: flex-start;
-    gap: var(--space-xs);
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
   }
 
   .share-btn {
-    flex-grow: 1;
-    justify-content: center;
+    flex-grow: 1 !important;
+    min-width: 120px !important;
+    justify-content: center !important;
+    font-size: 0.8rem !important;
   }
 
-  /* E-Paper Archive Grid (2-Column Grid on Tablet/Mobile) */
+  .media-placeholder {
+    min-height: 200px !important;
+    max-height: 380px !important;
+  }
+
+  #article-main-img {
+    max-height: 360px !important;
+    width: 100% !important;
+    object-fit: contain !important;
+  }
+
+  /* 9. E-PAPER DIGITAL PAGE */
+  .archive-date-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+    padding: 14px !important;
+  }
+
+  .archive-date-bar input[type="date"] {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .archive-date-bar button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .epaper-current-issue {
+    grid-template-columns: 1fr !important;
+    padding: var(--space-md) !important;
+    gap: var(--space-md) !important;
+  }
+
+  .epaper-cover-lg {
+    max-width: 240px !important;
+    margin: 0 auto !important;
+    min-height: 260px !important;
+  }
+
   .grid-4-epaper-archives {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-md);
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--space-md) !important;
   }
 
-  /* Footer Touch Links */
+  /* 10. REPORTER PROFILES & EDITORIAL TEAM */
+  .on-screen-profile-hero {
+    padding: 18px 14px !important;
+    border-radius: 12px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .profile-hero-flex-wrap {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 20px !important;
+  }
+
+  .profile-hero-image-col {
+    width: 100% !important;
+    max-width: 230px !important;
+    margin: 0 auto !important;
+  }
+
+  .profile-hero-image-col img,
+  .profile-hero-image-col div {
+    height: 260px !important;
+  }
+
+  #reporter-typewriter-name {
+    font-size: clamp(1.6rem, 5.5vw, 2.2rem) !important;
+    text-align: center !important;
+  }
+
+  .founder-profile-card {
+    flex-direction: column !important;
+    padding: 20px 16px !important;
+    gap: 20px !important;
+  }
+
+  .founder-image-container {
+    width: 100% !important;
+    max-width: 260px !important;
+    margin: 0 auto !important;
+  }
+
+  .founder-full-img {
+    height: auto !important;
+    max-height: 340px !important;
+  }
+
+  .reporters-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+    gap: 16px !important;
+  }
+
+  .reporters-filter-panel {
+    padding: 14px !important;
+  }
+
+  .reporters-filter-top {
+    flex-direction: column !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  .reporters-search-wrap,
+  .reporters-district-wrap {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .reporters-stats-bar {
+    font-size: 0.78rem !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+
+  /* 11. FOOTER REFINEMENTS */
+  .footer-top-grid {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-xl) !important;
+  }
+
+  .footer-bottom-bar {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 8px !important;
+  }
+
+  .site-footer {
+    padding: 24px 0 16px 0 !important;
+    margin-top: 32px !important;
+  }
+
   .footer-nav-list a {
     display: inline-block;
     padding: 6px 0;
@@ -2878,109 +3246,96 @@ body {
    B. MOBILE LARGE & STANDARD BREAKPOINT (max-width: 480px - 375px/390px/414px)
    -------------------------------------------------------------------------- */
 @media (max-width: 480px) {
-  .container {
-    padding-left: var(--space-sm);
-    padding-right: var(--space-sm);
+  .container,
+  .container-standard,
+  .container-narrow {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
   }
 
-  .masthead {
-    padding: var(--space-xs) 0;
+  /* Masthead Font Clamping for Telugu Mobile View */
+  .brand-main-stacked {
+    font-size: clamp(1.8rem, 8.5vw, 2.4rem) !important;
+    text-shadow: 
+      1px 1px 0px #ffcc00,
+      1.5px 1.5px 0px #8a084b,
+      2px 2px 3px rgba(0,0,0,0.2) !important;
   }
 
-  .top-utility-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+  .brand-prefix-stacked {
+    font-size: 0.72rem !important;
+    margin-bottom: -0.15em !important;
   }
 
-  .utility-left,
-  .utility-right {
-    font-size: 0.75rem;
+  .brand-english-sub {
+    font-size: 0.68rem !important;
+    letter-spacing: 0.14em !important;
   }
 
-  /* Breaking News Mobile Layout */
-  .breaking-news-inner {
-    flex-wrap: wrap;
-    gap: 6px;
+  .newspaper-tagline-green {
+    font-size: 0.72rem !important;
   }
 
-  .breaking-news-header {
-    gap: 6px;
-  }
-
-  .breaking-news-badge {
-    font-size: 0.65rem;
-    padding: 2px 6px;
-  }
-
-  .breaking-news-item {
-    font-size: 0.8rem;
+  .newspaper-badge-purple {
+    font-size: 0.65rem !important;
+    padding: 2px 8px !important;
   }
 
   /* Compact News Cards */
   .card-compact {
-    grid-template-columns: 50px 1fr;
-    gap: var(--space-xs);
-    padding: 8px var(--space-xs);
+    grid-template-columns: 50px 1fr !important;
+    gap: var(--space-xs) !important;
+    padding: 8px var(--space-xs) !important;
   }
 
   .card-compact .card-title {
-    font-size: 0.85rem;
+    font-size: 0.85rem !important;
   }
 
   .card-horizontal {
-    grid-template-columns: 80px 1fr;
+    grid-template-columns: 80px 1fr !important;
   }
 
   /* Search Page Form Stacking */
   .search-hero-box {
-    padding: var(--space-md) var(--space-xs);
+    padding: var(--space-md) var(--space-xs) !important;
   }
 
   .search-form-wrap {
-    flex-direction: column;
-    gap: var(--space-xs);
+    flex-direction: column !important;
+    gap: var(--space-xs) !important;
   }
 
   .search-btn-lg {
-    width: 100%;
+    width: 100% !important;
   }
 
   .search-filter-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-xs);
+    grid-template-columns: 1fr !important;
+    gap: var(--space-xs) !important;
   }
 
-  /* E-Paper Current Issue Mobile Cover Stacking */
-  .epaper-current-issue {
-    grid-template-columns: 1fr;
-    padding: var(--space-md);
-    gap: var(--space-md);
-  }
-
-  .epaper-cover-lg {
-    max-width: 220px;
-    margin: 0 auto;
-    min-height: 280px;
-  }
-
-  .epaper-selector-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .epaper-selector-bar select,
-  .epaper-selector-bar input {
-    width: 100%;
+  /* E-Paper Archive Grid (Single Column on Narrow Phones) */
+  .grid-4-epaper-archives {
+    grid-template-columns: 1fr !important;
   }
 
   /* Utility Pages Layout Padding */
   .utility-card {
-    padding: var(--space-md);
+    padding: 14px !important;
   }
 
   .utility-title {
-    font-size: 1.5rem;
+    font-size: 1.35rem !important;
+  }
+
+  .reporter-modal-dialog {
+    max-height: 94vh !important;
+    margin: 10px !important;
+  }
+
+  .reporter-modal-body {
+    padding: 18px 14px !important;
   }
 }
 
@@ -2988,40 +3343,50 @@ body {
    C. EXTRA SMALL MOBILE BREAKPOINT (max-width: 360px - 320px iPhone SE)
    -------------------------------------------------------------------------- */
 @media (max-width: 360px) {
-  .container {
-    padding-left: var(--space-xs);
-    padding-right: var(--space-xs);
+  .container,
+  .container-standard,
+  .container-narrow {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
   }
 
-  .brand-title {
-    font-size: 1.55rem;
+  .brand-main-stacked {
+    font-size: 1.7rem !important;
+  }
+
+  .brand-prefix-stacked {
+    font-size: 0.65rem !important;
+  }
+
+  .brand-english-sub {
+    font-size: 0.62rem !important;
+  }
+
+  .newspaper-tagline-green {
+    font-size: 0.68rem !important;
+  }
+
+  .nav-item {
+    font-size: 0.82rem !important;
+    padding: 5px 8px !important;
   }
 
   .card-featured .card-title {
-    font-size: 1.2rem;
+    font-size: 1.15rem !important;
   }
 
   .card-horizontal {
-    grid-template-columns: 70px 1fr;
-    gap: 6px;
-    padding: 6px;
+    grid-template-columns: 65px 1fr !important;
+    gap: 6px !important;
+    padding: 6px !important;
   }
 
   .card-horizontal .card-title {
-    font-size: 0.85rem;
-  }
-
-  .grid-4-epaper-archives {
-    grid-template-columns: 1fr;
+    font-size: 0.82rem !important;
   }
 
   .footer-brand-title {
-    font-size: 1.3rem;
-  }
-
-  .social-btn-placeholder {
-    font-size: 0.7rem;
-    padding: 4px 8px;
+    font-size: 1.25rem !important;
   }
 }
 
