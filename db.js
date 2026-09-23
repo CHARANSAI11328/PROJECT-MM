@@ -21,7 +21,8 @@ const reportersDir = path.join(uploadsDir, 'reporters');
   }
 });
 
-const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+const rawDbUrl = (process.env.DATABASE_URL || process.env.POSTGRES_URL || '').trim();
+const databaseUrl = rawDbUrl.replace(/^["']|["']$/g, '').trim();
 const isPostgres = Boolean(databaseUrl);
 
 let db = null;
@@ -29,6 +30,11 @@ let pgPool = null;
 
 if (isPostgres) {
   const { Pool } = require('pg');
+  try {
+    const parsed = new URL(databaseUrl);
+    console.log(`Connecting to PostgreSQL host: ${parsed.host} | db: ${parsed.pathname}`);
+  } catch (e) {}
+
   pgPool = new Pool({
     connectionString: databaseUrl,
     ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false }
