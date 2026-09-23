@@ -51,7 +51,9 @@ if (!fs.existsSync(qrUploadDir)) fs.mkdirSync(qrUploadDir, { recursive: true });
 
 function getBaseServerUrl(reqOrBaseUrl) {
   let baseUrl = process.env.APP_BASE_URL || process.env.PUBLIC_URL;
-  if (!baseUrl && process.env.RAILWAY_PUBLIC_DOMAIN) {
+  if (!baseUrl && process.env.RENDER_EXTERNAL_URL) {
+    baseUrl = process.env.RENDER_EXTERNAL_URL;
+  } else if (!baseUrl && process.env.RAILWAY_PUBLIC_DOMAIN) {
     baseUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
   } else if (!baseUrl && process.env.RAILWAY_STATIC_URL) {
     baseUrl = `https://${process.env.RAILWAY_STATIC_URL}`;
