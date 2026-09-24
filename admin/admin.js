@@ -2212,8 +2212,8 @@ function initAdminApp() {
             const new_password = document.getElementById('new-password').value;
             const confirm_password = document.getElementById('confirm-password').value;
 
-            if (new_password.length < 4) {
-                showAlert(alertBox, 'పాస్‌వర్డ్ కనీసం 4 అక్షరాలు ఉండాలి. (Password must be at least 4 characters)', 'error');
+            if (new_password.length < 8) {
+                showAlert(alertBox, 'పాస్‌వర్డ్ కనీసం 8 అక్షరాలు ఉండాలి. (Password must be at least 8 characters)', 'error');
                 return;
             }
             if (new_password !== confirm_password) {
@@ -2355,11 +2355,12 @@ function initAdminApp() {
                     const qrConf = await qrConfRes.json();
                     const domainDisplay = document.getElementById('current-qr-domain-display');
                     const domainInput = document.getElementById('input-qr-base-domain');
-                    if (domainDisplay && qrConf.base_url) {
-                        domainDisplay.textContent = qrConf.base_url;
+                    const effectiveDomain = qrConf.base_url || window.location.origin;
+                    if (domainDisplay) {
+                        domainDisplay.textContent = effectiveDomain;
                     }
-                    if (domainInput && qrConf.base_url && !domainInput.value) {
-                        domainInput.value = qrConf.env_base_url || qrConf.base_url;
+                    if (domainInput && !domainInput.value) {
+                        domainInput.value = qrConf.env_base_url || effectiveDomain;
                     }
                 }
             } catch (e) {}

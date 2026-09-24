@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>గోప్యతా విధానం (Privacy Policy) - మమేక మహోదయం | Mameka Mahodayam</title>
     <meta name="description" content="Privacy Policy Page Structural Placeholder - Mameka Mahodayam Telugu Daily Newspaper" />
-    <link rel="stylesheet" href="styles/design-system.css" />
+    <link rel="stylesheet" href="/styles/design-system.css" />
   </head>
   <body>
     <a href="#main-content" class="skip-link" data-i18n="skip_link">ముఖ్య నివిడికి వెళ్ళండి</a>
@@ -16,16 +16,16 @@
       <div class="utility-bar">
         <div class="container-standard utility-bar-inner">
           <div class="utility-bar-left">
-            <span data-i18n="top_date_placeholder">బుధవారం, 11 సెప్టెంబర్ 2026</span>
+            <span id="header-date" data-i18n="top_date_placeholder">బుధవారం, 11 సెప్టెంబర్ 2026</span>
             <span data-i18n="top_edition_placeholder">ఆంధ్రప్రదేశ్ & తెలంగాణ</span>
           </div>
           <div class="utility-bar-right">
             <span data-i18n="top_weather_placeholder">విజయవాడ: 31°C | తేమ: 68%</span>
-            <a href="epaper.html" style="color: inherit; text-decoration: underline;" data-i18n="top_epaper_link">ఈ-పేపర్ చదవండి</a> 
+            <a href="/epaper.html" style="color: inherit; text-decoration: underline;" data-i18n="top_epaper_link">ఈ-పేపర్ చదవండి</a> 
             <span aria-hidden="true" style="opacity: 0.5;">|</span> 
-            <a href="editorial-team.html" class="top-special-link" data-i18n="nav_team">✨ మా సంపాదకీయ బృందం</a>
+            <a href="/editorial-team.html" class="top-special-link" data-i18n="nav_team">✨ మా సంపాదకీయ బృందం</a>
             <span aria-hidden="true" style="opacity: 0.5;">|</span> 
-            <a href="admin/index.html" style="color: #ffcc00; text-decoration: underline; font-weight: bold;" data-i18n="top_admin_link">🔒 అడ్మిన్ లాగిన్</a>
+            <a href="/admin/index.html" style="color: #ffcc00; text-decoration: underline; font-weight: bold;" data-i18n="top_admin_link">🔒 అడ్మిన్ లాగిన్</a>
             
             <!-- ONE-CLICK LANGUAGE SWITCHER -->
             <div class="lang-switcher" role="region" aria-label="Language Selector / భాష ఎంపిక">
@@ -45,7 +45,7 @@
             <div class="masthead-left desktop-only"></div>
 
             <div class="masthead-center">
-              <a href="index.html" style="text-decoration: none;">
+              <a href="/" style="text-decoration: none;">
                 <h1 class="brand-logo-3d" aria-label="మమేక మహోదయం">
                   <span class="brand-stacked-wrap">
                     <span class="brand-prefix-stacked" data-i18n="brand_prefix_te">మమేక</span>
@@ -59,10 +59,10 @@
             </div>
 
             <div class="masthead-right">
-              <label class="search-bar-wrap" data-i18n-aria="search_bar_aria">
-                <input type="text" class="search-bar-input" data-i18n-placeholder="search_placeholder" placeholder="శోధించండి..." />
-                <button type="button" class="search-bar-btn" data-i18n-aria="search_submit_aria" aria-label="శోధన సమర్పించండి">⌕</button>
-              </label>
+              <form action="/search.html" method="GET" class="search-bar-wrap" role="search">
+                <input type="text" name="q" class="search-bar-input" data-i18n-placeholder="search_placeholder" placeholder="శోధించండి..." />
+                <button type="submit" class="search-bar-btn" data-i18n-aria="search_submit_aria" aria-label="శోధన సమర్పించండి">⌕</button>
+              </form>
             </div>
 
           </div>
@@ -75,14 +75,14 @@
     <nav class="main-nav" role="navigation" aria-label="Main Navigation">
       <div class="container-standard">
         <ul class="nav-list">
-          <li><a href="index.html" class="nav-item" data-i18n="nav_home">హోమ్</a></li>
-          <li><a href="category.html?c=latest" class="nav-item" data-i18n="nav_latest">తాజా వార్తలు</a></li>
-          <li><a href="category.html?c=state" class="nav-item" data-i18n="nav_state">ఆంధ్రప్రదేశ్</a></li>
-          <li><a href="district.html" class="nav-item" data-i18n="nav_district">జిల్లాల వార్తలు</a></li>
-          <li><a href="category.html?c=politics" class="nav-item" data-i18n="nav_politics">రాజకీయాలు</a></li>
-          <li><a href="category.html?c=national" class="nav-item" data-i18n="nav_national">దేశం &amp; ప్రపంచం</a></li>
-          <li><a href="category.html?c=tech" class="nav-item" data-i18n="nav_tech">టెక్నాలజీ</a></li>
-          <li><a href="category.html?c=business" class="nav-item" data-i18n="nav_business">బిజినెస్</a></li>
+          <li><a href="/" class="nav-item" data-i18n="nav_home">హోమ్</a></li>
+          <li><a href="/category.html?c=latest" class="nav-item" data-i18n="nav_latest">తాజా వార్తలు</a></li>
+          <li><a href="/category.html?c=state" class="nav-item" data-i18n="nav_state">ఆంధ్రప్రదేశ్</a></li>
+          <li><a href="/district.html" class="nav-item" data-i18n="nav_district">జిల్లాల వార్తలు</a></li>
+          <li><a href="/category.html?c=politics" class="nav-item" data-i18n="nav_politics">రాజకీయాలు</a></li>
+          <li><a href="/category.html?c=national" class="nav-item" data-i18n="nav_national">దేశం &amp; ప్రపంచం</a></li>
+          <li><a href="/category.html?c=tech" class="nav-item" data-i18n="nav_tech">టెక్నాలజీ</a></li>
+          <li><a href="/category.html?c=business" class="nav-item" data-i18n="nav_business">బిజినెస్</a></li>
           
           <!-- MORE DROPDOWN FOR REMAINING CATEGORIES -->
           <li class="nav-dropdown">
@@ -90,12 +90,12 @@
               మరిన్ని ▾
             </button>
             <ul class="nav-dropdown-menu">
-              <li><a href="category.html?c=cinema" class="nav-dropdown-item" data-i18n="nav_cinema">సినిమా</a></li>
-              <li><a href="category.html?c=sports" class="nav-dropdown-item" data-i18n="nav_sports">క్రీడలు</a></li>
-              <li><a href="category.html?c=education" class="nav-dropdown-item" data-i18n="nav_education">విద్య &amp; ఉద్యోగాలు</a></li>
-              <li><a href="category.html?c=editorial" class="nav-dropdown-item" data-i18n="nav_editorial">సంపాదకీయం</a></li>
-              <li><a href="epaper.html" class="nav-dropdown-item" data-i18n="nav_epaper">ఈ-పేపర్</a></li>
-              <li><a href="search.html" class="nav-dropdown-item" data-i18n="nav_search">శోధన</a></li>
+              <li><a href="/category.html?c=cinema" class="nav-dropdown-item" data-i18n="nav_cinema">సినిమా</a></li>
+              <li><a href="/category.html?c=sports" class="nav-dropdown-item" data-i18n="nav_sports">క్రీడలు</a></li>
+              <li><a href="/category.html?c=education" class="nav-dropdown-item" data-i18n="nav_education">విద్య &amp; ఉద్యోగాలు</a></li>
+              <li><a href="/category.html?c=editorial" class="nav-dropdown-item" data-i18n="nav_editorial">సంపాదకీయం</a></li>
+              <li><a href="/epaper.html" class="nav-dropdown-item" data-i18n="nav_epaper">ఈ-పేపర్</a></li>
+              <li><a href="/search.html" class="nav-dropdown-item" data-i18n="nav_search">శోధన</a></li>
             </ul>
           </li>
         </ul>
@@ -107,7 +107,7 @@
       
       <!-- BREADCRUMB -->
       <nav class="breadcrumb-wrap" data-i18n-aria="privacy_title">
-        <a href="index.html" data-i18n="nav_home">హోమ్</a>
+        <a href="/" data-i18n="nav_home">హోమ్</a>
         <span>›</span>
         <span data-i18n="nav_privacy">గోప్యతా విధానం</span>
       </nav>
@@ -201,14 +201,14 @@
           <div>
             <h3 class="footer-col-title">వార్తా విభాగములు</h3>
             <ul class="footer-nav-list">
-              <li><a href="category.html">రాష్ట్ర వార్తలు (State News)</a></li>
-              <li><a href="district.html">జిల్లాల సమాచారం (District News)</a></li>
-              <li><a href="category.html">రాజకీయాలు (Politics)</a></li>
-              <li><a href="category.html">జాతీయ / అంతర్జాతీయ (National &amp; Int)</a></li>
-              <li><a href="category.html">క్రీడలు (Sports)</a></li>
-              <li><a href="category.html">సినిమా / వినోదం (Cinema)</a></li>
-              <li><a href="category.html">విద్య &amp; ఉద్యోగాలు (Education)</a></li>
-              <li><a href="category.html">సంపాదకీయం (Editorial)</a></li>
+              <li><a href="/category.html?c=state">రాష్ట్ర వార్తలు (State News)</a></li>
+              <li><a href="/district.html">జిల్లాల సమాచారం (District News)</a></li>
+              <li><a href="/category.html?c=politics">రాజకీయాలు (Politics)</a></li>
+              <li><a href="/category.html?c=national">జాతీయ / అంతర్జాతీయ (National &amp; Int)</a></li>
+              <li><a href="/category.html?c=sports">క్రీడలు (Sports)</a></li>
+              <li><a href="/category.html?c=cinema">సినిమా / వినోదం (Cinema)</a></li>
+              <li><a href="/category.html?c=education">విద్య &amp; ఉద్యోగాలు (Education)</a></li>
+              <li><a href="/category.html?c=editorial">సంపాదకీయం (Editorial)</a></li>
             </ul>
           </div>
 
@@ -216,11 +216,11 @@
           <div>
             <h3 class="footer-col-title">మా సమాచారం</h3>
             <ul class="footer-nav-list">
-              <li><a href="about.html">మన గురించి (About Us)</a></li>
-              <li><a href="editorial-team.html">సంపాదకీయ బృందం (Editorial Team)</a></li>
-              <li><a href="contact.html">సంప్రదించండి (Contact Us)</a></li>
-              <li><a href="advertise.html">ప్రకటనలు (Advertise)</a></li>
-              <li><a href="epaper.html">ఈ-పేపర్ (E-Paper)</a></li>
+              <li><a href="/about.html">మన గురించి (About Us)</a></li>
+              <li><a href="/editorial-team.html">సంపాదకీయ బృందం (Editorial Team)</a></li>
+              <li><a href="/contact.html">సంప్రదించండి (Contact Us)</a></li>
+              <li><a href="/advertise.html">ప్రకటనలు (Advertise)</a></li>
+              <li><a href="/epaper.html">ఈ-పేపర్ (E-Paper)</a></li>
             </ul>
           </div>
 
@@ -228,11 +228,11 @@
           <div>
             <h3 class="footer-col-title">నిబంధనలు &amp; హక్కులు</h3>
             <ul class="footer-nav-list">
-              <li><a href="privacy.html">గోప్యతా విధానం (Privacy Policy)</a></li>
-              <li><a href="terms.html">నిబంధనలు &amp; షరతులు (Terms of Service)</a></li>
-              <li><a href="search.html">వార్తల శోధన (Search Archive)</a></li>
+              <li><a href="/privacy.html">గోప్యతా విధానం (Privacy Policy)</a></li>
+              <li><a href="/terms.html">నిబంధనలు &amp; షరతులు (Terms of Service)</a></li>
+              <li><a href="/search.html">వార్తల శోధన (Search Archive)</a></li>
               <li><span class="footer-contact-placeholder">RSS FEED Placeholder</span></li>
-              <li><span class="footer-contact-placeholder">SITEMAP Placeholder</span></li>
+              <li><a href="/sitemap.xml" style="color: inherit; text-decoration: none;">సైట్‌మ్యాప్ (Sitemap)</a></li>
             </ul>
           </div>
 
@@ -272,6 +272,6 @@
       </div>
     </footer>
 
-    <script src="js/i18n.js"></script>
+    <script src="/js/i18n.js"></script>
   </body>
 </html>

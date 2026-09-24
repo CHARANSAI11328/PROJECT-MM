@@ -1,3 +1,4 @@
+try { require('dotenv').config(); } catch (e) {}
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -65,6 +66,9 @@ function getBaseServerUrl(reqOrBaseUrl) {
       const proto = reqOrBaseUrl.headers && reqOrBaseUrl.headers['x-forwarded-proto'] ? reqOrBaseUrl.headers['x-forwarded-proto'] : reqOrBaseUrl.protocol;
       baseUrl = `${proto}://${reqOrBaseUrl.get('host')}`;
     }
+  }
+  if (!baseUrl && isProduction) {
+    baseUrl = 'https://project-mm-1.onrender.com';
   }
   return baseUrl ? baseUrl.replace(/\/$/, '') : `http://localhost:${PORT}`;
 }
@@ -205,14 +209,38 @@ async function generateAllQRCodes(customBaseUrl) {
   }
 }
 
-app.use(express.static(__dirname));
-app.use('/admin', express.static(path.join(__dirname, 'admin')));
-app.use('/uploads', express.static(uploadsDir));
-
-// Clean Route for Newspaper Article Pages (/news/:identifier)
-app.get('/news/:identifier', (req, res) => {
-  res.sendFile(path.join(__dirname, 'article.html'));
+// Strict sensitive files protection middleware
+app.use((req, res, next) => {
+  const reqPath = req.path.toLowerCase();
+  const blockedPatterns = [
+    /^\/\.env/i,
+    /\.(sqlite|sqlite3|db)$/i,
+    /^\/(server|db|ingestion|neon)\.(js|ts)$/i,
+    /^\/package(-lock)?\.json$/i,
+    /^\/(scratch|node_modules|\.git)/i,
+    /\.log$/i
+  ];
+  if (blockedPatterns.some(pattern => pattern.test(reqPath))) {
+    return res.status(403).json({ success: false, error: 'Access denied.' });
+  }
+  next();
 });
+
+app.use(express.static(__dirname, { dotfiles: 'ignore' }));
+app.use('/admin', express.static(path.join(__dirname, 'admin'), { dotfiles: 'ignore' }));
+app.use('/uploads', express.static(uploadsDir, { dotfiles: 'ignore' }));
+
+// Configure Image Filter for Article & Reporter Image Uploads
+const imageFilter = (req, file, cb) => {
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (allowedExtensions.includes(ext) && allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid image format. Allowed formats: JPG, JPEG, PNG, WebP, GIF.'), false);
+  }
+};
 
 // Configure Multer for Article Image Uploads (Files & Pastes)
 const imageStorage = multer.diskStorage({
@@ -229,6 +257,7 @@ const imageStorage = multer.diskStorage({
 
 const uploadImageMulter = multer({
   storage: imageStorage,
+  fileFilter: imageFilter,
   limits: { fileSize: 25 * 1024 * 1024 }
 });
 
@@ -247,6 +276,7 @@ const reporterStorage = multer.diskStorage({
 
 const uploadReporterMulter = multer({
   storage: reporterStorage,
+  fileFilter: imageFilter,
   limits: { fileSize: 10 * 1024 * 1024 }
 });
 
@@ -289,25 +319,25 @@ function isValidPdfBuffer(filePath) {
   }
 }
 
-// Authentication Middleware for Protected Admin API Routes (Supports Bearer JWT with Direct Admin Fallback)
+// Authentication Middleware for Protected Admin API Routes (Strict Security Enforcement)
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      if (decoded && (decoded.id || decoded.username)) {
-        req.user = decoded;
-        return next();
-      }
-    } catch (err) {
-      // Token invalid or expired, continue to fallback
-    }
+  if (!token) {
+    return res.status(401).json({ success: false, error: 'Access token required. Please log in.' });
   }
 
-  req.user = { id: 'usr_admin', username: 'admin', role: 'superadmin' };
-  next();
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (!decoded || (!decoded.id && !decoded.username)) {
+      return res.status(401).json({ success: false, error: 'Invalid authentication token.' });
+    }
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ success: false, error: 'Authentication token expired or invalid. Please log in again.' });
+  }
 };
 
 // ==========================================================================
@@ -369,8 +399,8 @@ app.post(['/api/admin/change-password', '/api/auth/change-password'], authentica
       return res.status(400).json({ success: false, error: 'Current password, new password, and confirmation are required.' });
     }
 
-    if (String(new_password).length < 4) {
-      return res.status(400).json({ success: false, error: 'పాస్‌వర్డ్ కనీసం 4 అక్షరాలు ఉండాలి. (New password must be at least 4 characters long.)' });
+    if (String(new_password).length < 8) {
+      return res.status(400).json({ success: false, error: 'పాస్‌వర్డ్ కనీసం 8 అక్షరాలు ఉండాలి. (New password must be at least 8 characters long.)' });
     }
 
     if (new_password !== confirm_password) {
@@ -643,8 +673,11 @@ app.delete(['/api/editions/:id', '/api/admin/editions/:id'], authenticateToken, 
       }
     }
 
+    await dbRun('DELETE FROM articles WHERE edition_id = ?', [id]);
+    await dbRun('DELETE FROM edition_pages WHERE edition_id = ?', [id]);
+    await dbRun('DELETE FROM processing_jobs WHERE edition_id = ?', [id]);
     await dbRun('DELETE FROM editions WHERE id = ?', [id]);
-    res.json({ success: true, message: 'Edition deleted successfully.' });
+    res.json({ success: true, message: 'Edition and related records deleted successfully.' });
   } catch (err) {
     console.error('Delete edition error:', err);
     res.status(500).json({ success: false, error: 'Failed to delete edition.' });
@@ -663,12 +696,12 @@ app.get('/api/public/epaper', async (req, res) => {
     let exactMatch = false;
 
     if (dateQuery) {
-      edition = await dbGet("SELECT * FROM editions WHERE status = 'published' AND edition_date = ? ORDER BY created_at DESC LIMIT 1", [dateQuery]);
+      edition = await dbGet("SELECT * FROM editions WHERE status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' AND edition_date = ? ORDER BY created_at DESC LIMIT 1", [dateQuery]);
       if (edition) {
         exactMatch = true;
       }
     } else {
-      edition = await dbGet("SELECT * FROM editions WHERE status = 'published' ORDER BY edition_date DESC, created_at DESC LIMIT 1");
+      edition = await dbGet("SELECT * FROM editions WHERE status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' ORDER BY edition_date DESC, created_at DESC LIMIT 1");
       if (edition) exactMatch = true;
     }
 
@@ -690,7 +723,7 @@ app.get('/api/public/epaper/archive', async (req, res) => {
     const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 20, 1), 50);
     const editions = await dbAll(`
       SELECT * FROM editions
-      WHERE status = 'published'
+      WHERE status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf'
       ORDER BY edition_date DESC, created_at DESC
       LIMIT ${limit}
     `);
@@ -989,69 +1022,6 @@ app.get('/api/public/categories', (req, res) => {
   }
 });
 
-// Public Reporters List API Endpoint
-app.get(['/api/public/reporters', '/api/reporters'], async (req, res) => {
-  try {
-    const reporters = await dbAll("SELECT * FROM reporters WHERE status = 'active' ORDER BY display_order ASC, created_at ASC");
-    res.json({ success: true, reporters: reporters || [] });
-  } catch (err) {
-    console.error('Public reporters error:', err);
-    res.status(500).json({ success: false, error: 'Failed to fetch reporters list.' });
-  }
-});
-
-// Single Reporter Profile API Endpoint with Authored Articles
-app.get('/api/public/reporters/:identifier', async (req, res) => {
-  try {
-    const { identifier } = req.params;
-    if (!identifier || !identifier.trim()) {
-      return res.status(404).json({ success: false, error: 'Reporter identifier required.' });
-    }
-
-    const cleanIdentifier = identifier.trim();
-    // Lookup by exact ID, or exact Name
-    let reporter = await dbGet("SELECT * FROM reporters WHERE (id = ? OR name = ?) AND status = 'active'", [cleanIdentifier, cleanIdentifier]);
-
-    if (!reporter) {
-      return res.status(404).json({
-        success: false,
-        error: 'పాత్రికేయుని గుర్తింపు ప్రొఫైల్ లభించలేదు లేదా తొలగించబడినది (Press ID Revoked or Deleted / Not Found).'
-      });
-    }
-
-    // Fetch published articles authored by this reporter
-    const articles = await dbAll(`
-      SELECT a.*, COALESCE(e.edition_date, DATE(a.published_at)) as edition_date, e.edition_name
-      FROM articles a
-      LEFT JOIN editions e ON e.id = a.edition_id
-      WHERE a.status = 'published' AND (
-        LOWER(a.author_name) LIKE LOWER(?) OR 
-        LOWER(a.author_name) LIKE LOWER(?) OR
-        a.reporter_id = ?
-      )
-      ORDER BY COALESCE(a.published_at, a.created_at) DESC
-      LIMIT 24
-    `, [`%${reporter.name}%`, `%${reporter.id}%`, reporter.id]);
-
-    const formattedArticles = articles.map(r => ({
-      ...r,
-      headline: r.title_te || r.title_en,
-      summary: r.summary_te || r.summary_en,
-      content: r.content_te || r.content_en,
-      publication_date: r.edition_date || new Date(r.published_at || r.created_at).toISOString().split('T')[0],
-      source_newspaper: r.source_newspaper || 'మమేక మహోదయం'
-    }));
-
-    res.json({
-      success: true,
-      reporter,
-      articles: formattedArticles
-    });
-  } catch (err) {
-    console.error('Public reporter detail error:', err);
-    res.status(500).json({ success: false, error: 'Failed to fetch reporter profile.' });
-  }
-});
 
 // 1-Click Publish All Articles in an Edition API Endpoint
 app.post('/api/admin/editions/:id/publish-all', authenticateToken, async (req, res) => {
@@ -1122,76 +1092,6 @@ app.put('/api/admin/editions/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Admin Edition Delete API
-app.delete('/api/admin/editions/:id', authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const existing = await dbGet('SELECT * FROM editions WHERE id = ?', [id]);
-    if (!existing) {
-      return res.status(404).json({ success: false, error: 'Edition not found.' });
-    }
-
-    // Unlink PDF file if exists
-    if (existing.pdf_path) {
-      const fullPdfPath = path.join(__dirname, existing.pdf_path);
-      if (fs.existsSync(fullPdfPath)) {
-        try { fs.unlinkSync(fullPdfPath); } catch (e) {}
-      }
-    }
-
-    // Delete associated articles, pages, jobs, and edition record
-    await dbRun('DELETE FROM articles WHERE edition_id = ?', [id]);
-    await dbRun('DELETE FROM edition_pages WHERE edition_id = ?', [id]);
-    await dbRun('DELETE FROM processing_jobs WHERE edition_id = ?', [id]);
-    await dbRun('DELETE FROM editions WHERE id = ?', [id]);
-
-    res.json({ success: true, message: 'Edition and related records deleted successfully.' });
-  } catch (err) {
-    console.error('Admin edition delete error:', err);
-    res.status(500).json({ success: false, error: 'Failed to delete edition.' });
-  }
-});
-
-
-
-// Alias Upload API route for /api/admin/editions/upload
-app.post('/api/admin/editions/upload', authenticateToken, upload.single('pdf_file'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ success: false, error: 'Please select a valid PDF newspaper file to upload.' });
-  }
-  const { edition_date, edition_name, edition_type } = req.body;
-  if (!edition_date) {
-    fs.unlinkSync(req.file.path);
-    return res.status(400).json({ success: false, error: 'Edition date is required.' });
-  }
-  const editionId = 'edt_' + Date.now();
-  const pdfFilename = req.file.filename;
-  const pdfPath = `/uploads/editions/${pdfFilename}`;
-  const fileSize = req.file.size;
-  const uploadedBy = req.user.id;
-  const name = edition_name || `Edition ${edition_date}`;
-  const type = edition_type || 'main';
-
-  await dbRun(`
-    INSERT INTO editions (id, edition_date, edition_name, edition_type, pdf_filename, pdf_path, file_size_bytes, uploaded_by, status, published_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP)
-  `, [editionId, edition_date, name, type, pdfFilename, pdfPath, fileSize, uploadedBy]);
-
-  processEdition({
-    edition: { id: editionId, absolute_pdf_path: req.file.path },
-    jobId: null,
-    dbRun,
-    dbGet,
-    pagesDir
-  });
-
-  const newEdition = await dbGet('SELECT * FROM editions WHERE id = ?', [editionId]);
-  res.status(201).json({
-    success: true,
-    message: 'Newspaper PDF uploaded and published successfully.',
-    edition: newEdition
-  });
-});
 
 // Helper function to generate clean article slugs
 function generateArticleSlug(titleEn, titleTe, id) {
@@ -1222,8 +1122,9 @@ app.post('/api/admin/upload-image', authenticateToken, uploadImageMulter.any(), 
     }
 
     // Also check Base64 payload (for clipboard pasted images or canvas data)
-    const { image_base64, base64, images_base64 } = req.body || {};
-    const base64List = Array.isArray(images_base64) ? images_base64 : (image_base64 || base64 ? [image_base64 || base64] : []);
+    const { image_base64, base64, images_base64, base64Image, image_data, image } = req.body || {};
+    const singlePayload = image_base64 || base64 || base64Image || image_data || image;
+    const base64List = Array.isArray(images_base64) ? images_base64 : (singlePayload ? [singlePayload] : []);
 
     for (const rawData of base64List) {
       if (typeof rawData === 'string' && rawData.trim()) {
@@ -1370,7 +1271,7 @@ app.put(['/api/admin/articles/:id', '/api/admin/articles/:id/update'], authentic
     const {
       title_te, title_en, subheadline_te, summary_te, summary_en,
       content_te, content_en, category, district, image_url, images_json, image_urls, image_caption_te,
-      status, featured, show_on_homepage, is_breaking, author_name
+      status, featured, show_on_homepage, is_breaking, author_name, byline, slug
     } = req.body;
 
     const headline = title_te || title_en || existing.title_te;
@@ -1381,6 +1282,14 @@ app.put(['/api/admin/articles/:id', '/api/admin/articles/:id/update'], authentic
       finalImagesJson = typeof images_json === 'string' ? images_json : JSON.stringify(images_json);
     } else if (Array.isArray(image_urls)) {
       finalImagesJson = JSON.stringify(image_urls);
+    }
+
+    const isPublishingNow = status === 'published' && existing.status !== 'published';
+    const publishedAtClause = isPublishingNow ? 'CURRENT_TIMESTAMP' : 'published_at';
+
+    let targetSlug = slug || existing.slug;
+    if (!targetSlug || !targetSlug.trim()) {
+      targetSlug = generateArticleSlug(title_en || existing.title_en, title_te || existing.title_te, id);
     }
 
     await dbRun(`
@@ -1402,6 +1311,9 @@ app.put(['/api/admin/articles/:id', '/api/admin/articles/:id/update'], authentic
         show_on_homepage = ?,
         is_breaking = ?,
         author_name = ?,
+        byline = ?,
+        slug = ?,
+        published_at = ${publishedAtClause},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `, [
@@ -1422,6 +1334,8 @@ app.put(['/api/admin/articles/:id', '/api/admin/articles/:id/update'], authentic
       show_on_homepage !== undefined ? (show_on_homepage ? 1 : 0) : existing.show_on_homepage,
       is_breaking !== undefined ? (is_breaking ? 1 : 0) : existing.is_breaking,
       author_name || existing.author_name,
+      byline !== undefined ? byline : existing.byline,
+      targetSlug,
       id
     ]);
 
@@ -1559,51 +1473,6 @@ app.delete('/api/admin/articles/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Admin Standalone Image Upload API Endpoint (Supports Multipart Files & Base64 Clipboard Pastes)
-app.post('/api/admin/upload-image', authenticateToken, (req, res) => {
-  uploadImageMulter.any()(req, res, async (err) => {
-    if (err) {
-      console.error('Multer upload error:', err);
-      return res.status(400).json({ success: false, error: err.message || 'Image upload failed.' });
-    }
-    try {
-      let urls = [];
-      // 1. Files uploaded via Multer
-      if (req.files && req.files.length > 0) {
-        for (const file of req.files) {
-          urls.push(`/uploads/images/${file.filename}`);
-        }
-      }
-      // 2. Base64 pasted image in req.body.base64Image or req.body.image_data or req.body.image
-      const rawBase64 = req.body && (req.body.base64Image || req.body.image_data || req.body.image);
-      if (rawBase64 && typeof rawBase64 === 'string' && rawBase64.startsWith('data:image')) {
-        const matches = rawBase64.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
-        if (matches) {
-          const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
-          const buffer = Buffer.from(matches[2], 'base64');
-          const filename = `paste_${Date.now()}_${Math.floor(Math.random() * 10000)}.${ext}`;
-          const savePath = path.join(imagesDir, filename);
-          fs.writeFileSync(savePath, buffer);
-          urls.push(`/uploads/images/${filename}`);
-        }
-      }
-
-      if (urls.length === 0) {
-        return res.status(400).json({ success: false, error: 'Please select or paste a valid image file.' });
-      }
-
-      res.json({
-        success: true,
-        message: 'Image(s) uploaded successfully.',
-        image_url: urls[0],
-        image_urls: urls
-      });
-    } catch (uploadErr) {
-      console.error('Image upload processing error:', uploadErr);
-      res.status(500).json({ success: false, error: 'Failed to process image upload.' });
-    }
-  });
-});
 
 // Admin List Uploaded Media Library API Endpoint
 app.get('/api/admin/media', authenticateToken, async (req, res) => {
@@ -1766,72 +1635,12 @@ app.post('/api/admin/articles/:id/unpublish', authenticateToken, async (req, res
   }
 });
 
-// Admin Article Review, Override & Publishing API Endpoint
-app.put('/api/admin/articles/:id', authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const {
-      district, category, title_te, title_en, subheadline_te, summary_te, summary_en,
-      content_te, content_en, author_name, byline, image_url, image_caption_te,
-      status, featured, show_on_homepage, is_breaking, slug
-    } = req.body;
-
-    const existing = await dbGet('SELECT * FROM articles WHERE id = ?', [id]);
-    if (!existing) {
-      return res.status(404).json({ success: false, error: 'Article record not found.' });
-    }
-
-    const isPublishingNow = status === 'published' && existing.status !== 'published';
-    const publishedAtClause = isPublishingNow ? 'CURRENT_TIMESTAMP' : 'published_at';
-
-    let targetSlug = slug || existing.slug;
-    if (!targetSlug || !targetSlug.trim()) {
-      targetSlug = generateArticleSlug(title_en || existing.title_en, title_te || existing.title_te, id);
-    }
-
-    await dbRun(`
-      UPDATE articles
-      SET district = COALESCE(?, district),
-          category = COALESCE(?, category),
-          title_te = COALESCE(?, title_te),
-          title_en = COALESCE(?, title_en),
-          subheadline_te = COALESCE(?, subheadline_te),
-          summary_te = COALESCE(?, summary_te),
-          summary_en = COALESCE(?, summary_en),
-          content_te = COALESCE(?, content_te),
-          content_en = COALESCE(?, content_en),
-          author_name = COALESCE(?, author_name),
-          byline = COALESCE(?, byline),
-          image_url = COALESCE(?, image_url),
-          image_caption_te = COALESCE(?, image_caption_te),
-          status = COALESCE(?, status),
-          featured = COALESCE(?, featured),
-          show_on_homepage = COALESCE(?, show_on_homepage),
-          is_breaking = COALESCE(?, is_breaking),
-          slug = ?,
-          published_at = ${publishedAtClause},
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `, [
-      district, category, title_te, title_en, subheadline_te, summary_te, summary_en,
-      content_te, content_en, author_name, byline, image_url, image_caption_te,
-      status, featured, show_on_homepage, is_breaking, targetSlug, id
-    ]);
-
-    const updated = await dbGet('SELECT * FROM articles WHERE id = ?', [id]);
-    res.json({ success: true, message: 'Article updated successfully.', article: updated });
-  } catch (err) {
-    console.error('Admin article update error:', err);
-    res.status(500).json({ success: false, error: 'Failed to update article.' });
-  }
-});
-
 // ==========================================================================
 // REPORTERS & EDITORIAL TEAM MANAGEMENT APIS (DYNAMIC CMS)
 // ==========================================================================
 
 // Public Directory: List all active reporters with optional district/designation filters
-app.get('/api/public/reporters', async (req, res) => {
+app.get(['/api/public/reporters', '/api/reporters'], async (req, res) => {
   try {
     const { district, designation, search, q } = req.query;
     const filters = ["LOWER(status) = 'active'"];
@@ -1861,41 +1670,62 @@ app.get('/api/public/reporters', async (req, res) => {
       ORDER BY display_order ASC, created_at ASC
     `, params);
 
-    res.json({ success: true, reporters, count: reporters.length });
+    res.json({ success: true, reporters: reporters || [], count: (reporters || []).length });
   } catch (err) {
     console.error('Public reporters error:', err);
     res.status(500).json({ success: false, error: 'Failed to fetch reporters directory.' });
   }
 });
 
-// Public Profile: Fetch single reporter by ID with their published news articles
-app.get('/api/public/reporters/:id', async (req, res) => {
+// Public Profile: Fetch single reporter by ID or Name with their published news articles
+app.get(['/api/public/reporters/:id', '/api/reporters/:id'], async (req, res) => {
   try {
+    const rawId = req.params.id;
+    if (!rawId || !rawId.trim()) {
+      return res.status(404).json({ success: false, error: 'Reporter identifier required.' });
+    }
+    const cleanId = rawId.trim();
+
     const reporter = await dbGet(`
       SELECT id, name, designation, district, mandal, bio, photo_url, phone, email, social_links, display_order, created_at
       FROM reporters
-      WHERE id = ? AND status = 'active'
-    `, [req.params.id]);
+      WHERE (id = ? OR name = ?) AND status = 'active'
+    `, [cleanId, cleanId]);
 
     if (!reporter) {
-      return res.status(404).json({ success: false, error: 'Reporter profile not found.' });
+      return res.status(404).json({
+        success: false,
+        error: 'పాత్రికేయుని గుర్తింపు ప్రొఫైల్ లభించలేదు లేదా తొలగించబడినది (Press ID Revoked or Deleted / Not Found).'
+      });
     }
 
     // Dynamic Article-Author mapping: fetch published articles authored by this reporter
     const articles = await dbAll(`
-      SELECT a.id, a.slug, a.title_te, a.title_en, a.summary_te, a.summary_en,
-             a.image_url, a.category, a.district, a.author_name,
-             COALESCE(a.published_at, a.created_at) as published_at
+      SELECT a.*, COALESCE(e.edition_date, DATE(a.published_at)) as edition_date, e.edition_name
       FROM articles a
-      WHERE a.status = 'published' AND (a.author_name = ? OR a.author_name LIKE ? OR a.reporter_id = ?)
+      LEFT JOIN editions e ON e.id = a.edition_id
+      WHERE a.status = 'published' AND (
+        LOWER(a.author_name) LIKE LOWER(?) OR 
+        LOWER(a.author_name) LIKE LOWER(?) OR
+        a.reporter_id = ?
+      )
       ORDER BY COALESCE(a.published_at, a.created_at) DESC
-      LIMIT 15
-    `, [reporter.name, `%${reporter.name}%`, reporter.id]);
+      LIMIT 24
+    `, [`%${reporter.name}%`, `%${reporter.id}%`, reporter.id]);
+
+    const formattedArticles = (articles || []).map(r => ({
+      ...r,
+      headline: r.title_te || r.title_en,
+      summary: r.summary_te || r.summary_en,
+      content: r.content_te || r.content_en,
+      publication_date: r.edition_date || new Date(r.published_at || r.created_at).toISOString().split('T')[0],
+      source_newspaper: r.source_newspaper || 'మమేక మహోదయం'
+    }));
 
     res.json({
       success: true,
       reporter,
-      articles
+      articles: formattedArticles
     });
   } catch (err) {
     console.error('Public reporter profile error:', err);
@@ -2289,6 +2119,60 @@ app.get(['/api/public/reporters/:id/qr.png', '/api/public/reporters/:id/qr'], as
   } catch (err) {
     console.error('Public QR generation error:', err);
     res.status(500).send('Failed to generate QR code.');
+  }
+});
+
+// Dynamic robots.txt
+app.get('/robots.txt', (req, res) => {
+  const baseUrl = getBaseServerUrl(req);
+  res.type('text/plain');
+  res.send(`User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/admin/\nSitemap: ${baseUrl}/sitemap.xml\n`);
+});
+
+// Dynamic sitemap.xml
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const baseUrl = getBaseServerUrl(req);
+    const now = new Date().toISOString().split('T')[0];
+
+    const articles = await dbAll("SELECT id, slug, published_at, updated_at FROM articles WHERE status = 'published' ORDER BY published_at DESC LIMIT 500");
+    const editions = await dbAll("SELECT id, edition_date FROM editions WHERE status = 'active' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' ORDER BY edition_date DESC LIMIT 100");
+
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+    const staticPages = [
+      '',
+      '/epaper.html',
+      '/editorial-team.html',
+      '/about.html',
+      '/contact.html',
+      '/advertise.html',
+      '/privacy.html',
+      '/terms.html',
+      '/search.html'
+    ];
+
+    for (const page of staticPages) {
+      xml += `  <url>\n    <loc>${baseUrl}${page}</loc>\n    <changefreq>daily</changefreq>\n    <priority>${page === '' ? '1.0' : '0.8'}</priority>\n  </url>\n`;
+    }
+
+    for (const art of (articles || [])) {
+      const artUrl = `${baseUrl}/news/${encodeURIComponent(art.slug || art.id)}`;
+      const lastMod = (art.updated_at || art.published_at || now).toString().split('T')[0];
+      xml += `  <url>\n    <loc>${artUrl}</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
+    }
+
+    for (const ed of (editions || [])) {
+      const edUrl = `${baseUrl}/epaper.html?date=${ed.edition_date}`;
+      xml += `  <url>\n    <loc>${edUrl}</loc>\n    <lastmod>${ed.edition_date}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+    }
+
+    xml += `</urlset>`;
+    res.type('application/xml');
+    res.send(xml);
+  } catch (err) {
+    console.error('Sitemap generation error:', err);
+    res.status(500).send('Error generating sitemap');
   }
 });
 

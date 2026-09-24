@@ -155,7 +155,7 @@
       if (e && typeof e.preventDefault === 'function') {
         e.preventDefault();
       }
-      window.location.href = 'index.html';
+      window.location.href = '/';
       return;
     }
 

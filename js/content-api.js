@@ -40,7 +40,13 @@
   }
 
   function escapeText(val) {
-    return val ? String(val).trim() : '';
+    if (val === null || val === undefined) return '';
+    return String(val)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   function formatDate(dateStr) {
@@ -642,6 +648,75 @@
         bodyContainer.innerHTML = paragraphs.map(p => `<p style="font-size: 1.15rem; line-height: 1.85; color: #0f172a; margin-bottom: 1.4rem; font-family: var(--font-body, inherit);">${escapeText(p)}</p>`).join('');
       }
 
+      // Social Share Buttons Wiring
+      const shareUrl = window.location.href;
+      const shareTitle = article.headline || '';
+      const btnWhatsapp = document.getElementById('share-whatsapp');
+      const btnFacebook = document.getElementById('share-facebook');
+      const btnTwitter = document.getElementById('share-twitter');
+      const btnCopyLink = document.getElementById('share-copylink');
+
+      if (btnWhatsapp) {
+        btnWhatsapp.onclick = () => {
+          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareTitle + ' ' + shareUrl)}`, '_blank', 'noopener,noreferrer');
+        };
+      }
+      if (btnFacebook) {
+        btnFacebook.onclick = () => {
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener,noreferrer');
+        };
+      }
+      if (btnTwitter) {
+        btnTwitter.onclick = () => {
+          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareTitle)}&url=${encodeURIComponent(shareUrl)}`, '_blank', 'noopener,noreferrer');
+        };
+      }
+      if (btnCopyLink) {
+        btnCopyLink.onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(shareUrl);
+            const originalHtml = btnCopyLink.innerHTML;
+            btnCopyLink.innerHTML = '<span>✓ కాపీ అయ్యింది! (Copied!)</span>';
+            setTimeout(() => { btnCopyLink.innerHTML = originalHtml; }, 2000);
+          } catch (e) {
+            prompt('లింక్ కాపీ చేసుకోండి (Copy link):', shareUrl);
+          }
+        };
+      }
+
+      // Schema.org NewsArticle Structured Data
+      try {
+        let schemaTag = document.getElementById('schema-news-article');
+        if (!schemaTag) {
+          schemaTag = document.createElement('script');
+          schemaTag.id = 'schema-news-article';
+          schemaTag.type = 'application/ld+json';
+          document.head.appendChild(schemaTag);
+        }
+        const schemaData = {
+          "@context": "https://schema.org",
+          "@type": "NewsArticle",
+          "headline": article.headline,
+          "description": article.summary || article.subheadline || article.headline,
+          "datePublished": article.publication_date || article.created_at,
+          "dateModified": article.updated_at || article.publication_date || article.created_at,
+          "author": {
+            "@type": "Person",
+            "name": article.author_name || article.source_newspaper || "మమేక మహోదయం"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "మమేక మహోదయం",
+            "url": window.location.origin
+          },
+          "mainEntityOfPage": shareUrl
+        };
+        if (allArticleImages.length > 0) {
+          schemaData.image = allArticleImages;
+        }
+        schemaTag.textContent = JSON.stringify(schemaData);
+      } catch (e) {}
+
       // Make all images inside article view zoomable into Lightbox!
       setTimeout(() => {
         if (articleContainer) makeImagesClickable(articleContainer);
@@ -903,7 +978,8 @@
             dateAlertBox.style.background = '#fffbeb';
             dateAlertBox.style.color = '#b45309';
             dateAlertBox.style.border = '1px solid #fde68a';
-            dateAlertBox.innerHTML = `⚠️ మీరు ఎంచుకున్న తేదీ <strong>(${targetDate})</strong> కి సంబంధించి ఎలాంటి పత్రిక ప్రచురించబడలేదు. (No edition found for ${targetDate})`;
+            const safeDate = escapeText(targetDate);
+            dateAlertBox.innerHTML = `⚠️ మీరు ఎంచుకున్న తేదీ <strong>(${safeDate})</strong> కి సంబంధించి ఎలాంటి పత్రిక ప్రచురించబడలేదు. (No edition found for ${safeDate})`;
           }
         } else {
           dateAlertBox.style.display = 'none';
@@ -1012,16 +1088,94 @@
     const searchInput = document.getElementById('searchInput');
     const catFilter = document.getElementById('catFilter');
     const distFilter = document.getElementById('distFilter');
-    const searchForm = document.querySelector('.search-hero-box form, .search-form-wrap');
+    const searchForm = document.getElementById('mainSearchForm') || document.querySelector('.search-hero-box form, .search-form-wrap');
     const resultsEl = document.getElementById('searchStateResults');
     const resultsGrid = document.getElementById('searchResultsGrid');
+    const resultsCountBadge = document.getElementById('resultsCountBadge');
+    const initialEl = document.getElementById('searchStateInitial');
+    const emptyEl = document.getElementById('searchStateEmpty');
+    const btnClearSearch = document.getElementById('btnClearSearch');
 
     const urlParams = new URLSearchParams(window.location.search);
     const query = urlParams.get('q') || urlParams.get('search') || '';
     const cat = urlParams.get('c') || urlParams.get('category') || '';
     const dist = urlParams.get('d') || urlParams.get('district') || '';
 
+    const lang = (window.MM_i18n ? window.MM_i18n.getLanguage() : 'te');
+
+    // Populate Category Dropdown if needed
+    if (catFilter && catFilter.options.length <= 1) {
+      const catLabels = CATEGORY_LABELS[lang] || CATEGORY_LABELS.te;
+      Object.keys(catLabels).forEach(k => {
+        const opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = catLabels[k];
+        catFilter.appendChild(opt);
+      });
+    }
+
+    // Populate District Dropdown if needed
+    if (distFilter && distFilter.options.length <= 1 && typeof MAMEKA_DISTRICTS !== 'undefined') {
+      MAMEKA_DISTRICTS.getAllDistricts().forEach(d => {
+        if (d.code === 'all') return;
+        const opt = document.createElement('option');
+        opt.value = d.code;
+        opt.textContent = lang === 'en' ? d.name_en : d.name_te;
+        distFilter.appendChild(opt);
+      });
+    }
+
     if (query && searchInput) searchInput.value = query;
+    if (cat && catFilter) catFilter.value = cat;
+    if (dist && distFilter) distFilter.value = dist;
+
+    // Form submission & filter change binding
+    const executeSearch = () => {
+      const qVal = searchInput ? searchInput.value.trim() : '';
+      const cVal = catFilter ? catFilter.value : '';
+      const dVal = distFilter ? distFilter.value : '';
+      const sp = new URLSearchParams();
+      if (qVal) sp.append('q', qVal);
+      if (cVal) sp.append('c', cVal);
+      if (dVal) sp.append('d', dVal);
+      window.location.href = `/search.html?${sp.toString()}`;
+    };
+
+    if (searchForm && !searchForm.dataset.bound) {
+      searchForm.dataset.bound = 'true';
+      searchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        executeSearch();
+      });
+    }
+
+    if (catFilter && !catFilter.dataset.bound) {
+      catFilter.dataset.bound = 'true';
+      catFilter.addEventListener('change', executeSearch);
+    }
+
+    if (distFilter && !distFilter.dataset.bound) {
+      distFilter.dataset.bound = 'true';
+      distFilter.addEventListener('change', executeSearch);
+    }
+
+    if (btnClearSearch && !btnClearSearch.dataset.bound) {
+      btnClearSearch.dataset.bound = 'true';
+      btnClearSearch.addEventListener('click', () => {
+        window.location.href = '/search.html';
+      });
+    }
+
+    const hasSearch = Boolean(query || cat || dist);
+
+    if (!hasSearch) {
+      if (initialEl) initialEl.style.display = 'block';
+      if (resultsEl) resultsEl.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'none';
+      return;
+    }
+
+    if (initialEl) initialEl.style.display = 'none';
 
     const apiParams = new URLSearchParams();
     if (query) apiParams.append('search', query);
@@ -1030,11 +1184,20 @@
 
     const articles = await fetchArticles(Object.fromEntries(apiParams));
 
-    if (resultsGrid) {
-      if (articles.length > 0) {
+    if (articles.length > 0) {
+      if (resultsEl) resultsEl.style.display = 'block';
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (resultsCountBadge) {
+        resultsCountBadge.textContent = lang === 'en' ? `${articles.length} articles found` : `${articles.length} కథనాలు లభించాయి`;
+      }
+      if (resultsGrid) {
         resultsGrid.replaceChildren(...articles.map(art => createStandardCard(art)));
-      } else {
-        renderSubtleEmptyState(resultsGrid, 'empty_search');
+      }
+    } else {
+      if (resultsEl) resultsEl.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'block';
+      if (resultsGrid) {
+        resultsGrid.innerHTML = '';
       }
     }
   }

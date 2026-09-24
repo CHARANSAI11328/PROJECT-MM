@@ -348,7 +348,7 @@
   }
 
   function openReporterModal(reporterId) {
-    window.location.href = `reporter-profile.html?id=${encodeURIComponent(reporterId)}`;
+    window.location.href = `/reporter-profile.html?id=${encodeURIComponent(reporterId)}`;
   }
 
   function closeReporterModal() {

@@ -22,13 +22,13 @@ async function processEdition({ edition, jobId, dbRun, dbGet, pagesDir }) {
 
     let totalPages = 0;
     try {
-      const pdfjsLib = await import('file:///D:/24F01A4422/PROJECT-MM/node_modules/pdfjs-dist/legacy/build/pdf.mjs');
+      const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
       const data = new Uint8Array(fs.readFileSync(edition.absolute_pdf_path));
       const standardFontDataUrl = path.join(__dirname, 'node_modules/pdfjs-dist/standard_fonts/').replace(/\\/g, '/') + '/';
       const pdfDoc = await pdfjsLib.getDocument({ data, standardFontDataUrl, verbosity: 0 }).promise;
       totalPages = pdfDoc.numPages;
 
-      const { createCanvas } = require('D:/24F01A4422/PROJECT-MM/node_modules/@napi-rs/canvas');
+      const { createCanvas } = require('@napi-rs/canvas');
       for (let pageNo = 1; pageNo <= totalPages; pageNo++) {
         const page = await pdfDoc.getPage(pageNo);
         const viewport = page.getViewport({ scale: 1.5 });

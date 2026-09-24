@@ -88,7 +88,7 @@
           <p style="color: #742a2a; font-size: 0.95rem; margin-bottom: 20px;">
             కోరిన పాత్రికేయుని వివరాలు లభించలేదు లేదా గుర్తింపు కార్డు తొలగించబడినది.
           </p>
-          <a href="editorial-team.html" class="btn-newspaper-action" style="display: inline-block; text-decoration: none; padding: 8px 20px; background: #be185d; color: #fff; border-radius: 4px; font-weight: 700;">
+          <a href="/editorial-team.html" class="btn-newspaper-action" style="display: inline-block; text-decoration: none; padding: 8px 20px; background: #be185d; color: #fff; border-radius: 4px; font-weight: 700;">
             ← మా సంపాదకీయ బృందం పేజీకి వెళ్ళు
           </a>
         </div>
@@ -409,9 +409,10 @@
       const imgUrl = resolvePhotoUrl(rawImg);
       const pubDate = art.publication_date || (art.created_at ? art.created_at.split('T')[0] : '');
 
+      const artUrl = art.slug ? `/article.html?slug=${encodeURIComponent(art.slug)}` : `/article.html?id=${encodeURIComponent(art.id)}`;
       return `
         <article class="article-card" style="display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease;">
-          <a href="article.html?id=${encodeURIComponent(art.slug || art.id)}" style="display: block; text-decoration: none; color: inherit;">
+          <a href="${artUrl}" style="display: block; text-decoration: none; color: inherit;">
             <div style="width: 100%; height: 200px; overflow: hidden; background: #f8fafc; position: relative;">
               <img 
                 src="${escapeHtml(imgUrl)}" 
