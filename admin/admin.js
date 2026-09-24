@@ -2300,7 +2300,7 @@ function initAdminApp() {
         const districtSelect = document.getElementById('rep-district');
         const districtFilter = document.getElementById('rep-filter-district');
         if (districtSelect && districtSelect.options.length <= 1 && typeof MAMEKA_DISTRICTS !== 'undefined') {
-            const list = MAMEKA_DISTRICTS.getDistrictsList ? MAMEKA_DISTRICTS.getDistrictsList() : [];
+            const list = MAMEKA_DISTRICTS.getAllDistricts ? MAMEKA_DISTRICTS.getAllDistricts() : (MAMEKA_DISTRICTS.getDistrictsList ? MAMEKA_DISTRICTS.getDistrictsList() : []);
             list.forEach(d => {
                 if (d.code === 'all') return;
                 const opt1 = document.createElement('option');
@@ -2372,6 +2372,55 @@ function initAdminApp() {
         }
     }
 
+    function updateMandalDropdown(selectedDistrict, preselectedMandal) {
+        const mandalSelect = document.getElementById('rep-mandal');
+        const customWrap = document.getElementById('rep-mandal-custom-wrap');
+        const customInput = document.getElementById('rep-mandal-custom');
+        if (!mandalSelect) return;
+
+        mandalSelect.innerHTML = '';
+        if (!selectedDistrict) {
+            mandalSelect.innerHTML = '<option value="">ముందుగా జిల్లాను ఎంచుకోండి...</option>';
+            if (customWrap) customWrap.style.display = 'none';
+            return;
+        }
+
+        const mandals = (typeof MAMEKA_DISTRICTS !== 'undefined' && MAMEKA_DISTRICTS.getMandalsForDistrict)
+            ? MAMEKA_DISTRICTS.getMandalsForDistrict(selectedDistrict)
+            : [];
+
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = 'మండలం ఎంచుకోండి...';
+        mandalSelect.appendChild(defaultOpt);
+
+        let matched = false;
+        mandals.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.name_te;
+            opt.textContent = `${m.name_te} (${m.name_en})`;
+            if (preselectedMandal && (preselectedMandal === m.name_te || preselectedMandal === m.name_en || preselectedMandal.includes(m.name_te))) {
+                opt.selected = true;
+                matched = true;
+            }
+            mandalSelect.appendChild(opt);
+        });
+
+        const customOpt = document.createElement('option');
+        customOpt.value = '__custom__';
+        customOpt.textContent = '➕ ఇతర ప్రాంతం / Custom Mandal నమోదు చేయండి...';
+        mandalSelect.appendChild(customOpt);
+
+        if (preselectedMandal && !matched) {
+            customOpt.selected = true;
+            if (customWrap) customWrap.style.display = 'block';
+            if (customInput) customInput.value = preselectedMandal;
+        } else {
+            if (customWrap) customWrap.style.display = 'none';
+            if (customInput) customInput.value = '';
+        }
+    }
+
     function renderReportersTable(reporters) {
         const tableBody = document.getElementById('reporters-table-body');
         if (!tableBody) return;
@@ -2401,10 +2450,16 @@ function initAdminApp() {
                 if (dObj) distName = dObj.name_te;
             }
 
-            // Status badge
-            const statusBadge = r.status === 'active'
-                ? '<span style="display:inline-block; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0;">Active</span>'
-                : '<span style="display:inline-block; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;">Inactive</span>';
+            // Role / Leadership Tier badge
+            const desigLower = (r.designation || '').toLowerCase();
+            let tierBadge = '';
+            if (r.display_order === 1 || desigLower.includes('founder') || (r.designation || '').includes('వ్యవస్థాపక') || desigLower.includes('editor-in-chief') || (r.designation || '').includes('ప్రధాన సంపాదకులు')) {
+                tierBadge = '<span style="display:inline-block; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700; background:#fff1f2; color:#be185d; border:1px solid #fecdd3;">⭐ Top 1: Chief</span>';
+            } else if (r.display_order === 2 || desigLower.includes('associate') || (r.designation || '').includes('అసోసియేట్')) {
+                tierBadge = '<span style="display:inline-block; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700; background:#f0f9ff; color:#0369a1; border:1px solid #bae6fd;">⭐ Top 2: Associate</span>';
+            } else {
+                tierBadge = '<span style="display:inline-block; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:600; background:#f8fafc; color:#475569; border:1px solid #cbd5e1;">Normal Block</span>';
+            }
 
             // Contact
             const contactItems = [];
@@ -2435,7 +2490,6 @@ function initAdminApp() {
                 <td style="text-align:center; vertical-align:middle;">${photoHtml}</td>
                 <td>
                     <strong style="color:var(--text-main); font-size:0.95rem;">${escapeHTML(r.name)}</strong>
-                    ${r.display_order ? `<span style="font-size:0.75rem; color:#94a3b8; display:block;">Priority: ${r.display_order}</span>` : ''}
                 </td>
                 <td>
                     <span style="display:inline-block; padding:3px 8px; border-radius:4px; font-size:0.8rem; font-weight:600; background:#fdf2f8; color:#be185d; border:1px solid #fbcfe8;">
@@ -2447,7 +2501,7 @@ function initAdminApp() {
                     ${r.mandal ? `<span style="display:block; font-size:0.8rem; color:#64748b;">${escapeHTML(r.mandal)}</span>` : ''}
                 </td>
                 <td style="font-size:0.825rem;">${contactHtml}</td>
-                <td>${statusBadge}</td>
+                <td>${tierBadge}</td>
                 <td style="text-align:center; vertical-align:middle;">${qrHtml}</td>
                 <td>
                     <div style="display:flex; gap:6px;">
@@ -2503,6 +2557,30 @@ function initAdminApp() {
         const searchInput = document.getElementById('rep-filter-search');
         const districtFilter = document.getElementById('rep-filter-district');
         const statusFilter = document.getElementById('rep-filter-status');
+
+        // District & Mandal dynamic selector events
+        const repDistrictSelect = document.getElementById('rep-district');
+        const repMandalSelect = document.getElementById('rep-mandal');
+        const repMandalCustomWrap = document.getElementById('rep-mandal-custom-wrap');
+        const repMandalCustomInput = document.getElementById('rep-mandal-custom');
+
+        if (repDistrictSelect) {
+            repDistrictSelect.onchange = () => {
+                updateMandalDropdown(repDistrictSelect.value, '');
+            };
+        }
+
+        if (repMandalSelect) {
+            repMandalSelect.onchange = () => {
+                if (repMandalSelect.value === '__custom__') {
+                    if (repMandalCustomWrap) repMandalCustomWrap.style.display = 'block';
+                    if (repMandalCustomInput) repMandalCustomInput.focus();
+                } else {
+                    if (repMandalCustomWrap) repMandalCustomWrap.style.display = 'none';
+                    if (repMandalCustomInput) repMandalCustomInput.value = '';
+                }
+            };
+        }
 
         if (browsePhotoBtn && photoFileInput) {
             browsePhotoBtn.onclick = () => photoFileInput.click();
@@ -2658,8 +2736,6 @@ function initAdminApp() {
         const mandalInput = document.getElementById('rep-mandal');
         const phoneInput = document.getElementById('rep-phone');
         const emailInput = document.getElementById('rep-email');
-        const statusSelect = document.getElementById('rep-status');
-        const orderInput = document.getElementById('rep-display-order');
         const bioTextarea = document.getElementById('rep-bio');
         const photoUrlInput = document.getElementById('rep-photo-url');
         const photoPreview = document.getElementById('rep-photo-preview');
@@ -2680,12 +2756,12 @@ function initAdminApp() {
         if (editIdInput) editIdInput.value = r.id;
         if (nameInput) nameInput.value = r.name || '';
         if (desigInput) desigInput.value = r.designation || '';
-        if (distSelect) distSelect.value = r.district || '';
-        if (mandalInput) mandalInput.value = r.mandal || '';
+        if (distSelect) {
+            distSelect.value = r.district || '';
+            updateMandalDropdown(r.district || '', r.mandal || '');
+        }
         if (phoneInput) phoneInput.value = r.phone || '';
         if (emailInput) emailInput.value = r.email || '';
-        if (statusSelect) statusSelect.value = r.status || 'active';
-        if (orderInput) orderInput.value = r.display_order || 0;
         if (bioTextarea) bioTextarea.value = r.bio || '';
 
         if (photoUrlInput) photoUrlInput.value = r.photo_url || '';
@@ -2714,6 +2790,9 @@ function initAdminApp() {
         if (form) form.reset();
         const editIdInput = document.getElementById('rep-edit-id');
         if (editIdInput) editIdInput.value = '';
+        const distSelect = document.getElementById('rep-district');
+        if (distSelect) distSelect.value = '';
+        updateMandalDropdown('', '');
         const formTitle = document.getElementById('reporter-form-title');
         if (formTitle) formTitle.textContent = '➕ కొత్త రిపోర్టర్‌ని నమోదు చేయండి (Add New Reporter)';
         const submitBtn = document.getElementById('btn-save-reporter');
@@ -2740,11 +2819,35 @@ function initAdminApp() {
         const name = (document.getElementById('rep-name') ? document.getElementById('rep-name').value : '').trim();
         const desig = (document.getElementById('rep-designation') ? document.getElementById('rep-designation').value : '').trim();
         const dist = document.getElementById('rep-district') ? document.getElementById('rep-district').value : '';
-        const mandal = (document.getElementById('rep-mandal') ? document.getElementById('rep-mandal').value : '').trim();
+        
+        let mandal = '';
+        const mandalSelect = document.getElementById('rep-mandal');
+        const customMandalInput = document.getElementById('rep-mandal-custom');
+        if (mandalSelect) {
+            if (mandalSelect.value === '__custom__') {
+                mandal = (customMandalInput ? customMandalInput.value : '').trim();
+            } else {
+                mandal = (mandalSelect.value || '').trim();
+            }
+        }
+
         const phone = (document.getElementById('rep-phone') ? document.getElementById('rep-phone').value : '').trim();
         const email = (document.getElementById('rep-email') ? document.getElementById('rep-email').value : '').trim();
-        const status = document.getElementById('rep-status') ? document.getElementById('rep-status').value : 'active';
-        const order = document.getElementById('rep-display-order') ? parseInt(document.getElementById('rep-display-order').value, 10) || 0 : 0;
+        const status = 'active';
+
+        // Auto-calculate priority: Top 1 = Chief / Founder, Top 2 = Associate Editor, 3 = Normal Block
+        function calculateReporterPriority(desigText) {
+            if (!desigText) return 3;
+            const d = String(desigText).toLowerCase();
+            if (d.includes('founder') || d.includes('వ్యవస్థాపక') || d.includes('editor-in-chief') || d.includes('ప్రధాన సంపాదకులు') || d.includes('chief') || d.includes('చీఫ్')) {
+                return 1;
+            }
+            if (d.includes('associate') || d.includes('అసోసియేట్')) {
+                return 2;
+            }
+            return 3;
+        }
+        const order = calculateReporterPriority(desig);
         const bio = (document.getElementById('rep-bio') ? document.getElementById('rep-bio').value : '').trim();
         const photoUrl = (document.getElementById('rep-photo-url') ? document.getElementById('rep-photo-url').value : '').trim();
         const photoFileInput = document.getElementById('rep-photo-file');

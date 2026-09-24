@@ -907,11 +907,16 @@
                                 <!-- Mandal / Region -->
                                 <div class="form-group">
                                     <label for="rep-mandal" class="form-label-editorial">మండలం / ప్రాంతం (Mandal / Region)</label>
-                                    <input type="text" id="rep-mandal" class="form-control" placeholder="ఉదా: తెనాలి, బాపట్ల రూరల్...">
+                                    <select id="rep-mandal" class="form-control">
+                                        <option value="">ముందుగా జిల్లాను ఎంచుకోండి...</option>
+                                    </select>
+                                    <div id="rep-mandal-custom-wrap" style="display: none; margin-top: 8px;">
+                                        <input type="text" id="rep-mandal-custom" class="form-control" placeholder="కస్టమ్ మండలం / గ్రామం / ప్రాంతం పేరును నమోదు చేయండి...">
+                                    </div>
                                 </div>
                             </div>
 
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; margin-bottom: 18px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-bottom: 18px;">
                                 <!-- Phone -->
                                 <div class="form-group">
                                     <label for="rep-phone" class="form-label-editorial">ఫోన్ నంబర్ (Phone Number)</label>
@@ -922,21 +927,6 @@
                                 <div class="form-group">
                                     <label for="rep-email" class="form-label-editorial">ఈమెయిల్ (Email Address)</label>
                                     <input type="email" id="rep-email" class="form-control" placeholder="reporter@mamekamahodayam.com">
-                                </div>
-
-                                <!-- Status -->
-                                <div class="form-group">
-                                    <label for="rep-status" class="form-label-editorial">ప్రొఫైల్ స్థితి (Status)</label>
-                                    <select id="rep-status" class="form-control">
-                                        <option value="active">Active (ప్రదర్శించు - లైవ్)</option>
-                                        <option value="inactive">Inactive (దాచు - నిలిపివేత)</option>
-                                    </select>
-                                </div>
-
-                                <!-- Display Priority -->
-                                <div class="form-group">
-                                    <label for="rep-display-order" class="form-label-editorial">ప్రదర్శన క్రమం (Priority Order)</label>
-                                    <input type="number" id="rep-display-order" class="form-control" value="0" min="0" placeholder="0 = ప్రామాణికం, 1, 2, 3...">
                                 </div>
                             </div>
 
@@ -1006,7 +996,7 @@
                                         <th>హోదా (Position)</th>
                                         <th>జిల్లా / మండలం</th>
                                         <th>సంప్రదింపు</th>
-                                        <th style="width: 80px;">స్థితి</th>
+                                        <th style="width: 130px;">ప్రాధాన్యత (Tier)</th>
                                         <th style="width: 150px;">QR కోడ్ (ID కార్డ్)</th>
                                         <th style="width: 130px;">చర్యలు</th>
                                     </tr>

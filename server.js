@@ -1667,7 +1667,13 @@ app.get(['/api/public/reporters', '/api/reporters'], async (req, res) => {
       SELECT id, name, designation, district, mandal, bio, photo_url, phone, email, social_links, display_order, created_at
       FROM reporters
       WHERE ${filters.join(' AND ')}
-      ORDER BY display_order ASC, created_at ASC
+      ORDER BY 
+        (CASE 
+          WHEN LOWER(designation) LIKE '%founder%' OR designation LIKE '%వ్యవస్థాపక%' OR LOWER(designation) LIKE '%editor-in-chief%' OR designation LIKE '%ప్రధాన సంపాదకులు%' THEN 1
+          WHEN LOWER(designation) LIKE '%associate%' OR designation LIKE '%అసోసియేట్%' THEN 2
+          ELSE 3
+        END) ASC,
+        display_order ASC, created_at ASC
     `, params);
 
     res.json({ success: true, reporters: reporters || [], count: (reporters || []).length });
@@ -1761,7 +1767,13 @@ app.get('/api/admin/reporters', authenticateToken, async (req, res) => {
     const reporters = await dbAll(`
       SELECT * FROM reporters
       ${whereClause}
-      ORDER BY display_order ASC, created_at DESC
+      ORDER BY 
+        (CASE 
+          WHEN LOWER(designation) LIKE '%founder%' OR designation LIKE '%వ్యవస్థాపక%' OR LOWER(designation) LIKE '%editor-in-chief%' OR designation LIKE '%ప్రధాన సంపాదకులు%' THEN 1
+          WHEN LOWER(designation) LIKE '%associate%' OR designation LIKE '%అసోసియేట్%' THEN 2
+          ELSE 3
+        END) ASC,
+        display_order ASC, created_at DESC
     `, params);
 
     res.json({ success: true, reporters, count: reporters.length });
@@ -1843,7 +1855,13 @@ app.post('/api/admin/reporters', authenticateToken, uploadReporterMulter.single(
       email || '',
       socialLinksJson,
       status === 'inactive' ? 'inactive' : 'active',
-      parseInt(display_order, 10) || 0
+      (function() {
+        if (display_order !== undefined && parseInt(display_order, 10) > 0) return parseInt(display_order, 10);
+        const d = String(designation || '').toLowerCase();
+        if (d.includes('founder') || d.includes('వ్యవస్థాపక') || d.includes('editor-in-chief') || d.includes('ప్రధాన సంపాదకులు') || d.includes('chief') || d.includes('చీఫ్')) return 1;
+        if (d.includes('associate') || d.includes('అసోసియేట్')) return 2;
+        return 3;
+      })()
     ]);
 
     const created = await dbGet('SELECT * FROM reporters WHERE id = ?', [id]);
@@ -1921,7 +1939,13 @@ app.put('/api/admin/reporters/:id', authenticateToken, uploadReporterMulter.sing
       email !== undefined ? email : null,
       socialLinksJson,
       status !== undefined ? (status === 'inactive' ? 'inactive' : 'active') : null,
-      display_order !== undefined ? parseInt(display_order, 10) : null,
+      (function() {
+        if (display_order !== undefined && display_order !== null && parseInt(display_order, 10) > 0) return parseInt(display_order, 10);
+        const d = String(designation || existing.designation || '').toLowerCase();
+        if (d.includes('founder') || d.includes('వ్యవస్థాపక') || d.includes('editor-in-chief') || d.includes('ప్రధాన సంపాదకులు') || d.includes('chief') || d.includes('చీఫ్')) return 1;
+        if (d.includes('associate') || d.includes('అసోసియేట్')) return 2;
+        return existing.display_order || 3;
+      })(),
       id
     ]);
 

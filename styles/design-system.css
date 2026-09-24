@@ -3774,6 +3774,24 @@ body {
   transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
+@media (max-width: 680px) {
+  .founder-hero-horizontal, .associate-hero-horizontal {
+    flex-direction: column !important;
+    text-align: center !important;
+    align-items: center !important;
+  }
+  .founder-left-image-frame, .assoc-left-image-frame {
+    margin: 0 auto !important;
+  }
+  .founder-right-content, .assoc-right-content {
+    text-align: center !important;
+    align-items: center !important;
+  }
+  .founder-typewriter-wrap {
+    justify-content: center !important;
+  }
+}
+
 .reporter-modal-overlay.active {
   opacity: 1;
   visibility: visible;

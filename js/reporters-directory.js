@@ -216,7 +216,7 @@
           <div class="founder-fade-details" id="founder-fade-target" style="opacity: 0; transform: translateY(16px); transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
               <span class="founder-badge-tag" style="display: inline-flex; align-items: center; gap: 4px; background: #fff1f2; color: #be185d; border: 1px solid #fecdd3; font-size: 0.8rem; font-weight: 700; padding: 3px 12px; border-radius: 16px; text-transform: uppercase;">
-                ⭐ FOUNDER &amp; EDITOR-IN-CHIEF / వ్యవస్థాపక ప్రధాన సంపాదకులు
+                ⭐ TOP 1 • FOUNDER &amp; EDITOR-IN-CHIEF / వ్యవస్థాపక ప్రధాన సంపాదకులు
               </span>
               ${locationText ? `
                 <span style="font-size: 0.85rem; color: #475569; font-weight: 600;">📍 ${escapeHtml(locationText)}</span>
@@ -258,8 +258,98 @@
       }
     }
 
-    // 3. Render ALL REMAINING team members (excluding founder to eliminate duplicate card!)
-    const remainingReporters = reporters.filter(r => r.id !== (founder ? founder.id : null));
+    // 2.5 Separate Associate Editor for Top 2 Priority Showcase
+    const associateEditor = reporters.find(r => 
+      r.id !== (founder ? founder.id : null) && (
+        r.display_order === 2 || 
+        (r.designation || '').toLowerCase().includes('associate') || 
+        (r.designation || '').includes('అసోసియేట్')
+      )
+    );
+
+    if (associateEditor) {
+      const assocCard = document.createElement('section');
+      assocCard.className = 'associate-hero-horizontal';
+      assocCard.style.cssText = `
+        background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+        border: 1px solid #e2e8f0;
+        border-left: 6px solid #0284c7;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 32px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 24px;
+        width: 100%;
+        box-sizing: border-box;
+      `;
+
+      const distName = getDistrictName(associateEditor.district);
+      const locationText = [distName, associateEditor.mandal].filter(Boolean).join(', ');
+      const hasAssocPhoto = Boolean(associateEditor.photo_url && associateEditor.photo_url.trim());
+      const assocPhotoSrc = hasAssocPhoto ? resolvePhotoUrl(associateEditor.photo_url) : '';
+      const assocInitial = escapeHtml((associateEditor.name || 'A').charAt(0));
+
+      assocCard.innerHTML = `
+        <!-- LEFT SIDE IMAGE FRAME -->
+        <div class="assoc-left-image-frame" style="width: 190px; height: 230px; flex-shrink: 0; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 2px solid #ffffff; outline: 1px solid #cbd5e1; background: #ffffff; display: flex; align-items: center; justify-content: center;">
+          ${assocPhotoSrc
+            ? `<img src="${escapeHtml(assocPhotoSrc)}" alt="${escapeHtml(associateEditor.name)}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.onerror=null; this.parentNode.innerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#e0f2fe;color:#0369a1;font-size:2.6rem;font-weight:800;\\'>${assocInitial}</div>';">`
+            : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #e0f2fe; color: #0369a1; font-size: 2.6rem; font-weight: 800;">${assocInitial}</div>`}
+        </div>
+
+        <!-- RIGHT SIDE CONTENT -->
+        <div class="assoc-right-content" style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; text-align: left;">
+          
+          <div style="margin-bottom: 6px;">
+            <h2 style="font-size: clamp(1.4rem, 2.6vw, 1.85rem); font-weight: 800; color: #0f172a; margin: 0; font-family: Georgia, 'Times New Roman', serif; line-height: 1.2;">
+              ${escapeHtml(associateEditor.name)}
+            </h2>
+          </div>
+
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+              <span class="assoc-badge-tag" style="display: inline-flex; align-items: center; gap: 4px; background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; font-size: 0.8rem; font-weight: 700; padding: 3px 12px; border-radius: 16px; text-transform: uppercase;">
+                ⭐ TOP 2 • ASSOCIATE EDITOR / అసోసియేట్ ఎడిటర్
+              </span>
+              ${locationText ? `
+                <span style="font-size: 0.85rem; color: #475569; font-weight: 600;">📍 ${escapeHtml(locationText)}</span>
+              ` : ''}
+            </div>
+
+            <div class="assoc-bio-quote-box" style="background: #f8fafc; border-left: 3px solid #0284c7; border-radius: 0 6px 6px 0; padding: 10px 16px; margin-bottom: 14px; color: #334155; font-size: 0.92rem; line-height: 1.6; font-family: Georgia, 'Times New Roman', serif;">
+              "${escapeHtml(associateEditor.bio || 'దినపత్రిక ఎడిటోరియల్ డెస్క్ పర్యవేక్షణ, ప్రధాన వార్తా విభాగాలు మరియు పరిశోధనాత్మక జర్నలిజం సమన్వయకర్త.')}"
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <button type="button" id="btn-view-assoc-modal" style="padding: 7px 16px; background: #0284c7; color: #ffffff; border: none; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.2); transition: transform 0.2s, background 0.2s;">
+                పూర్తి ప్రొఫైల్ వివరాలు (Full Profile) →
+              </button>
+              ${associateEditor.phone ? `<span style="padding: 5px 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; font-size: 0.8rem; font-weight: 600; color: #334155;">📞 ${escapeHtml(associateEditor.phone)}</span>` : ''}
+              ${associateEditor.email ? `<span style="padding: 5px 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; font-size: 0.8rem; font-weight: 600; color: #334155;">✉️ ${escapeHtml(associateEditor.email)}</span>` : ''}
+            </div>
+          </div>
+
+        </div>
+      `;
+
+      mainWrap.appendChild(assocCard);
+
+      const assocBtn = assocCard.querySelector('#btn-view-assoc-modal');
+      if (assocBtn) {
+        assocBtn.addEventListener('click', () => {
+          openReporterModal(associateEditor.id);
+        });
+      }
+    }
+
+    // 3. Render ALL REMAINING team members in standard uniform grid
+    const remainingReporters = reporters.filter(r => 
+      r.id !== (founder ? founder.id : null) &&
+      r.id !== (associateEditor ? associateEditor.id : null)
+    );
     if (remainingReporters.length > 0) {
       const section = document.createElement('div');
       section.className = 'editorial-hierarchy-section';
@@ -267,8 +357,8 @@
 
       section.innerHTML = `
         <div class="editorial-section-title-wrap" style="margin-bottom: 16px; border-bottom: 2px solid #be185d; padding-bottom: 8px;">
-          <span class="editorial-section-badge" style="font-size: 0.75rem; font-weight: 800; color: #be185d; text-transform: uppercase;">EDITORIAL TEAM</span>
-          <h3 class="editorial-section-title" style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 4px 0 0 0;">మా రిపోర్టర్లు &amp; సంపాదకీయ బృందం (Reporters &amp; Editorial Team)</h3>
+          <span class="editorial-section-badge" style="font-size: 0.75rem; font-weight: 800; color: #be185d; text-transform: uppercase;">DISTRICT &amp; MANDAL REPORTERS</span>
+          <h3 class="editorial-section-title" style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 4px 0 0 0;">మా పాత్రికేయ బృందం (Reporters &amp; Editorial Team)</h3>
         </div>
         <div class="reporters-grid-sub" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-top: 16px;"></div>
       `;
