@@ -133,28 +133,6 @@
     document.title = `${r.name} - అధికారిక పాత్రికేయ గుర్తింపు ధృవీకరణ | మమేక మహోదయం`;
 
     contentEl.innerHTML = `
-      <!-- TOP SECURITY RAINBOW STRIPE -->
-      <div class="card-security-stripe"></div>
-
-      <!-- CARD BRAND HEADER (EXACT 3D LOGO MATCHING HOMEPAGE) -->
-      <div class="card-header-masthead">
-        <div class="card-brand-stacked-box">
-          <span class="card-brand-prefix-text">మమేక</span>
-          <span class="card-brand-main-text">మహోదయం</span>
-        </div>
-        <div class="card-brand-en-text">MAMEKA MAHODAYAM</div>
-        <div class="card-tagline-text">అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం</div>
-        <div class="card-badge-flex">
-          <span class="card-badge-pill">తెలుగు దినపత్రిక</span>
-          <span class="card-badge-gold">PRESS ID</span>
-        </div>
-      </div>
-
-      <!-- EDITORIAL RED SUBSTRIP -->
-      <div class="card-substrip-red">
-        పాత్రికేయుల అధికారిక గుర్తింపు కార్డు (PRESS IDENTITY CARD)
-      </div>
-
       <!-- CARD MAIN BODY -->
       <div class="card-main-body">
         
@@ -271,7 +249,6 @@
     if (!contentEl) return;
 
     contentEl.innerHTML = `
-      <div class="card-security-stripe" style="background: #dc2626;"></div>
       <div style="padding: 36px 20px; text-align: center;">
         <div style="font-size: 3rem; margin-bottom: 12px; color: #dc2626;">⚠️</div>
         <h2 style="font-size: 1.25rem; font-weight: 800; color: #991b1b; margin-bottom: 8px; font-family: var(--font-serif-te);">

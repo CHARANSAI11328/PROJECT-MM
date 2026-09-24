@@ -38,146 +38,18 @@
 
       body {
         font-family: var(--font-telugu);
-        background-color: var(--color-bg-main);
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
         min-height: 100vh;
         color: var(--color-text-main);
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 0 0 40px 0;
+        justify-content: flex-start;
+        padding: 24px 14px 40px 14px;
       }
 
       /* ==========================================================================
-         1. HOMEPAGE-MATCHING BRAND MASTHEAD AT TOP OF PAGE
-         ========================================================================== */
-      .site-header-verification {
-        width: 100%;
-        background-color: var(--color-surface);
-        border-bottom: 3px double var(--color-brand-magenta);
-        text-align: center;
-      }
-
-      .veri-utility-bar {
-        background-color: #1a1a1a;
-        color: #ffffff;
-        font-size: 0.74rem;
-        padding: 6px 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        flex-wrap: wrap;
-        font-family: 'Inter', sans-serif;
-        letter-spacing: 0.02em;
-      }
-
-      .veri-utility-bar strong {
-        color: #ffcc00;
-      }
-
-      .veri-masthead-brand {
-        background: linear-gradient(180deg, #fff0f6 0%, #ffffff 60%, #fff5f9 100%);
-        border-top: 1px solid #f4ecef;
-        border-bottom: 2px solid var(--color-brand-gold);
-        padding: 14px 12px 12px 12px;
-      }
-
-      .veri-brand-anchor {
-        text-decoration: none;
-        display: inline-block;
-      }
-
-      .veri-brand-stacked-wrap {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        line-height: 1.0;
-        position: relative;
-        margin: 0 auto;
-        width: fit-content;
-      }
-
-      .veri-brand-prefix {
-        font-family: var(--font-serif-te);
-        font-weight: 700;
-        font-size: clamp(0.72rem, 2vw, 0.95rem);
-        line-height: 1;
-        color: #d97706;
-        text-shadow: 
-          1px 1px 0px #fff,
-          -1px -1px 0px #fff,
-          1px 1px 2px rgba(0, 0, 0, 0.2);
-        letter-spacing: 0.05em;
-        margin-left: 6px;
-        margin-bottom: -0.28em;
-        z-index: 2;
-        position: relative;
-        display: block;
-      }
-
-      .veri-brand-main {
-        font-family: var(--font-serif-te);
-        font-weight: 900;
-        font-size: clamp(2.4rem, 7vw, 3.4rem);
-        line-height: 0.98;
-        letter-spacing: -0.015em;
-        color: var(--color-brand-magenta);
-        text-shadow: 
-          1px 1px 0px #ffcc00,
-          -1px -1px 0px #ffcc00,
-          2px 2px 0px #8a084b,
-          3px 3px 0px #8a084b,
-          4px 4px 0px #600433,
-          4px 4px 6px rgba(0, 0, 0, 0.3);
-        z-index: 1;
-        display: block;
-      }
-
-      .veri-brand-english {
-        font-family: var(--font-serif-en, "Lora", serif);
-        font-size: clamp(0.72rem, 1.8vw, 0.85rem);
-        font-weight: 700;
-        letter-spacing: 0.24em;
-        text-transform: uppercase;
-        color: var(--color-brand-magenta);
-        margin-top: 3px;
-      }
-
-      .veri-brand-tagline {
-        color: var(--color-brand-green);
-        font-family: var(--font-telugu);
-        font-size: clamp(0.75rem, 1.8vw, 0.84rem);
-        font-weight: 700;
-        margin-top: 4px;
-        letter-spacing: 0.02em;
-      }
-
-      .veri-brand-badge {
-        display: inline-block;
-        background-color: var(--color-brand-purple);
-        color: #ffffff;
-        font-size: 0.72rem;
-        font-weight: 700;
-        padding: 2px 14px;
-        border-radius: 12px;
-        margin-top: 6px;
-        letter-spacing: 0.05em;
-      }
-
-      .veri-red-bar {
-        background-color: var(--color-brand-red);
-        color: #ffffff;
-        font-size: 0.78rem;
-        font-weight: 700;
-        padding: 6px 12px;
-        letter-spacing: 0.04em;
-        border-top: 1px solid #990000;
-        border-bottom: 1px solid #990000;
-        text-align: center;
-      }
-
-      /* ==========================================================================
-         2. STANDALONE DIGITAL PRESS ID CARD WRAPPER
+         OFFICIAL DIGITAL PRESS ID CARD (UNIFIED SINGLE MASTHEAD)
          ========================================================================== */
       .press-card-wrapper {
         width: 100%;
@@ -187,10 +59,36 @@
         border: 2px solid var(--color-brand-magenta);
         border-radius: 16px;
         box-shadow: 
-          0 16px 36px -10px rgba(216, 27, 122, 0.16),
-          0 4px 12px rgba(0, 0, 0, 0.05);
+          0 20px 40px -15px rgba(216, 27, 122, 0.18),
+          0 4px 16px rgba(0, 0, 0, 0.06);
         overflow: hidden;
-        margin: 20px 12px 0 12px;
+        margin: 0 auto;
+      }
+
+      /* Official Accreditation RNI Utility Strip */
+      .card-utility-bar {
+        background-color: #1a1a1a;
+        color: #ffffff;
+        font-size: 0.72rem;
+        padding: 6px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        font-family: 'Inter', sans-serif;
+        letter-spacing: 0.02em;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .card-utility-bar strong {
+        color: #ffcc00;
+      }
+
+      .card-brand-anchor {
+        text-decoration: none;
+        display: inline-block;
+        color: inherit;
       }
 
       /* Security stripe on card */
@@ -601,13 +499,43 @@
         to { transform: rotate(360deg); }
       }
 
+      /* MOBILE RESPONSIVE TWEAKS */
+      @media (max-width: 480px) {
+        body {
+          padding: 8px 6px 30px 6px;
+        }
+        .press-card-wrapper {
+          border-radius: 14px;
+          margin: 0;
+          max-width: 100%;
+        }
+        .card-brand-main-text {
+          font-size: clamp(1.9rem, 8.5vw, 2.3rem);
+        }
+        .card-header-masthead {
+          padding: 12px 10px 8px 10px;
+        }
+        .card-main-body {
+          padding: 16px 12px;
+        }
+        .photo-frame-wrap {
+          width: 110px;
+          height: 110px;
+        }
+        .reporter-full-name {
+          font-size: 1.45rem;
+        }
+        .actions-container {
+          grid-template-columns: 1fr;
+        }
+      }
+
       /* PRINT OVERRIDES */
       @media print {
         body {
           background: #ffffff !important;
           padding: 0 !important;
         }
-        .site-header-verification,
         .actions-container,
         .visit-newspaper-wrap {
           display: none !important;
@@ -622,41 +550,47 @@
     </style>
   </head>
   <body>
-    <!-- 1. TOP EDITORIAL MASTHEAD (EXACT HOMEPAGE BRAND SYSTEM) -->
-    <header class="site-header-verification" role="banner">
-      <div class="veri-utility-bar">
+    <!-- OFFICIAL DIGITAL PRESS ID CARD (SINGLE UNIFIED ACCREDITATION PASS) -->
+    <main class="press-card-wrapper" id="press-card-container">
+      <!-- TOP SECURITY RAINBOW STRIPE -->
+      <div class="card-security-stripe"></div>
+
+      <!-- OFFICIAL ACCREDITATION RNI & JURISDICTION UTILITY BAR -->
+      <div class="card-utility-bar">
         <span>RNI No: <strong>APTEL/26/A5988</strong></span>
         <span>•</span>
-        <span>ఆంధ్రప్రదేశ్ &amp; తెలంగాణ దినపత్రిక (Andhra Pradesh &amp; Telangana)</span>
+        <span>ఆంధ్రప్రదేశ్ &amp; తెలంగాణ దినపత్రిక</span>
       </div>
 
-      <div class="veri-masthead-brand">
-        <a href="/" class="veri-brand-anchor" title="మమేక మహోదయం హోమ్‌పేజీకి వెళ్ళండి">
-          <div class="veri-brand-stacked-wrap">
-            <span class="veri-brand-prefix">మమేక</span>
-            <span class="veri-brand-main">మహోదయం</span>
+      <!-- CARD BRAND HEADER (EXACT 3D LOGO MATCHING HOMEPAGE) -->
+      <header class="card-header-masthead">
+        <a href="/" class="card-brand-anchor" title="మమేక మహోదయం ప్రధాన వెబ్‌సైట్‌కి వెళ్ళండి">
+          <div class="card-brand-stacked-box">
+            <span class="card-brand-prefix-text">మమేక</span>
+            <span class="card-brand-main-text">మహోదయం</span>
           </div>
-          <div class="veri-brand-english">MAMEKA MAHODAYAM</div>
-          <div class="veri-brand-tagline">అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం</div>
-          <div class="veri-brand-badge">తెలుగు దినపత్రిక</div>
+          <div class="card-brand-en-text">MAMEKA MAHODAYAM</div>
+          <div class="card-tagline-text">అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం</div>
+          <div class="card-badge-flex">
+            <span class="card-badge-pill">తెలుగు దినపత్రిక</span>
+            <span class="card-badge-gold">PRESS ID</span>
+          </div>
         </a>
-      </div>
+      </header>
 
-      <div class="veri-red-bar">
+      <!-- OFFICIAL RED SECURITY STRIP -->
+      <div class="card-substrip-red">
         🛡️ అధికారిక పాత్రికేయ డిజిటల్ గుర్తింపు కార్డు (OFFICIAL DIGITAL PRESS ID)
       </div>
-    </header>
 
-    <!-- 2. MAIN DIGITAL PRESS ID CARD WRAPPER -->
-    <main class="press-card-wrapper" id="press-card-container">
-      <!-- Loading State -->
+      <!-- Loading State (Inside Card Body) -->
       <div class="loading-wrap" id="press-card-loading">
         <div class="spinner"></div>
         <p style="font-weight: 700; color: #1e293b;">పాత్రికేయుని గుర్తింపు వివరాలు లోడ్ అవుతున్నాయి...</p>
         <p style="font-size: 0.8rem; margin-top: 4px; color: #64748b;">Loading Press ID Card Verification...</p>
       </div>
 
-      <!-- Injected Card Content Will Replace Spinner -->
+      <!-- Dynamic Reporter Details (Photo, Name, Designation, Credentials Grid, Actions) -->
       <div id="press-card-content" style="display: none;"></div>
     </main>
 
