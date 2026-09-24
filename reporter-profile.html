@@ -2,251 +2,557 @@
 <html lang="te">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>పాత్రికేయుని ప్రొఫైల్ - మమేక మహోదయం | Reporter Profile</title>
-    <meta name="description" content="మమేక మహోదయం దినపత్రిక పాత్రికేయుని వివరాలు మరియు ప్రచురించిన వార్తా కథనాలు" />
-    <link rel="stylesheet" href="/styles/design-system.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>అధికారిక పాత్రికేయ గుర్తింపు ధృవీకరణ | Official Press ID - మమేక మహోదయం</title>
+    <meta name="description" content="మమేక మహోదయం దినపత్రిక అధికారిక పాత్రికేయుల డిజిటల్ గుర్తింపు ధృవీకరణ కార్డు (Official Press ID Verification)" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;500;600;700;800&family=Mandali&display=swap" rel="stylesheet" />
+
     <style>
-      /* DISPLAY & PRINT HYBRID SYSTEM FOR PRESS ACCREDITATION PROFILES */
-      .print-only-card {
-        display: none !important;
+      :root {
+        --color-brand-magenta: #be185d;
+        --color-brand-dark: #831843;
+        --color-gold: #d97706;
+        --color-gold-light: #fef3c7;
+        --color-gold-border: #fcd34d;
+        --color-verified-green: #059669;
+        --color-verified-bg: #ecfdf5;
+        --color-verified-border: #a7f3d0;
+        --color-text-main: #0f172a;
+        --color-text-muted: #64748b;
+        --font-telugu: "Noto Sans Telugu", "Mandali", sans-serif;
+        --font-serif: Georgia, 'Times New Roman', serif;
       }
 
-      @media print {
-        header,
-        nav,
-        footer,
-        .utility-bar,
-        .skip-link,
-        .breadcrumb-wrap,
-        #section-authored-articles,
-        .utility-card,
-        .no-print,
-        .on-screen-profile-hero {
-          display: none !important;
-        }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
 
-        body, main, #main-content, #reporter-profile-hero {
+      body {
+        font-family: var(--font-telugu);
+        background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 140px, #f1f5f9 140px, #f8fafc 100%);
+        min-height: 100vh;
+        color: var(--color-text-main);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 16px 12px 32px 12px;
+      }
+
+      /* TOP SECURITY MASTHEAD */
+      .press-verification-masthead {
+        width: 100%;
+        max-width: 480px;
+        text-align: center;
+        padding: 12px 16px 16px 16px;
+        color: #ffffff;
+      }
+
+      .gov-reg-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        color: #cbd5e1;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        font-family: 'Inter', sans-serif;
+      }
+
+      .gov-reg-badge {
+        background: rgba(255, 255, 255, 0.15);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #fcd34d;
+        font-weight: 700;
+      }
+
+      .press-org-title {
+        font-size: 1.55rem;
+        font-weight: 800;
+        color: #ffffff;
+        letter-spacing: 0.02em;
+        line-height: 1.15;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      }
+
+      .press-org-sub {
+        font-size: 0.76rem;
+        color: #cbd5e1;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        font-family: 'Inter', sans-serif;
+        margin-top: 2px;
+      }
+
+      .press-verification-title-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(217, 119, 6, 0.25);
+        border: 1px solid rgba(252, 211, 77, 0.4);
+        padding: 3px 10px;
+        border-radius: 20px;
+        color: #fef3c7;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        margin-top: 8px;
+      }
+
+      /* MAIN DIGITAL PRESS ID CARD WRAPPER */
+      .press-card-wrapper {
+        width: 100%;
+        max-width: 460px;
+        position: relative;
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 
+          0 20px 40px -15px rgba(0, 0, 0, 0.2),
+          0 0 0 1px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        margin-top: 4px;
+      }
+
+      /* CARD TOP ACCENT & HOLOGRAPHIC STRIPE */
+      .card-security-stripe {
+        height: 8px;
+        background: linear-gradient(90deg, #be185d 0%, #d97706 35%, #2563eb 70%, #059669 100%);
+        width: 100%;
+      }
+
+      .card-header-bar {
+        background: linear-gradient(135deg, #831843 0%, #be185d 100%);
+        color: #ffffff;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+      }
+
+      .card-header-emblem {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .emblem-icon {
+        width: 38px;
+        height: 38px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1.5px solid rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+      }
+
+      .emblem-text h3 {
+        font-size: 0.98rem;
+        font-weight: 800;
+        line-height: 1.15;
+      }
+
+      .emblem-text p {
+        font-size: 0.68rem;
+        color: #fbcfe8;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        font-family: 'Inter', sans-serif;
+      }
+
+      .card-press-badge {
+        background: #fcd34d;
+        color: #78350f;
+        font-weight: 800;
+        font-size: 0.68rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+        letter-spacing: 0.04em;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        font-family: 'Inter', sans-serif;
+      }
+
+      /* VERIFIED STATUS PILL */
+      .status-banner {
+        background: var(--color-verified-bg);
+        border-bottom: 1px solid var(--color-verified-border);
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .pulse-dot {
+        width: 10px;
+        height: 10px;
+        background-color: var(--color-verified-green);
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+        animation: pulseStatus 2s infinite;
+      }
+
+      @keyframes pulseStatus {
+        0% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }
+        70% { box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+      }
+
+      .status-text {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #065f46;
+        letter-spacing: 0.02em;
+      }
+
+      /* CARD BODY CONTENT */
+      .card-main-body {
+        padding: 24px 20px 20px 20px;
+        text-align: center;
+      }
+
+      /* JOURNALIST PHOTO FRAME */
+      .photo-frame-wrap {
+        position: relative;
+        width: 136px;
+        height: 154px;
+        margin: 0 auto 16px auto;
+      }
+
+      .photo-frame {
+        width: 100%;
+        height: 100%;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 3.5px solid #ffffff;
+        outline: 2px solid #be185d;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .photo-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .photo-placeholder {
+        font-size: 3.5rem;
+        color: #94a3b8;
+      }
+
+      .photo-verified-seal {
+        position: absolute;
+        bottom: -6px;
+        right: -6px;
+        width: 32px;
+        height: 32px;
+        background: #059669;
+        color: #ffffff;
+        border-radius: 50%;
+        border: 2.5px solid #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        font-weight: 800;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      }
+
+      /* JOURNALIST IDENTITY */
+      .reporter-full-name {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.25;
+        margin-bottom: 6px;
+      }
+
+      .designation-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fdf2f8;
+        color: #be185d;
+        border: 1.5px solid #fbcfe8;
+        font-weight: 700;
+        font-size: 0.88rem;
+        padding: 5px 14px;
+        border-radius: 20px;
+        margin-bottom: 16px;
+      }
+
+      /* CREDENTIAL DETAILS TABLE GRID */
+      .credentials-grid {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 14px 16px;
+        text-align: left;
+        margin-bottom: 18px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .cred-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .cred-item.full-width {
+        grid-column: 1 / -1;
+      }
+
+      .cred-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-bottom: 2px;
+      }
+
+      .cred-value {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #1e293b;
+      }
+
+      .cred-value.highlight {
+        color: #be185d;
+        font-family: 'Inter', monospace;
+        letter-spacing: 0.04em;
+      }
+
+      .cred-value.jurisdiction {
+        color: #0369a1;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      /* BIO QUOTE BOX */
+      .reporter-bio-box {
+        background: #fffbeb;
+        border-left: 3px solid #d97706;
+        border-radius: 0 8px 8px 0;
+        padding: 10px 14px;
+        text-align: left;
+        font-size: 0.86rem;
+        line-height: 1.55;
+        color: #78350f;
+        margin-bottom: 20px;
+        font-family: var(--font-serif);
+      }
+
+      /* ACTION BUTTONS (TAP TO CALL, EMAIL, SHARE) */
+      .actions-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 0.86rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform 0.15s, opacity 0.15s;
+        border: none;
+        cursor: pointer;
+      }
+
+      .action-btn:active {
+        transform: scale(0.97);
+      }
+
+      .action-btn.call-btn {
+        background: #059669;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+      }
+
+      .action-btn.email-btn {
+        background: #0284c7;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+      }
+
+      .action-btn.share-btn {
+        grid-column: 1 / -1;
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+      }
+
+      .action-btn.hotline-btn {
+        grid-column: 1 / -1;
+        background: #fff1f2;
+        color: #be185d;
+        border: 1px solid #fecdd3;
+        font-size: 0.8rem;
+        padding: 8px 12px;
+      }
+
+      /* CARD FOOTER SEAL & SECURITY STATEMENT */
+      .card-footer-security {
+        border-top: 1px dashed #cbd5e1;
+        padding-top: 14px;
+        text-align: center;
+      }
+
+      .security-statement {
+        font-size: 0.72rem;
+        line-height: 1.45;
+        color: #64748b;
+        margin-bottom: 10px;
+      }
+
+      .digital-seal-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #94a3b8;
+        font-size: 0.7rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-family: 'Inter', sans-serif;
+      }
+
+      /* VISIT MAIN NEWSPAPER BUTTON */
+      .visit-newspaper-wrap {
+        margin-top: 20px;
+        text-align: center;
+        width: 100%;
+        max-width: 460px;
+      }
+
+      .btn-visit-main-site {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        padding: 10px 20px;
+        border-radius: 24px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        text-decoration: none;
+        backdrop-filter: blur(8px);
+        transition: background 0.2s;
+      }
+
+      .btn-visit-main-site:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* LOADING SPINNER */
+      .loading-wrap {
+        padding: 60px 20px;
+        text-align: center;
+        color: #64748b;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e2e8f0;
+        border-top-color: #be185d;
+        border-radius: 50%;
+        margin: 0 auto 16px auto;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* PRINT OVERRIDES */
+      @media print {
+        body {
           background: #ffffff !important;
           padding: 0 !important;
-          margin: 0 !important;
-          box-shadow: none !important;
-          width: 100% !important;
         }
-
-        .print-only-card {
-          display: block !important;
-          visibility: visible !important;
-          position: absolute !important;
-          left: 0 !important;
-          top: 0 !important;
-          width: 100% !important;
-          max-width: 650px !important;
-          margin: 10px auto !important;
-          border: 2px solid #be185d !important;
-          border-radius: 12px !important;
-          box-shadow: none !important;
-          page-break-inside: avoid !important;
-        }
-
-        .print-only-card * {
-          visibility: visible !important;
-        }
-
-        .typewriter-cursor {
+        .press-verification-masthead,
+        .actions-container,
+        .visit-newspaper-wrap {
           display: none !important;
+        }
+        .press-card-wrapper {
+          box-shadow: none !important;
+          border: 2px solid #000000 !important;
+          max-width: 500px !important;
+          margin: 0 auto !important;
         }
       }
     </style>
   </head>
   <body>
-    <a href="#main-content" class="skip-link" data-i18n="skip_link">ముఖ్య నివిడికి వెళ్ళండి</a>
-
-    <!-- 1. HEADER / MASTHEAD -->
-    <header role="banner" class="masthead-container">
-      <!-- Top Utility Bar -->
-      <div class="utility-bar">
-        <div class="container-standard utility-bar-inner">
-          <div class="utility-bar-left">
-            <span id="header-date" data-i18n="top_date_placeholder">బుధవారం, 11 సెప్టెంబర్ 2026</span>
-            <span data-i18n="top_edition_placeholder">ఆంధ్రప్రదేశ్ &amp; తెలంగాణ</span>
-          </div>
-          <div class="utility-bar-right">
-            <span data-i18n="top_weather_placeholder">విజయవాడ: 31°C | తేమ: 68%</span>
-            <a href="/epaper.html" style="color: inherit; text-decoration: underline;" data-i18n="top_epaper_link">ఈ-పేపర్</a> 
-            <span aria-hidden="true" style="opacity: 0.5;">|</span> 
-            <a href="/editorial-team.html" class="top-special-link" data-i18n="nav_team">✨ మా సంపాదకీయ బృందం</a>
-            <span aria-hidden="true" style="opacity: 0.5;">|</span> 
-            <a href="/admin/index.html" style="color: #ffcc00; text-decoration: underline; font-weight: bold;" data-i18n="top_admin_link">🔒 అడ్మిన్ లాగిన్</a>
-            
-            <!-- ONE-CLICK LANGUAGE SWITCHER -->
-            <div class="lang-switcher" role="region" aria-label="Language Selector">
-              <button type="button" class="lang-btn active" data-lang-btn="te" aria-label="తెలుగు">తెలుగు</button>
-              <span class="lang-divider" aria-hidden="true">|</span>
-              <button type="button" class="lang-btn" data-lang-btn="en" aria-label="English">English</button>
-            </div>
-          </div>
-        </div>
+    <!-- 1. TOP SECURITY MASTHEAD -->
+    <header class="press-verification-masthead">
+      <div class="gov-reg-row">
+        <span>RNI: <strong class="gov-reg-badge">APTEL/2026/89123</strong></span>
+        <span>•</span>
+        <span>ISSN: <strong>2456-8910</strong></span>
       </div>
-
-      <!-- Main Masthead Brand Area -->
-      <div class="masthead-brand-area">
-        <div class="container-standard">
-          <div class="masthead-grid">
-            
-            <div class="masthead-left desktop-only"></div>
-
-            <div class="masthead-center">
-              <a href="/" style="text-decoration: none;">
-                <h1 class="brand-logo-3d" aria-label="మమేక మహోదయం">
-                  <span class="brand-stacked-wrap">
-                    <span class="brand-prefix-stacked" data-i18n="brand_prefix_te">మమేక</span>
-                    <span class="brand-main-stacked" data-i18n="brand_main_te">మహోదయం</span>
-                  </span>
-                </h1>
-                <div class="brand-english-sub" data-i18n="brand_name_en">MAMEKA MAHODAYAM</div>
-                <div class="newspaper-tagline-green" data-i18n="brand_slogan">అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం</div>
-                <div class="newspaper-badge-purple" data-i18n="brand_tagline">తెలుగు దినపత్రిక</div>
-              </a>
-            </div>
-
-            <div class="masthead-right">
-              <form action="/search.html" method="GET" class="search-bar-wrap" data-i18n-aria="search_bar_aria">
-                <input type="text" name="q" class="search-bar-input" data-i18n-placeholder="search_placeholder" placeholder="వార్తలను శోధించండి..." />
-                <button type="submit" class="search-bar-btn" data-i18n-aria="search_submit_aria" aria-label="శోధన సమర్పించండి">⌕</button>
-              </form>
-            </div>
-
-          </div>
-        </div>
+      <h1 class="press-org-title">మమేక మహోదయం</h1>
+      <p class="press-org-sub">Telugu Daily Newspaper • Accredited Media Press Card</p>
+      <div class="press-verification-title-badge">
+        <span>🛡️</span>
+        <span>అధికారిక పాత్రికేయ ధృవీకరణ పోర్టల్ (Press Verification)</span>
       </div>
     </header>
 
-    <!-- 2. MAIN NAVIGATION -->
-    <nav class="main-nav" role="navigation" aria-label="Main Navigation">
-      <div class="container-standard">
-        <ul class="nav-list">
-          <li><a href="/" class="nav-item" data-i18n="nav_home">హోమ్</a></li>
-          <li><a href="/category.html?c=latest" class="nav-item" data-i18n="nav_latest">తాజా వార్తలు</a></li>
-          <li><a href="/category.html?c=state" class="nav-item" data-i18n="nav_state">ఆంధ్రప్రదేశ్</a></li>
-          <li><a href="/district.html" class="nav-item" data-i18n="nav_district">జిల్లాల వార్తలు</a></li>
-          <li><a href="/category.html?c=politics" class="nav-item" data-i18n="nav_politics">రాజకీయాలు</a></li>
-          <li><a href="/category.html?c=national" class="nav-item" data-i18n="nav_national">దేశం &amp; ప్రపంచం</a></li>
-          <li><a href="/category.html?c=tech" class="nav-item" data-i18n="nav_tech">టెక్నాలజీ</a></li>
-          <li><a href="/category.html?c=business" class="nav-item" data-i18n="nav_business">బిజినెస్</a></li>
-          
-          <!-- MORE DROPDOWN FOR REMAINING CATEGORIES -->
-          <li class="nav-dropdown">
-            <button type="button" class="nav-dropdown-btn" aria-haspopup="true" aria-expanded="false" data-i18n="nav_more">
-              మరిన్ని ▾
-            </button>
-            <ul class="nav-dropdown-menu">
-              <li><a href="/category.html?c=cinema" class="nav-dropdown-item" data-i18n="nav_cinema">సినిమా</a></li>
-              <li><a href="/category.html?c=sports" class="nav-dropdown-item" data-i18n="nav_sports">క్రీడలు</a></li>
-              <li><a href="/category.html?c=education" class="nav-dropdown-item" data-i18n="nav_education">విద్య &amp; ఉద్యోగాలు</a></li>
-              <li><a href="/category.html?c=editorial" class="nav-dropdown-item" data-i18n="nav_editorial">సంపాదకీయం</a></li>
-              <li><a href="/epaper.html" class="nav-dropdown-item" data-i18n="nav_epaper">ఈ-పేపర్</a></li>
-              <li><a href="/search.html" class="nav-dropdown-item" data-i18n="nav_search">శోధన</a></li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-    </nav>
-
-    <!-- MAIN CONTENT CONTAINER -->
-    <main id="main-content" role="main" class="container-standard" style="padding-top: var(--space-xl); padding-bottom: var(--space-3xl);">
-      
-      <!-- BREADCRUMBS -->
-      <nav class="breadcrumb-wrap" aria-label="Breadcrumb" style="margin-bottom: 24px;">
-        <a href="/" data-i18n="nav_home">హోమ్</a>
-        <span>›</span>
-        <a href="/editorial-team.html" data-i18n="nav_editorial_team">మా సంపాదకీయ బృందం</a>
-        <span>›</span>
-        <span id="breadcrumb-reporter-name">పాత్రికేయుని ప్రొఫైల్</span>
-      </nav>
-
-      <!-- REPORTER PROFILE HERO CARD (INJECTED DYNAMICALLY) -->
-      <div id="reporter-profile-hero" class="reporter-profile-card">
-        <div style="text-align: center; padding: 60px 20px;">
-          <div style="font-size: 2.5rem; margin-bottom: 12px; animation: pulse 1.5s infinite;">👤</div>
-          <p style="font-size: 1.1rem; color: var(--color-text-secondary); font-weight: 500;">
-            పాత్రికేయుని వివరాలు లోడ్ అవుతున్నాయి...
-          </p>
-        </div>
+    <!-- 2. MAIN DIGITAL PRESS ID CARD WRAPPER -->
+    <main class="press-card-wrapper" id="press-card-container">
+      <!-- Loading State -->
+      <div class="loading-wrap" id="press-card-loading">
+        <div class="spinner"></div>
+        <p style="font-weight: 600;">పాత్రికేయుని ధృవీకరణ వివరాలు లోడ్ అవుతున్నాయి...</p>
+        <p style="font-size: 0.8rem; margin-top: 4px; color: #94a3b8;">Verifying Press Accreditation Credential...</p>
       </div>
 
-      <!-- AUTHORED ARTICLES FEED SECTION -->
-      <section id="section-authored-articles" style="margin-top: var(--space-2xl);">
-        <div class="section-header-editorial" style="margin-bottom: 20px;">
-          <div class="section-header-left">
-            <span class="section-accent-tag"></span>
-            <h2 class="tp-h2" id="authored-articles-heading">ప్రచురించిన వార్తా కథనాలు &amp; వ్యాసాలు</h2>
-          </div>
-        </div>
-
-        <!-- Articles Grid Container -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch" id="reporter-articles-grid">
-          <!-- Dynamic Article Cards injected by reporter-profile.js -->
-        </div>
-      </section>
-
-      <!-- JOURNALISTIC ETHICS & INDEPENDENCE NOTE -->
-      <div class="utility-card" style="margin-top: var(--space-2xl);">
-        <h3 class="utility-card-title">జర్నలిజం విశిష్టత &amp; నిబద్ధత</h3>
-        <p style="font-size: 0.95rem; line-height: 1.6; color: var(--color-text-secondary); margin-top: 8px;">
-          మమేక మహోదయం దినపత్రిక విలేఖరులందరూ అత్యున్నత ప్రమాణాలతో కూడిన నిష్పాక్షికమైన సత్యసంధమైన వార్తలను ప్రజా హితమే పరమావధిగా ప్రచురిస్తారు.
-        </p>
-      </div>
-
+      <!-- Injected Card Content Will Replace Spinner -->
+      <div id="press-card-content" style="display: none;"></div>
     </main>
 
-    <!-- GLOBAL FOOTER SYSTEM -->
-    <footer class="site-footer" role="contentinfo">
-      <div class="container">
-        <div class="footer-top-grid">
-          <!-- Col 1: Newspaper Identity & Social Media -->
-          <div class="footer-col-brand">
-            <div class="footer-brand-title">మమేక మహోదయం</div>
-            <div class="footer-brand-subtitle">MAMEKA MAHODAYAM DAILY</div>
-            <p class="footer-tagline">తెలుగు ప్రజల విశ్వసనీయ దినపత్రిక | Independent Telugu Daily Newspaper</p>
-          </div>
+    <!-- 3. VISIT MAIN NEWSPAPER WEBSITE (CLEAN LINK) -->
+    <div class="visit-newspaper-wrap">
+      <a href="/" class="btn-visit-main-site">
+        <span>🌐</span>
+        <span>మమేక మహోదయం ప్రధాన దినపత్రిక (Visit Website) →</span>
+      </a>
+      <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 10px;">
+        &copy; 2026 Mameka Mahodayam Digital Media. All Rights Reserved.
+      </p>
+    </div>
 
-          <!-- Col 2: News Sections -->
-          <div>
-            <h3 class="footer-col-title">వార్తా విభాగములు</h3>
-            <ul class="footer-nav-list">
-              <li><a href="/category.html?c=state">రాష్ట్ర వార్తలు (State News)</a></li>
-              <li><a href="/district.html">జిల్లాల సమాచారం (District News)</a></li>
-              <li><a href="/category.html?c=politics">రాజకీయాలు (Politics)</a></li>
-              <li><a href="/category.html?c=national">జాతీయ / అంతర్జాతీయ</a></li>
-              <li><a href="/category.html?c=sports">క్రీడలు (Sports)</a></li>
-              <li><a href="/category.html?c=cinema">సినిమా / వినోదం (Cinema)</a></li>
-            </ul>
-          </div>
-
-          <!-- Col 3: About & Services -->
-          <div>
-            <h3 class="footer-col-title">మా సమాచారం</h3>
-            <ul class="footer-nav-list">
-              <li><a href="/about.html">మన గురించి (About Us)</a></li>
-              <li><a href="/editorial-team.html">సంపాదకీయ బృందం (Editorial Team)</a></li>
-              <li><a href="/contact.html">సంప్రదించండి (Contact Us)</a></li>
-              <li><a href="/advertise.html">ప్రకటనలు (Advertise)</a></li>
-              <li><a href="/epaper.html">ఈ-పేపర్ (E-Paper)</a></li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="footer-bottom-bar">
-          <div>© 2026 మమేక మహోదయం. సర్వ హక్కులూ ప్రత్యేకించబడ్డాయి.</div>
-        </div>
-      </div>
-    </footer>
-
-    <!-- JS ENGINES -->
-    <script src="/js/config.js"></script>
-    <script src="/js/districts-config.js"></script>
-    <script src="/js/i18n.js"></script>
-    <script src="/js/reporter-profile.js"></script>
+    <!-- SCRIPTS -->
+    <script src="/js/config.js?v=20260924_6"></script>
+    <script src="/js/districts-config.js?v=20260924_6"></script>
+    <script src="/js/reporter-profile.js?v=20260924_6"></script>
   </body>
 </html>

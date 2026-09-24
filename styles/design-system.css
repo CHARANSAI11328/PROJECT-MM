@@ -2757,11 +2757,35 @@ body {
   box-sizing: border-box;
 }
 
+/* Centered Containers for Desktop with Professional Newspaper Margins */
 .container,
-.container-standard,
+.container-standard {
+  width: 100%;
+  max-width: 1240px;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 24px;
+  padding-right: 24px;
+  box-sizing: border-box;
+}
+
 .container-narrow {
   width: 100%;
-  max-width: 100%;
+  max-width: 860px;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 24px;
+  padding-right: 24px;
+  box-sizing: border-box;
+}
+
+.container-wide {
+  width: 100%;
+  max-width: 1360px;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 24px;
+  padding-right: 24px;
   box-sizing: border-box;
 }
 
@@ -4237,6 +4261,394 @@ body {
   }
   .founder-full-img {
     height: 360px;
+  }
+}
+
+/* ==========================================================================
+   MOBILE-FIRST APP EXPERIENCE & NATIVE DOCKED NAVIGATION SYSTEM
+   ========================================================================== */
+
+/* 1. Desktop & Mobile Visibility Guards */
+.mobile-app-header,
+.mobile-bottom-nav,
+.mobile-drawer-overlay,
+.mobile-search-modal {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Body safety padding for fixed bottom navigation */
+  body {
+    padding-bottom: 74px !important;
+  }
+
+  /* Hide bloated desktop-only bars on mobile */
+  .utility-bar {
+    display: none !important;
+  }
+
+  .masthead-brand-area {
+    padding: 10px 0 8px 0 !important;
+  }
+
+  .masthead-right {
+    display: none !important;
+  }
+
+  .brand-main-stacked {
+    font-size: clamp(2rem, 7.5vw, 2.6rem) !important;
+  }
+
+  /* 2. Sleek Sticky Mobile App Bar */
+  .mobile-app-header {
+    display: flex !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 54px !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-bottom: 2px solid var(--color-brand-magenta) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
+    z-index: 9990 !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .mobile-app-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .mobile-menu-btn {
+    width: 38px !important;
+    height: 38px !important;
+    border: none !important;
+    background: #fdf2f8 !important;
+    color: var(--color-brand-magenta) !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.25rem !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+  }
+
+  .mobile-app-brand-title {
+    font-size: 1.18rem !important;
+    font-weight: 800 !important;
+    color: #be185d !important;
+    text-decoration: none !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-family: var(--font-telugu) !important;
+    line-height: 1 !important;
+  }
+
+  .mobile-live-indicator {
+    width: 7px !important;
+    height: 7px !important;
+    background: #dc2626 !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
+    animation: liveBlink 1.5s infinite !important;
+  }
+
+  @keyframes liveBlink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.8); }
+  }
+
+  .mobile-app-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .mobile-epaper-badge {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    padding: 4px 8px !important;
+    border-radius: 14px !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+  }
+
+  .mobile-search-trigger-btn {
+    width: 36px !important;
+    height: 36px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+    color: #334155 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.95rem !important;
+    cursor: pointer !important;
+  }
+
+  /* 3. Modern Category Chips (Swipeable Horizontal Story Tabs) */
+  .main-nav {
+    position: relative !important;
+    top: auto !important;
+    border-top: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  }
+
+  .nav-list {
+    display: flex !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+
+  .nav-item {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    padding: 6px 14px !important;
+    border-radius: 20px !important;
+    background: #f1f5f9 !important;
+    color: #334155 !important;
+    border: 1px solid #e2e8f0 !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  .nav-item.active {
+    background: #be185d !important;
+    color: #ffffff !important;
+    border-color: #9d174d !important;
+    box-shadow: 0 2px 8px rgba(190, 24, 93, 0.25) !important;
+    font-weight: 700 !important;
+  }
+
+  /* 4. Slide-Out Native Mobile Drawer */
+  .mobile-drawer-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(15, 23, 42, 0.55) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    z-index: 100000 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.3s ease, visibility 0.3s ease !important;
+  }
+
+  .mobile-drawer-overlay.active {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .mobile-drawer {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: min(320px, 86vw) !important;
+    height: 100% !important;
+    background: #ffffff !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    overflow-y: auto !important;
+  }
+
+  .mobile-drawer-overlay.active .mobile-drawer {
+    transform: translateX(0) !important;
+  }
+
+  .drawer-header {
+    background: linear-gradient(135deg, #831843 0%, #be185d 100%) !important;
+    color: #ffffff !important;
+    padding: 20px 16px 16px 16px !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+  }
+
+  .drawer-brand-title {
+    font-size: 1.35rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    line-height: 1.15 !important;
+  }
+
+  .drawer-brand-tagline {
+    font-size: 0.72rem !important;
+    color: #fbcfe8 !important;
+    margin-top: 4px !important;
+  }
+
+  .drawer-close-btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: none !important;
+    color: #ffffff !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.1rem !important;
+    cursor: pointer !important;
+  }
+
+  .drawer-links-list {
+    list-style: none !important;
+    padding: 12px 0 !important;
+    margin: 0 !important;
+    flex: 1 !important;
+  }
+
+  .drawer-link-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px 18px !important;
+    color: #1e293b !important;
+    text-decoration: none !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    border-left: 3px solid transparent !important;
+    transition: background 0.15s !important;
+  }
+
+  .drawer-link-item:active {
+    background: #fdf2f8 !important;
+    color: #be185d !important;
+    border-left-color: #be185d !important;
+  }
+
+  .drawer-divider {
+    height: 1px !important;
+    background: #e2e8f0 !important;
+    margin: 8px 16px !important;
+  }
+
+  .drawer-footer {
+    padding: 16px !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    font-size: 0.75rem !important;
+    color: #64748b !important;
+  }
+
+  /* 5. Fixed Native App Bottom Navigation Bar */
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 58px !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-top: 1px solid #e2e8f0 !important;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05) !important;
+    z-index: 9998 !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
+  }
+
+  .bottom-nav-tab {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #64748b !important;
+    text-decoration: none !important;
+    font-size: 0.68rem !important;
+    font-weight: 600 !important;
+    padding: 4px 6px !important;
+    border-radius: 8px !important;
+    transition: color 0.15s !important;
+    flex: 1 !important;
+    max-width: 72px !important;
+  }
+
+  .bottom-nav-tab .tab-icon {
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+    margin-bottom: 2px !important;
+  }
+
+  .bottom-nav-tab.active {
+    color: #be185d !important;
+    font-weight: 700 !important;
+  }
+
+  .bottom-nav-tab.active .tab-icon {
+    transform: scale(1.1) !important;
+  }
+
+  /* 6. Native App Cards Refinements (Horizontal Feed for Mobile) */
+  .card-standard,
+  .tp-article-card {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    border: 1px solid #f1f5f9 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    background: #ffffff !important;
+    margin-bottom: 12px !important;
+  }
+
+  /* 7. Quick Mobile Search Modal Sheet */
+  .mobile-search-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(15, 23, 42, 0.6) !important;
+    backdrop-filter: blur(4px) !important;
+    z-index: 100001 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.25s ease, visibility 0.25s ease !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    padding-top: 60px !important;
+  }
+
+  .mobile-search-modal.active {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .mobile-search-box {
+    width: min(440px, 92vw) !important;
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
   }
 }
 
