@@ -58,7 +58,8 @@
 
   function resolvePhotoUrl(url) {
     if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('file:') || url.startsWith('C:') || url.startsWith('D:') || url.includes('fakepath')) return '';
     const base = getApiBaseUrl();
     return base + (url.startsWith('/') ? '' : '/') + url;
   }

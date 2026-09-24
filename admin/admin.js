@@ -2287,6 +2287,8 @@ function initAdminApp() {
     // ----------------------------------------------------------------------
     let reportersInitialized = false;
     let allReportersCache = [];
+    let currentReporterPhotoBase64 = null;
+    let isReporterPhotoRemoved = false;
 
     async function loadReportersView() {
         const tableBody = document.getElementById('reporters-table-body');
@@ -2458,11 +2460,16 @@ function initAdminApp() {
             
             // Photo / Avatar
             let photoHtml = '';
-            if (r.photo_url) {
-                photoHtml = `<img src="${escapeHTML(r.photo_url)}" alt="${escapeHTML(r.name)}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #cbd5e1;">`;
+            const initial = escapeHTML((r.name || 'R').charAt(0));
+            if (r.photo_url && !r.photo_url.startsWith('C:') && !r.photo_url.startsWith('D:') && !r.photo_url.includes('fakepath')) {
+                photoHtml = `
+                    <div style="width: 44px; height: 44px; position: relative;">
+                        <img src="${escapeHTML(r.photo_url)}" alt="${escapeHTML(r.name)}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #cbd5e1; display: block;" onerror="this.onerror=null; this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                        <div style="width: 44px; height: 44px; border-radius: 50%; background: #fce7f3; color: #be185d; font-weight: 700; display: none; align-items: center; justify-content: center; font-size: 1.1rem; border: 2px solid #fbcfe8; position: absolute; top: 0; left: 0;">${initial}</div>
+                    </div>
+                `;
             } else {
-                const initial = (r.name || 'R').charAt(0);
-                photoHtml = `<div style="width: 44px; height: 44px; border-radius: 50%; background: #fce7f3; color: #be185d; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 2px solid #fbcfe8;">${escapeHTML(initial)}</div>`;
+                photoHtml = `<div style="width: 44px; height: 44px; border-radius: 50%; background: #fce7f3; color: #be185d; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 2px solid #fbcfe8;">${initial}</div>`;
             }
 
             // Role / Leadership Tier badge
@@ -2667,14 +2674,39 @@ function initAdminApp() {
                 const file = photoFileInput.files[0];
                 if (file) {
                     if (photoFileName) photoFileName.textContent = file.name;
+                    isReporterPhotoRemoved = false;
                     const reader = new FileReader();
                     reader.onload = (e) => {
-                        if (photoPreview) {
-                            photoPreview.src = e.target.result;
-                            photoPreview.style.display = 'block';
-                        }
-                        if (photoPlaceholder) photoPlaceholder.style.display = 'none';
-                        if (removePhotoBtn) removePhotoBtn.style.display = 'inline-block';
+                        const img = new Image();
+                        img.onload = () => {
+                            // Standardize & compress avatar via Canvas (max 600px width/height, 0.85 quality)
+                            const maxDim = 600;
+                            let width = img.width;
+                            let height = img.height;
+                            if (width > maxDim || height > maxDim) {
+                                if (width > height) {
+                                    height = Math.round((height * maxDim) / width);
+                                    width = maxDim;
+                                } else {
+                                    width = Math.round((width * maxDim) / height);
+                                    height = maxDim;
+                                }
+                            }
+                            const canvas = document.createElement('canvas');
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            currentReporterPhotoBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+                            if (photoPreview) {
+                                photoPreview.src = currentReporterPhotoBase64;
+                                photoPreview.style.display = 'block';
+                            }
+                            if (photoPlaceholder) photoPlaceholder.style.display = 'none';
+                            if (removePhotoBtn) removePhotoBtn.style.display = 'inline-block';
+                        };
+                        img.src = e.target.result;
                     };
                     reader.readAsDataURL(file);
                 }
@@ -2684,7 +2716,13 @@ function initAdminApp() {
         if (photoUrlInput) {
             photoUrlInput.oninput = () => {
                 const url = photoUrlInput.value.trim();
+                if (url.startsWith('C:') || url.startsWith('D:') || url.startsWith('file:') || url.includes('fakepath')) {
+                    showAlert(alertBox, '⚠️ స్థానిక కంప్యూటర్ ఫైల్ పాత్ (C:\\...) బ్రౌజర్‌లో లోడ్ అవ్వదు. దయచేసి "ఫొటో ఎంచుకోండి" బటన్ ద్వారా నేరుగా ఫైల్‌ని అప్‌లోడ్ చేయండి.', 'warning');
+                    return;
+                }
                 if (url) {
+                    isReporterPhotoRemoved = false;
+                    currentReporterPhotoBase64 = null;
                     if (photoPreview) {
                         photoPreview.src = url;
                         photoPreview.style.display = 'block';
@@ -2697,6 +2735,8 @@ function initAdminApp() {
 
         if (removePhotoBtn) {
             removePhotoBtn.onclick = () => {
+                isReporterPhotoRemoved = true;
+                currentReporterPhotoBase64 = null;
                 if (photoFileInput) photoFileInput.value = '';
                 if (photoFileName) photoFileName.textContent = 'ఫైల్ ఎంచుకోలేదు';
                 if (photoUrlInput) photoUrlInput.value = '';
@@ -2843,7 +2883,17 @@ function initAdminApp() {
         if (bioTextarea) bioTextarea.value = r.bio || '';
         handleDesignationJurisdictionChange();
 
-        if (photoUrlInput) photoUrlInput.value = r.photo_url || '';
+        currentReporterPhotoBase64 = null;
+        isReporterPhotoRemoved = false;
+
+        const photoFileInput = document.getElementById('rep-photo-file');
+        const photoFileName = document.getElementById('rep-photo-file-name');
+        if (photoFileInput) photoFileInput.value = '';
+        if (photoFileName) {
+            photoFileName.textContent = r.photo_url ? 'ప్రస్తుత ప్రొఫైల్ చిత్రం భద్రపరచబడింది ✓' : 'ఫైల్ ఎంచుకోలేదు';
+        }
+
+        if (photoUrlInput) photoUrlInput.value = (r.photo_url && !r.photo_url.startsWith('data:')) ? r.photo_url : '';
         if (r.photo_url) {
             if (photoPreview) {
                 photoPreview.src = r.photo_url;
@@ -2865,6 +2915,9 @@ function initAdminApp() {
     }
 
     function resetReporterForm() {
+        currentReporterPhotoBase64 = null;
+        isReporterPhotoRemoved = false;
+
         const form = document.getElementById('form-manage-reporter');
         if (form) form.reset();
         const editIdInput = document.getElementById('rep-edit-id');
@@ -2971,48 +3024,44 @@ function initAdminApp() {
         }
 
         try {
-            let res;
-            if (photoFileInput && photoFileInput.files && photoFileInput.files[0]) {
-                // Multipart FormData upload
-                const formData = new FormData();
-                formData.append('name', name);
-                formData.append('designation', desig);
-                formData.append('press_id', pressId);
-                formData.append('jurisdiction', finalJurisdiction);
-                formData.append('district', finalDist);
-                formData.append('mandal', finalMandal);
-                formData.append('phone', phone);
-                formData.append('email', email);
-                formData.append('status', status);
-                formData.append('display_order', order);
-                formData.append('bio', bio);
-                formData.append('social_links', JSON.stringify(socialLinks));
-                formData.append('photo_file', photoFileInput.files[0]);
+            const payload = {
+                name,
+                designation: desig,
+                press_id: pressId,
+                jurisdiction: finalJurisdiction,
+                district: finalDist,
+                mandal: finalMandal,
+                phone,
+                email,
+                status,
+                display_order: order,
+                bio,
+                social_links: JSON.stringify(socialLinks)
+            };
 
+            if (currentReporterPhotoBase64) {
+                payload.photo_base64 = currentReporterPhotoBase64;
+            } else if (isReporterPhotoRemoved) {
+                payload.remove_photo = true;
+                payload.photo_url = '';
+            } else if (photoUrl && !photoUrl.startsWith('C:') && !photoUrl.startsWith('D:') && !photoUrl.includes('fakepath')) {
+                payload.photo_url = photoUrl;
+            }
+
+            let res;
+            if (photoFileInput && photoFileInput.files && photoFileInput.files[0] && !currentReporterPhotoBase64) {
+                const formData = new FormData();
+                Object.keys(payload).forEach(k => formData.append(k, payload[k]));
+                formData.append('photo_file', photoFileInput.files[0]);
                 res = await apiFetch(url, {
                     method: method,
                     body: formData
                 });
             } else {
-                // JSON Payload
                 res = await apiFetch(url, {
                     method: method,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name,
-                        designation: desig,
-                        press_id: pressId,
-                        jurisdiction: finalJurisdiction,
-                        district: finalDist,
-                        mandal: finalMandal,
-                        phone,
-                        email,
-                        status,
-                        display_order: order,
-                        bio,
-                        photo_url: photoUrl,
-                        social_links: JSON.stringify(socialLinks)
-                    })
+                    body: JSON.stringify(payload)
                 });
             }
 

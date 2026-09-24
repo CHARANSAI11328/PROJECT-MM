@@ -1813,21 +1813,30 @@ app.post('/api/admin/reporters', authenticateToken, uploadReporterMulter.single(
       return res.status(400).json({ success: false, error: 'Designation / Position is required.' });
     }
 
-    let finalPhotoUrl = photo_url || '';
-    if (req.file) {
-      finalPhotoUrl = `/uploads/reporters/${req.file.filename}`;
-    }
-
-    // Support Base64 image payload if provided
+    let finalPhotoUrl = '';
     const { photo_base64 } = req.body;
-    if (photo_base64 && typeof photo_base64 === 'string' && photo_base64.startsWith('data:image/')) {
-      const matches = photo_base64.match(/^data:image\/([a-zA-Z0-9+\/-]+);base64,(.+)$/);
-      if (matches) {
-        const ext = '.' + (matches[1] === 'jpeg' ? 'jpg' : matches[1]);
-        const filename = `rep_${Date.now()}_${Math.floor(Math.random() * 10000)}${ext}`;
-        const savePath = path.join(reportersUploadDir, filename);
-        fs.writeFileSync(savePath, Buffer.from(matches[2], 'base64'));
-        finalPhotoUrl = `/uploads/reporters/${filename}`;
+    if (req.file) {
+      try {
+        const fileBuffer = fs.readFileSync(req.file.path);
+        const mime = req.file.mimetype || 'image/jpeg';
+        finalPhotoUrl = `data:${mime};base64,${fileBuffer.toString('base64')}`;
+      } catch (e) {
+        finalPhotoUrl = `/uploads/reporters/${req.file.filename}`;
+      }
+    } else if (photo_base64 && typeof photo_base64 === 'string' && photo_base64.startsWith('data:image/')) {
+      finalPhotoUrl = photo_base64;
+      try {
+        const matches = photo_base64.match(/^data:image\/([a-zA-Z0-9+\/-]+);base64,(.+)$/);
+        if (matches) {
+          const ext = '.' + (matches[1] === 'jpeg' ? 'jpg' : matches[1]);
+          const filename = `rep_${Date.now()}_${Math.floor(Math.random() * 10000)}${ext}`;
+          fs.writeFileSync(path.join(reportersUploadDir, filename), Buffer.from(matches[2], 'base64'));
+        }
+      } catch (e) {}
+    } else if (photo_url && typeof photo_url === 'string' && photo_url.trim()) {
+      const p = photo_url.trim();
+      if (!p.startsWith('file:') && !p.startsWith('C:') && !p.startsWith('D:') && !p.includes('fakepath')) {
+        finalPhotoUrl = p;
       }
     }
 
@@ -1907,26 +1916,36 @@ app.put('/api/admin/reporters/:id', authenticateToken, uploadReporterMulter.sing
     const {
       name, designation, district, mandal, bio,
       photo_url, phone, email, social_links, status, display_order,
-      press_id, jurisdiction
+      press_id, jurisdiction, remove_photo
     } = req.body;
 
-    let finalPhotoUrl = existing.photo_url;
-    if (req.file) {
-      finalPhotoUrl = `/uploads/reporters/${req.file.filename}`;
-    } else if (photo_url !== undefined && photo_url !== null) {
-      finalPhotoUrl = photo_url;
-    }
-
-    // Support Base64 image payload if provided
+    let finalPhotoUrl = existing.photo_url || '';
     const { photo_base64 } = req.body;
-    if (photo_base64 && typeof photo_base64 === 'string' && photo_base64.startsWith('data:image/')) {
-      const matches = photo_base64.match(/^data:image\/([a-zA-Z0-9+\/-]+);base64,(.+)$/);
-      if (matches) {
-        const ext = '.' + (matches[1] === 'jpeg' ? 'jpg' : matches[1]);
-        const filename = `rep_${Date.now()}_${Math.floor(Math.random() * 10000)}${ext}`;
-        const savePath = path.join(reportersUploadDir, filename);
-        fs.writeFileSync(savePath, Buffer.from(matches[2], 'base64'));
-        finalPhotoUrl = `/uploads/reporters/${filename}`;
+
+    if (req.file) {
+      try {
+        const fileBuffer = fs.readFileSync(req.file.path);
+        const mime = req.file.mimetype || 'image/jpeg';
+        finalPhotoUrl = `data:${mime};base64,${fileBuffer.toString('base64')}`;
+      } catch (e) {
+        finalPhotoUrl = `/uploads/reporters/${req.file.filename}`;
+      }
+    } else if (photo_base64 && typeof photo_base64 === 'string' && photo_base64.startsWith('data:image/')) {
+      finalPhotoUrl = photo_base64;
+      try {
+        const matches = photo_base64.match(/^data:image\/([a-zA-Z0-9+\/-]+);base64,(.+)$/);
+        if (matches) {
+          const ext = '.' + (matches[1] === 'jpeg' ? 'jpg' : matches[1]);
+          const filename = `rep_${Date.now()}_${Math.floor(Math.random() * 10000)}${ext}`;
+          fs.writeFileSync(path.join(reportersUploadDir, filename), Buffer.from(matches[2], 'base64'));
+        }
+      } catch (e) {}
+    } else if (remove_photo === true || remove_photo === 'true') {
+      finalPhotoUrl = '';
+    } else if (photo_url && typeof photo_url === 'string' && photo_url.trim()) {
+      const p = photo_url.trim();
+      if (!p.startsWith('file:') && !p.startsWith('C:') && !p.startsWith('D:') && !p.includes('fakepath')) {
+        finalPhotoUrl = p;
       }
     }
 
