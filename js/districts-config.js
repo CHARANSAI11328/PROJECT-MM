@@ -689,7 +689,16 @@
       { name_te: 'త్రిపురాంతకం', name_en: 'Tripuranthakam' },
       { name_te: 'పుల్లలచెరువు', name_en: 'Pullalacheruvu' },
       { name_te: 'పెద్దారవీడు', name_en: 'Peda Araveedu' },
-      { name_te: 'దోర్నాల', name_en: 'Dornala' }
+      { name_te: 'దోర్నాల', name_en: 'Dornala' },
+      { name_te: 'దర్శి', name_en: 'Darsi' },
+      { name_te: 'కురిచేడు', name_en: 'Kurichedu' },
+      { name_te: 'ముండ్లమూరు', name_en: 'Mundlamuru' },
+      { name_te: 'దొనకొండ', name_en: 'Donakonda' },
+      { name_te: 'పొదిలి', name_en: 'Podili' },
+      { name_te: 'మర్రిపూడి', name_en: 'Marripudi' },
+      { name_te: 'కొనకనమిట్ల', name_en: 'Konakanamitla' },
+      { name_te: 'తర్లుపాడు', name_en: 'Tarlupadu' },
+      { name_te: 'హనుమంతునిపాడు', name_en: 'Hanumanthunipadu' }
     ],
     'srikakulam': [
       { name_te: 'శ్రీకాకుళం', name_en: 'Srikakulam' },
@@ -899,25 +908,118 @@
     return AP_DISTRICTS;
   }
 
+  // Pre-populate AP_MANDALS aliases for instant direct resolution by slug, English name, and Telugu name
+  (function initMandalAliases() {
+    AP_DISTRICTS.forEach(d => {
+      if (d.code === 'all' || !AP_MANDALS[d.code]) return;
+      const mandalList = AP_MANDALS[d.code];
+      if (d.slug && !AP_MANDALS[d.slug]) AP_MANDALS[d.slug] = mandalList;
+      if (d.name_en) {
+        const enLower = d.name_en.toLowerCase().trim();
+        if (!AP_MANDALS[enLower]) AP_MANDALS[enLower] = mandalList;
+        const norm = normalizeSlug(d.name_en);
+        if (norm && !AP_MANDALS[norm]) AP_MANDALS[norm] = mandalList;
+      }
+      if (d.name_te && !AP_MANDALS[d.name_te.trim()]) {
+        AP_MANDALS[d.name_te.trim()] = mandalList;
+      }
+      if (Array.isArray(d.keywords)) {
+        d.keywords.forEach(kw => {
+          const kwClean = String(kw).toLowerCase().trim();
+          if (kwClean && !AP_MANDALS[kwClean]) AP_MANDALS[kwClean] = mandalList;
+        });
+      }
+      if (Array.isArray(d.aliases)) {
+        d.aliases.forEach(al => {
+          const alClean = String(al).toLowerCase().trim();
+          if (alClean && !AP_MANDALS[alClean]) AP_MANDALS[alClean] = mandalList;
+        });
+      }
+    });
+
+    // Special common alias mappings
+    if (AP_MANDALS['prakasam']) {
+      AP_MANDALS['ongole'] = AP_MANDALS['prakasam'];
+      AP_MANDALS['ఒంగోలు'] = AP_MANDALS['prakasam'];
+      AP_MANDALS['ప్రకాశం'] = AP_MANDALS['prakasam'];
+    }
+    if (AP_MANDALS['krishna']) {
+      AP_MANDALS['ntr'] = AP_MANDALS['krishna'];
+      AP_MANDALS['vijayawada'] = AP_MANDALS['krishna'];
+      AP_MANDALS['విజయవాడ'] = AP_MANDALS['krishna'];
+    }
+  })();
+
   function getDistrictByCodeOrSlug(val) {
     if (!val) return null;
-    const clean = String(val).toLowerCase().trim();
+    const raw = String(val).trim();
+    const clean = raw.toLowerCase();
     const norm = normalizeSlug(clean);
-    return AP_DISTRICTS.find(d => 
+
+    // 1. Direct code/slug/English name match
+    let found = AP_DISTRICTS.find(d => 
       d.code === clean || 
       d.slug === clean || 
       d.slug === norm ||
-      (d.aliases && d.aliases.includes(clean)) ||
+      (d.aliases && d.aliases.some(a => a.toLowerCase() === clean)) ||
+      (d.name_en && d.name_en.toLowerCase() === clean) ||
       normalizeSlug(d.name_en) === norm
-    ) || null;
+    );
+    if (found) return found;
+
+    // 2. Direct Telugu name match
+    found = AP_DISTRICTS.find(d => d.name_te === raw || d.name_te === clean);
+    if (found) return found;
+
+    // 3. Keyword / partial Telugu or English match
+    found = AP_DISTRICTS.find(d => {
+      if (d.code === 'all') return false;
+      if (d.name_te && (raw.includes(d.name_te) || d.name_te.includes(raw))) return true;
+      if (d.name_en && (clean.includes(d.name_en.toLowerCase()) || d.name_en.toLowerCase().includes(clean))) return true;
+      if (d.keywords && d.keywords.some(kw => raw.includes(kw) || clean.includes(kw.toLowerCase()) || kw.toLowerCase().includes(clean))) return true;
+      return false;
+    });
+
+    return found || null;
   }
 
   function getMandalsForDistrict(districtCode) {
     if (!districtCode) return [];
-    const clean = String(districtCode).toLowerCase().trim();
-    const dObj = getDistrictByCodeOrSlug(clean);
-    const key = dObj ? dObj.code : clean;
-    return AP_MANDALS[key] || [];
+    const raw = String(districtCode).trim();
+    const clean = raw.toLowerCase();
+
+    // 1. Direct key match in AP_MANDALS (covers code, slug, English name, and Telugu name)
+    if (AP_MANDALS[clean] && AP_MANDALS[clean].length > 0) {
+      return AP_MANDALS[clean];
+    }
+    if (AP_MANDALS[raw] && AP_MANDALS[raw].length > 0) {
+      return AP_MANDALS[raw];
+    }
+
+    // 2. Resolve via district object
+    const dObj = getDistrictByCodeOrSlug(districtCode) || findDistrictByText(districtCode);
+    if (dObj) {
+      if (AP_MANDALS[dObj.code] && AP_MANDALS[dObj.code].length > 0) {
+        return AP_MANDALS[dObj.code];
+      }
+      if (dObj.slug && AP_MANDALS[dObj.slug] && AP_MANDALS[dObj.slug].length > 0) {
+        return AP_MANDALS[dObj.slug];
+      }
+    }
+
+    // 3. Fallback scan across all districts
+    for (const d of AP_DISTRICTS) {
+      if (d.code === 'all') continue;
+      if (
+        (d.name_te && raw.includes(d.name_te)) ||
+        (d.name_en && clean.includes(d.name_en.toLowerCase())) ||
+        (d.keywords && d.keywords.some(k => clean.includes(k.toLowerCase()) || raw.includes(k)))
+      ) {
+        if (AP_MANDALS[d.code] && AP_MANDALS[d.code].length > 0) return AP_MANDALS[d.code];
+      }
+    }
+
+    return [];
   }
 
   function findDistrictByText(text) {
@@ -932,7 +1034,7 @@
     return null;
   }
 
-  return {
+  const exportObj = {
     districts: AP_DISTRICTS,
     mandals: AP_MANDALS,
     getAllDistricts,
@@ -942,4 +1044,11 @@
     findDistrictByText,
     normalizeSlug
   };
+
+  if (typeof window !== 'undefined') {
+    window.MAMEKA_DISTRICTS = exportObj;
+    window.AP_MANDALS = AP_MANDALS;
+  }
+
+  return exportObj;
 }));

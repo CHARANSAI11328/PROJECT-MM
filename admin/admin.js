@@ -2385,21 +2385,43 @@ function initAdminApp() {
             return;
         }
 
-        const mandals = (typeof MAMEKA_DISTRICTS !== 'undefined' && MAMEKA_DISTRICTS.getMandalsForDistrict)
-            ? MAMEKA_DISTRICTS.getMandalsForDistrict(selectedDistrict)
-            : [];
+        let mandals = [];
+        if (typeof MAMEKA_DISTRICTS !== 'undefined' && MAMEKA_DISTRICTS.getMandalsForDistrict) {
+            mandals = MAMEKA_DISTRICTS.getMandalsForDistrict(selectedDistrict);
+        } else if (typeof window !== 'undefined' && window.AP_MANDALS && window.AP_MANDALS[selectedDistrict]) {
+            mandals = window.AP_MANDALS[selectedDistrict];
+        }
+
+        // State or National Bureau special handling
+        if (selectedDistrict.startsWith('all-') || selectedDistrict === 'all') {
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = 'రాష్ట్ర స్థాయి / హెడ్ ఆఫీస్';
+            defaultOpt.textContent = 'రాష్ట్ర స్థాయి / హెడ్ ఆఫీస్ (State Bureau / Head Office)';
+            defaultOpt.selected = true;
+            mandalSelect.appendChild(defaultOpt);
+            
+            const customOpt = document.createElement('option');
+            customOpt.value = '__custom__';
+            customOpt.textContent = '➕ నిర్దిష్ట ప్రాంతం నమోదు చేయండి...';
+            mandalSelect.appendChild(customOpt);
+            return;
+        }
 
         const defaultOpt = document.createElement('option');
         defaultOpt.value = '';
-        defaultOpt.textContent = 'మండలం ఎంచుకోండి...';
+        defaultOpt.textContent = mandals.length > 0 
+            ? `-- ${mandals.length} మండలాలు అందుబాటులో ఉన్నాయి (మండలం ఎంచుకోండి) --` 
+            : 'మండలం ఎంచుకోండి...';
         mandalSelect.appendChild(defaultOpt);
 
         let matched = false;
         mandals.forEach(m => {
             const opt = document.createElement('option');
-            opt.value = m.name_te;
-            opt.textContent = `${m.name_te} (${m.name_en})`;
-            if (preselectedMandal && (preselectedMandal === m.name_te || preselectedMandal === m.name_en || preselectedMandal.includes(m.name_te))) {
+            const teName = m.name_te || m;
+            const enName = m.name_en || '';
+            opt.value = teName;
+            opt.textContent = enName ? `${teName} (${enName})` : teName;
+            if (preselectedMandal && (preselectedMandal === teName || preselectedMandal === enName || preselectedMandal.includes(teName))) {
                 opt.selected = true;
                 matched = true;
             }
@@ -2565,9 +2587,18 @@ function initAdminApp() {
         const repMandalCustomInput = document.getElementById('rep-mandal-custom');
 
         if (repDistrictSelect) {
-            repDistrictSelect.onchange = () => {
-                updateMandalDropdown(repDistrictSelect.value, '');
+            const handleDistrictChange = () => {
+                const val = repDistrictSelect.value;
+                updateMandalDropdown(val, '');
             };
+            repDistrictSelect.addEventListener('change', handleDistrictChange);
+            repDistrictSelect.addEventListener('input', handleDistrictChange);
+            repDistrictSelect.onchange = handleDistrictChange;
+
+            // Trigger immediately if already selected
+            if (repDistrictSelect.value) {
+                updateMandalDropdown(repDistrictSelect.value, '');
+            }
         }
 
         if (repMandalSelect) {
