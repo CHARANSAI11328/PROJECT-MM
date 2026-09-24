@@ -1,6 +1,7 @@
 /**
  * MAMEKA MAHODAYAM - Official Digital Press ID & Journalist Accreditation Verification Engine
  * Renders dedicated mobile-first Press ID card for scanned QR codes and verification links.
+ * Aligns 100% with the print newspaper brand identity and homepage design system.
  */
 
 (function () {
@@ -50,12 +51,27 @@
     if (!contentEl) return;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const reporterId = urlParams.get('id') || (window.location.hash.startsWith('#rep_') ? window.location.hash.substring(1) : 'rep_1790053034641_707');
+    let reporterId = urlParams.get('id') || (window.location.hash.startsWith('#rep_') ? window.location.hash.substring(1) : '');
 
     try {
       const baseUrl = getApiBaseUrl();
-      const targetUrl = `${baseUrl}/api/public/reporters/${encodeURIComponent(reporterId)}`;
 
+      // If no ID is specified, fetch the first available active reporter
+      if (!reporterId) {
+        const listRes = await fetch(`${baseUrl}/api/public/reporters`);
+        if (listRes.ok) {
+          const listData = await listRes.json();
+          if (listData.reporters && listData.reporters.length > 0) {
+            reporterId = listData.reporters[0].id;
+          }
+        }
+      }
+
+      if (!reporterId) {
+        reporterId = 'rep_1790260017612_218'; // Known active reporter default fallback
+      }
+
+      const targetUrl = `${baseUrl}/api/public/reporters/${encodeURIComponent(reporterId)}`;
       const response = await fetch(targetUrl);
       if (!response.ok) throw new Error('Reporter not found');
       const data = await response.json();
@@ -76,45 +92,52 @@
     const initial = escapeHtml((r.name || 'R').charAt(0));
     
     // Resolve authentic Telugu district & mandal
-    const distName = getDistrictName(r.district) || 'ఆంధ్రప్రదేశ్ రాష్ట్ర స్థాయి (State Bureau)';
-    const mandalName = r.mandal ? escapeHtml(r.mandal) : 'ప్రధాన కార్యాలయం (Head Office)';
+    const distName = getDistrictName(r.district) || 'ఆంధ్రప్రదేశ్ రాష్ట్ర బ్యూరో';
+    const mandalName = r.mandal ? escapeHtml(r.mandal) : 'ప్రధాన కార్యాలయం';
     const locationDisplay = r.district ? `${distName} • ${mandalName}` : 'రాష్ట్ర బ్యూరో (State Bureau)';
 
-    // Press ID Number
+    // Press ID Number (Valid upto 2028)
     const rawNum = String(r.id || '101').replace(/\D/g, '').slice(-3).padStart(3, '0');
     const pressId = `MM-PRESS-2026-${rawNum}`;
 
-    // Priority Tier
+    // Priority Tier & Badge Styling
     const desigLower = (r.designation || '').toLowerCase();
     let tierText = escapeHtml(r.designation || 'పాత్రికేయులు (Journalist)');
+    let tierClass = 'tier-standard';
+
     if (r.display_order === 1 || desigLower.includes('founder') || (r.designation || '').includes('వ్యవస్థాపక') || desigLower.includes('editor-in-chief') || (r.designation || '').includes('ప్రధాన సంపాదకులు')) {
-      tierText = `⭐ ${escapeHtml(r.designation)}`;
+      tierText = `⭐ వ్యవస్థాపక ప్రధాన సంపాదకులు (FOUNDER &amp; EDITOR-IN-CHIEF)`;
+      tierClass = 'tier-founder';
     } else if (r.display_order === 2 || desigLower.includes('associate') || (r.designation || '').includes('అసోసియేట్')) {
-      tierText = `⭐ ${escapeHtml(r.designation)}`;
+      tierText = `⭐ అసోసియేట్ ఎడిటర్ (ASSOCIATE EDITOR)`;
+      tierClass = 'tier-associate';
+    } else {
+      tierText = `🏷️ ${escapeHtml(r.designation || 'పాత్రికేయులు')}`;
     }
 
     document.title = `${r.name} - అధికారిక పాత్రికేయ గుర్తింపు ధృవీకరణ | మమేక మహోదయం`;
 
     contentEl.innerHTML = `
-      <!-- TOP ACCENT COLOR STRIPE -->
+      <!-- TOP SECURITY RAINBOW STRIPE -->
       <div class="card-security-stripe"></div>
 
-      <!-- CARD HEADER BAR -->
-      <div class="card-header-bar">
-        <div class="card-header-emblem">
-          <div class="emblem-icon">📰</div>
-          <div class="emblem-text">
-            <h3>మమేక మహోదయం</h3>
-            <p>Accredited Press Card</p>
-          </div>
+      <!-- CARD BRAND HEADER (EXACT 3D LOGO MATCHING HOMEPAGE) -->
+      <div class="card-header-masthead">
+        <div class="card-brand-stacked-box">
+          <span class="card-brand-prefix-text">మమేక</span>
+          <span class="card-brand-main-text">మహోదయం</span>
         </div>
-        <div class="card-press-badge">PRESS ID</div>
+        <div class="card-brand-en-text">MAMEKA MAHODAYAM</div>
+        <div class="card-tagline-text">అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం</div>
+        <div class="card-badge-flex">
+          <span class="card-badge-pill">తెలుగు దినపత్రిక</span>
+          <span class="card-badge-gold">PRESS ID</span>
+        </div>
       </div>
 
-      <!-- VERIFIED STATUS PILL -->
-      <div class="status-banner">
-        <span class="pulse-dot"></span>
-        <span class="status-text">✓ అధికారిక పాత్రికేయులు (OFFICIALLY ACCREDITED &amp; VERIFIED)</span>
+      <!-- EDITORIAL RED SUBSTRIP -->
+      <div class="card-substrip-red">
+        పాత్రికేయుల అధికారిక గుర్తింపు కార్డు (PRESS IDENTITY CARD)
       </div>
 
       <!-- CARD MAIN BODY -->
@@ -128,14 +151,12 @@
               : `<span class="photo-placeholder">${initial}</span>`
             }
           </div>
-          <div class="photo-verified-seal" title="ధృవీకరించబడిన ప్రొఫైల్">✓</div>
         </div>
 
         <!-- JOURNALIST IDENTITY -->
         <h2 class="reporter-full-name">${escapeHtml(r.name)}</h2>
         
-        <div class="designation-badge">
-          <span>🏷️</span>
+        <div class="designation-badge ${tierClass}">
           <span>${tierText}</span>
         </div>
 
@@ -143,11 +164,11 @@
         <div class="credentials-grid">
           <div class="cred-item">
             <span class="cred-label">Press ID Number:</span>
-            <span class="cred-value highlight">${pressId}</span>
+            <span class="cred-value highlight-press-id">${pressId}</span>
           </div>
           <div class="cred-item">
             <span class="cred-label">గుర్తింపు కాలపరిమితి:</span>
-            <span class="cred-value">2026 - 2027</span>
+            <span class="cred-value highlight-validity">2026 - 2028 (Valid Upto 2028)</span>
           </div>
           <div class="cred-item full-width">
             <span class="cred-label">కేటాయించిన పరిధి (Jurisdiction):</span>
@@ -238,21 +259,21 @@
       <div class="card-security-stripe" style="background: #dc2626;"></div>
       <div style="padding: 36px 20px; text-align: center;">
         <div style="font-size: 3rem; margin-bottom: 12px; color: #dc2626;">⚠️</div>
-        <h2 style="font-size: 1.25rem; font-weight: 800; color: #991b1b; margin-bottom: 8px;">
+        <h2 style="font-size: 1.25rem; font-weight: 800; color: #991b1b; margin-bottom: 8px; font-family: var(--font-serif-te);">
           పాత్రికేయ గుర్తింపు ధృవీకరణ కాలం చెల్లినది లేదా రద్దు చేయబడినది
         </h2>
         <p style="font-size: 0.88rem; color: #64748b; line-height: 1.5; margin-bottom: 20px;">
           మీరు స్కాన్ చేసిన QR కోడ్ ప్రొఫైల్ ప్రస్తుతం యాక్టివ్‌గా లేదు లేదా మమేక మహోదయం రికార్డుల నుండి తొలగించబడినది.
         </p>
-        <a href="/" style="display: inline-block; padding: 10px 20px; background: #be185d; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.88rem;">
+        <a href="/" style="display: inline-block; padding: 10px 22px; background: #d81b7a; color: #ffffff; text-decoration: none; border-radius: 20px; font-weight: 700; font-size: 0.88rem;">
           ప్రధాన వెబ్‌సైట్‌కి వెళ్ళండి →
         </a>
       </div>
     `;
-    contentEl.style.display = 'block';
+    if (contentEl) contentEl.style.display = 'block';
   }
 
-  // Auto initialize on DOM ready
+  // Load verification immediately or on DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', loadReporterVerification);
   } else {

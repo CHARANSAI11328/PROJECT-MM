@@ -6,25 +6,27 @@
     <title>అధికారిక పాత్రికేయ గుర్తింపు ధృవీకరణ | Official Press ID - మమేక మహోదయం</title>
     <meta name="description" content="మమేక మహోదయం దినపత్రిక అధికారిక పాత్రికేయుల డిజిటల్ గుర్తింపు ధృవీకరణ కార్డు (Official Press ID Verification)" />
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts & Foundational Design System -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;500;600;700;800&family=Mandali&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,600;0,700;1,400&family=Noto+Sans+Telugu:wght@400;500;600;700;800&family=Noto+Serif+Telugu:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles/design-system.css?v=20260924_7" />
 
     <style>
       :root {
-        --color-brand-magenta: #be185d;
-        --color-brand-dark: #831843;
-        --color-gold: #d97706;
-        --color-gold-light: #fef3c7;
-        --color-gold-border: #fcd34d;
-        --color-verified-green: #059669;
-        --color-verified-bg: #ecfdf5;
-        --color-verified-border: #a7f3d0;
-        --color-text-main: #0f172a;
-        --color-text-muted: #64748b;
-        --font-telugu: "Noto Sans Telugu", "Mandali", sans-serif;
-        --font-serif: Georgia, 'Times New Roman', serif;
+        --color-brand-magenta: #d81b7a;
+        --color-brand-magenta-dark: #8a084b;
+        --color-brand-gold: #ffcc00;
+        --color-brand-gold-dark: #d97706;
+        --color-brand-green: #009944;
+        --color-brand-purple: #7b1fa2;
+        --color-brand-red: #cc0000;
+        --color-bg-main: #fcfbf9;
+        --color-surface: #ffffff;
+        --color-text-main: #121212;
+        --color-text-muted: #555555;
+        --font-telugu: "Noto Sans Telugu", -apple-system, BlinkMacSystemFont, sans-serif;
+        --font-serif-te: "Noto Serif Telugu", Georgia, "Times New Roman", serif;
       }
 
       * {
@@ -36,209 +38,310 @@
 
       body {
         font-family: var(--font-telugu);
-        background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 140px, #f1f5f9 140px, #f8fafc 100%);
+        background-color: var(--color-bg-main);
         min-height: 100vh;
         color: var(--color-text-main);
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 16px 12px 32px 12px;
+        padding: 0 0 40px 0;
       }
 
-      /* TOP SECURITY MASTHEAD */
-      .press-verification-masthead {
+      /* ==========================================================================
+         1. HOMEPAGE-MATCHING BRAND MASTHEAD AT TOP OF PAGE
+         ========================================================================== */
+      .site-header-verification {
         width: 100%;
-        max-width: 480px;
+        background-color: var(--color-surface);
+        border-bottom: 3px double var(--color-brand-magenta);
         text-align: center;
-        padding: 12px 16px 16px 16px;
-        color: #ffffff;
       }
 
-      .gov-reg-row {
+      .veri-utility-bar {
+        background-color: #1a1a1a;
+        color: #ffffff;
+        font-size: 0.74rem;
+        padding: 6px 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        font-size: 0.72rem;
-        letter-spacing: 0.08em;
-        color: #cbd5e1;
-        text-transform: uppercase;
-        margin-bottom: 6px;
+        flex-wrap: wrap;
         font-family: 'Inter', sans-serif;
-      }
-
-      .gov-reg-badge {
-        background: rgba(255, 255, 255, 0.15);
-        padding: 2px 6px;
-        border-radius: 4px;
-        color: #fcd34d;
-        font-weight: 700;
-      }
-
-      .press-org-title {
-        font-size: 1.55rem;
-        font-weight: 800;
-        color: #ffffff;
         letter-spacing: 0.02em;
-        line-height: 1.15;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
       }
 
-      .press-org-sub {
-        font-size: 0.76rem;
-        color: #cbd5e1;
-        letter-spacing: 0.15em;
+      .veri-utility-bar strong {
+        color: #ffcc00;
+      }
+
+      .veri-masthead-brand {
+        background: linear-gradient(180deg, #fff0f6 0%, #ffffff 60%, #fff5f9 100%);
+        border-top: 1px solid #f4ecef;
+        border-bottom: 2px solid var(--color-brand-gold);
+        padding: 14px 12px 12px 12px;
+      }
+
+      .veri-brand-anchor {
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .veri-brand-stacked-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.0;
+        position: relative;
+        margin: 0 auto;
+        width: fit-content;
+      }
+
+      .veri-brand-prefix {
+        font-family: var(--font-serif-te);
+        font-weight: 700;
+        font-size: clamp(0.72rem, 2vw, 0.95rem);
+        line-height: 1;
+        color: #d97706;
+        text-shadow: 
+          1px 1px 0px #fff,
+          -1px -1px 0px #fff,
+          1px 1px 2px rgba(0, 0, 0, 0.2);
+        letter-spacing: 0.05em;
+        margin-left: 6px;
+        margin-bottom: -0.28em;
+        z-index: 2;
+        position: relative;
+        display: block;
+      }
+
+      .veri-brand-main {
+        font-family: var(--font-serif-te);
+        font-weight: 900;
+        font-size: clamp(2.4rem, 7vw, 3.4rem);
+        line-height: 0.98;
+        letter-spacing: -0.015em;
+        color: var(--color-brand-magenta);
+        text-shadow: 
+          1px 1px 0px #ffcc00,
+          -1px -1px 0px #ffcc00,
+          2px 2px 0px #8a084b,
+          3px 3px 0px #8a084b,
+          4px 4px 0px #600433,
+          4px 4px 6px rgba(0, 0, 0, 0.3);
+        z-index: 1;
+        display: block;
+      }
+
+      .veri-brand-english {
+        font-family: var(--font-serif-en, "Lora", serif);
+        font-size: clamp(0.72rem, 1.8vw, 0.85rem);
+        font-weight: 700;
+        letter-spacing: 0.24em;
         text-transform: uppercase;
-        font-family: 'Inter', sans-serif;
-        margin-top: 2px;
+        color: var(--color-brand-magenta);
+        margin-top: 3px;
       }
 
-      .press-verification-title-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(217, 119, 6, 0.25);
-        border: 1px solid rgba(252, 211, 77, 0.4);
-        padding: 3px 10px;
-        border-radius: 20px;
-        color: #fef3c7;
+      .veri-brand-tagline {
+        color: var(--color-brand-green);
+        font-family: var(--font-telugu);
+        font-size: clamp(0.75rem, 1.8vw, 0.84rem);
+        font-weight: 700;
+        margin-top: 4px;
+        letter-spacing: 0.02em;
+      }
+
+      .veri-brand-badge {
+        display: inline-block;
+        background-color: var(--color-brand-purple);
+        color: #ffffff;
         font-size: 0.72rem;
         font-weight: 700;
+        padding: 2px 14px;
+        border-radius: 12px;
+        margin-top: 6px;
         letter-spacing: 0.05em;
-        margin-top: 8px;
       }
 
-      /* MAIN DIGITAL PRESS ID CARD WRAPPER */
-      .press-card-wrapper {
-        width: 100%;
-        max-width: 460px;
-        position: relative;
-        background: #ffffff;
-        border-radius: 20px;
-        box-shadow: 
-          0 20px 40px -15px rgba(0, 0, 0, 0.2),
-          0 0 0 1px rgba(0, 0, 0, 0.05);
-        overflow: hidden;
-        margin-top: 4px;
-      }
-
-      /* CARD TOP ACCENT & HOLOGRAPHIC STRIPE */
-      .card-security-stripe {
-        height: 8px;
-        background: linear-gradient(90deg, #be185d 0%, #d97706 35%, #2563eb 70%, #059669 100%);
-        width: 100%;
-      }
-
-      .card-header-bar {
-        background: linear-gradient(135deg, #831843 0%, #be185d 100%);
+      .veri-red-bar {
+        background-color: var(--color-brand-red);
         color: #ffffff;
-        padding: 14px 18px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        position: relative;
-      }
-
-      .card-header-emblem {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .emblem-icon {
-        width: 38px;
-        height: 38px;
-        background: rgba(255, 255, 255, 0.2);
-        border: 1.5px solid rgba(255, 255, 255, 0.4);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-      }
-
-      .emblem-text h3 {
-        font-size: 0.98rem;
-        font-weight: 800;
-        line-height: 1.15;
-      }
-
-      .emblem-text p {
-        font-size: 0.68rem;
-        color: #fbcfe8;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        font-family: 'Inter', sans-serif;
-      }
-
-      .card-press-badge {
-        background: #fcd34d;
-        color: #78350f;
-        font-weight: 800;
-        font-size: 0.68rem;
-        padding: 4px 8px;
-        border-radius: 6px;
-        letter-spacing: 0.04em;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        font-family: 'Inter', sans-serif;
-      }
-
-      /* VERIFIED STATUS PILL */
-      .status-banner {
-        background: var(--color-verified-bg);
-        border-bottom: 1px solid var(--color-verified-border);
-        padding: 8px 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-      }
-
-      .pulse-dot {
-        width: 10px;
-        height: 10px;
-        background-color: var(--color-verified-green);
-        border-radius: 50%;
-        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
-        animation: pulseStatus 2s infinite;
-      }
-
-      @keyframes pulseStatus {
-        0% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }
-        70% { box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
-      }
-
-      .status-text {
         font-size: 0.78rem;
         font-weight: 700;
-        color: #065f46;
-        letter-spacing: 0.02em;
+        padding: 6px 12px;
+        letter-spacing: 0.04em;
+        border-top: 1px solid #990000;
+        border-bottom: 1px solid #990000;
+        text-align: center;
+      }
+
+      /* ==========================================================================
+         2. STANDALONE DIGITAL PRESS ID CARD WRAPPER
+         ========================================================================== */
+      .press-card-wrapper {
+        width: 100%;
+        max-width: 440px;
+        position: relative;
+        background: #ffffff;
+        border: 2px solid var(--color-brand-magenta);
+        border-radius: 16px;
+        box-shadow: 
+          0 16px 36px -10px rgba(216, 27, 122, 0.16),
+          0 4px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        margin: 20px 12px 0 12px;
+      }
+
+      /* Security stripe on card */
+      .card-security-stripe {
+        height: 6px;
+        background: linear-gradient(90deg, #d81b7a 0%, #ffcc00 35%, #0284c7 70%, #009944 100%);
+        width: 100%;
+      }
+
+      /* Card Top Brand Area */
+      .card-header-masthead {
+        background: linear-gradient(180deg, #fff0f6 0%, #ffffff 80%, #fff7fb 100%);
+        padding: 14px 16px 10px 16px;
+        text-align: center;
+        border-bottom: 2px solid #ffcc00;
+      }
+
+      .card-brand-stacked-box {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.0;
+        position: relative;
+        margin: 0 auto;
+        width: fit-content;
+      }
+
+      .card-brand-prefix-text {
+        font-family: var(--font-serif-te);
+        font-weight: 700;
+        font-size: 0.78rem;
+        line-height: 1;
+        color: #d97706;
+        text-shadow: 
+          1px 1px 0px #fff,
+          -1px -1px 0px #fff,
+          1px 1px 2px rgba(0, 0, 0, 0.2);
+        letter-spacing: 0.05em;
+        margin-left: 4px;
+        margin-bottom: -0.28em;
+        z-index: 2;
+        position: relative;
+        display: block;
+      }
+
+      .card-brand-main-text {
+        font-family: var(--font-serif-te);
+        font-weight: 900;
+        font-size: 2.1rem;
+        line-height: 1;
+        letter-spacing: -0.015em;
+        color: var(--color-brand-magenta);
+        text-shadow: 
+          1px 1px 0px #ffcc00,
+          -1px -1px 0px #ffcc00,
+          2px 2px 0px #8a084b,
+          3px 3px 0px #8a084b,
+          4px 4px 0px #600433,
+          4px 4px 6px rgba(0, 0, 0, 0.3);
+        z-index: 1;
+        display: block;
+      }
+
+      .card-brand-en-text {
+        font-family: var(--font-serif-en, "Lora", serif);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--color-brand-magenta);
+        margin-top: 3px;
+      }
+
+      .card-tagline-text {
+        color: var(--color-brand-green);
+        font-family: var(--font-telugu);
+        font-size: 0.74rem;
+        font-weight: 700;
+        margin-top: 3px;
+        letter-spacing: 0.01em;
+      }
+
+      .card-badge-flex {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 6px;
+      }
+
+      .card-badge-pill {
+        display: inline-block;
+        background-color: var(--color-brand-purple);
+        color: #ffffff;
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 2px 10px;
+        border-radius: 10px;
+        letter-spacing: 0.04em;
+      }
+
+      .card-badge-gold {
+        display: inline-block;
+        background: linear-gradient(135deg, #ffcc00 0%, #d97706 100%);
+        color: #78350f;
+        font-size: 0.68rem;
+        font-weight: 800;
+        padding: 2px 10px;
+        border-radius: 10px;
+        letter-spacing: 0.05em;
+        border: 1px solid #fcd34d;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+
+      .card-substrip-red {
+        background-color: var(--color-brand-red);
+        color: #ffffff;
+        text-align: center;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 5px 12px;
+        letter-spacing: 0.05em;
+        border-top: 1px solid #990000;
+        border-bottom: 1px solid #990000;
+        font-family: 'Inter', sans-serif;
       }
 
       /* CARD BODY CONTENT */
       .card-main-body {
-        padding: 24px 20px 20px 20px;
+        padding: 20px 18px 20px 18px;
         text-align: center;
+        background: #ffffff;
       }
 
       /* JOURNALIST PHOTO FRAME */
       .photo-frame-wrap {
         position: relative;
-        width: 136px;
-        height: 154px;
+        width: 130px;
+        height: 150px;
         margin: 0 auto 16px auto;
       }
 
       .photo-frame {
         width: 100%;
         height: 100%;
-        border-radius: 14px;
+        border-radius: 12px;
         overflow: hidden;
         border: 3.5px solid #ffffff;
-        outline: 2px solid #be185d;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-        background: #f8fafc;
+        outline: 2px solid var(--color-brand-magenta);
+        box-shadow: 0 6px 18px rgba(216, 27, 122, 0.15);
+        background: #fdf2f8;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -252,55 +355,55 @@
       }
 
       .photo-placeholder {
-        font-size: 3.5rem;
-        color: #94a3b8;
-      }
-
-      .photo-verified-seal {
-        position: absolute;
-        bottom: -6px;
-        right: -6px;
-        width: 32px;
-        height: 32px;
-        background: #059669;
-        color: #ffffff;
-        border-radius: 50%;
-        border: 2.5px solid #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.95rem;
+        font-size: 3.2rem;
+        color: var(--color-brand-magenta);
         font-weight: 800;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
       }
 
       /* JOURNALIST IDENTITY */
       .reporter-full-name {
-        font-size: 1.45rem;
+        font-family: var(--font-serif-te);
+        font-size: clamp(1.4rem, 4.5vw, 1.75rem);
         font-weight: 800;
-        color: #0f172a;
+        color: var(--color-text-main);
         line-height: 1.25;
         margin-bottom: 6px;
+        letter-spacing: -0.01em;
       }
 
       .designation-badge {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: #fdf2f8;
-        color: #be185d;
-        border: 1.5px solid #fbcfe8;
         font-weight: 700;
-        font-size: 0.88rem;
-        padding: 5px 14px;
+        font-size: 0.85rem;
+        padding: 4px 14px;
         border-radius: 20px;
         margin-bottom: 16px;
       }
 
+      .designation-badge.tier-founder {
+        background: #fff1f2;
+        color: #be185d;
+        border: 1.5px solid #fecdd3;
+      }
+
+      .designation-badge.tier-associate {
+        background: #f0f9ff;
+        color: #0284c7;
+        border: 1.5px solid #bae6fd;
+      }
+
+      .designation-badge.tier-standard {
+        background: #fdf2f8;
+        color: var(--color-brand-magenta);
+        border: 1.5px solid #fbcfe8;
+      }
+
       /* CREDENTIAL DETAILS TABLE GRID */
       .credentials-grid {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background: #faf8f5;
+        border: 1px solid #e2ded7;
         border-radius: 12px;
         padding: 14px 16px;
         text-align: left;
@@ -322,10 +425,11 @@
       .cred-label {
         font-size: 0.72rem;
         font-weight: 600;
-        color: var(--color-text-muted);
+        color: #64748b;
         text-transform: uppercase;
         letter-spacing: 0.03em;
         margin-bottom: 2px;
+        font-family: 'Inter', sans-serif;
       }
 
       .cred-value {
@@ -334,10 +438,16 @@
         color: #1e293b;
       }
 
-      .cred-value.highlight {
-        color: #be185d;
+      .cred-value.highlight-press-id {
+        color: var(--color-brand-magenta);
         font-family: 'Inter', monospace;
         letter-spacing: 0.04em;
+        font-weight: 800;
+      }
+
+      .cred-value.highlight-validity {
+        color: #b45309;
+        font-weight: 800;
       }
 
       .cred-value.jurisdiction {
@@ -349,16 +459,16 @@
 
       /* BIO QUOTE BOX */
       .reporter-bio-box {
-        background: #fffbeb;
-        border-left: 3px solid #d97706;
+        background: #fff5f9;
+        border-left: 3px solid var(--color-brand-magenta);
         border-radius: 0 8px 8px 0;
         padding: 10px 14px;
         text-align: left;
         font-size: 0.86rem;
         line-height: 1.55;
-        color: #78350f;
-        margin-bottom: 20px;
-        font-family: var(--font-serif);
+        color: #4a4a4a;
+        margin-bottom: 18px;
+        font-family: var(--font-serif-te);
       }
 
       /* ACTION BUTTONS (TAP TO CALL, EMAIL, SHARE) */
@@ -374,9 +484,9 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 12px 14px;
-        border-radius: 10px;
-        font-size: 0.86rem;
+        padding: 11px 12px;
+        border-radius: 8px;
+        font-size: 0.84rem;
         font-weight: 700;
         text-decoration: none;
         transition: transform 0.15s, opacity 0.15s;
@@ -389,9 +499,9 @@
       }
 
       .action-btn.call-btn {
-        background: #059669;
+        background: #009944;
         color: #ffffff;
-        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+        box-shadow: 0 4px 12px rgba(0, 153, 68, 0.25);
       }
 
       .action-btn.email-btn {
@@ -402,9 +512,9 @@
 
       .action-btn.share-btn {
         grid-column: 1 / -1;
-        background: #f1f5f9;
-        color: #334155;
-        border: 1px solid #cbd5e1;
+        background: #fdf2f8;
+        color: var(--color-brand-magenta);
+        border: 1px solid #fbcfe8;
       }
 
       .action-btn.hotline-btn {
@@ -412,13 +522,13 @@
         background: #fff1f2;
         color: #be185d;
         border: 1px solid #fecdd3;
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         padding: 8px 12px;
       }
 
       /* CARD FOOTER SEAL & SECURITY STATEMENT */
       .card-footer-security {
-        border-top: 1px dashed #cbd5e1;
+        border-top: 1px dashed #dcd7ce;
         padding-top: 14px;
         text-align: center;
       }
@@ -434,7 +544,7 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        color: #94a3b8;
+        color: #737373;
         font-size: 0.7rem;
         letter-spacing: 0.04em;
         text-transform: uppercase;
@@ -443,30 +553,31 @@
 
       /* VISIT MAIN NEWSPAPER BUTTON */
       .visit-newspaper-wrap {
-        margin-top: 20px;
+        margin-top: 24px;
         text-align: center;
         width: 100%;
-        max-width: 460px;
+        max-width: 440px;
       }
 
       .btn-visit-main-site {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: var(--color-brand-magenta);
+        border: none;
         color: #ffffff;
-        padding: 10px 20px;
+        padding: 11px 22px;
         border-radius: 24px;
-        font-size: 0.84rem;
-        font-weight: 600;
+        font-size: 0.86rem;
+        font-weight: 700;
         text-decoration: none;
-        backdrop-filter: blur(8px);
-        transition: background 0.2s;
+        box-shadow: 0 4px 12px rgba(216, 27, 122, 0.25);
+        transition: background 0.2s, transform 0.15s;
       }
 
       .btn-visit-main-site:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: #b81264;
+        transform: translateY(-1px);
       }
 
       /* LOADING SPINNER */
@@ -479,8 +590,8 @@
       .spinner {
         width: 40px;
         height: 40px;
-        border: 3px solid #e2e8f0;
-        border-top-color: #be185d;
+        border: 3px solid #fbcfe8;
+        border-top-color: var(--color-brand-magenta);
         border-radius: 50%;
         margin: 0 auto 16px auto;
         animation: spin 0.8s linear infinite;
@@ -496,7 +607,7 @@
           background: #ffffff !important;
           padding: 0 !important;
         }
-        .press-verification-masthead,
+        .site-header-verification,
         .actions-container,
         .visit-newspaper-wrap {
           display: none !important;
@@ -504,25 +615,37 @@
         .press-card-wrapper {
           box-shadow: none !important;
           border: 2px solid #000000 !important;
-          max-width: 500px !important;
+          max-width: 480px !important;
           margin: 0 auto !important;
         }
       }
     </style>
   </head>
   <body>
-    <!-- 1. TOP SECURITY MASTHEAD -->
-    <header class="press-verification-masthead">
-      <div class="gov-reg-row">
-        <span>RNI: <strong class="gov-reg-badge">APTEL/2026/89123</strong></span>
+    <!-- 1. TOP EDITORIAL MASTHEAD (EXACT HOMEPAGE BRAND SYSTEM) -->
+    <header class="site-header-verification" role="banner">
+      <div class="veri-utility-bar">
+        <span>RNI No: <strong>APTEL/2026/89123</strong></span>
         <span>•</span>
         <span>ISSN: <strong>2456-8910</strong></span>
+        <span>•</span>
+        <span>ఆంధ్రప్రదేశ్ దినపత్రిక</span>
       </div>
-      <h1 class="press-org-title">మమేక మహోదయం</h1>
-      <p class="press-org-sub">Telugu Daily Newspaper • Accredited Media Press Card</p>
-      <div class="press-verification-title-badge">
-        <span>🛡️</span>
-        <span>అధికారిక పాత్రికేయ ధృవీకరణ పోర్టల్ (Press Verification)</span>
+
+      <div class="veri-masthead-brand">
+        <a href="/" class="veri-brand-anchor" title="మమేక మహోదయం హోమ్‌పేజీకి వెళ్ళండి">
+          <div class="veri-brand-stacked-wrap">
+            <span class="veri-brand-prefix">మమేక</span>
+            <span class="veri-brand-main">మహోదయం</span>
+          </div>
+          <div class="veri-brand-english">MAMEKA MAHODAYAM</div>
+          <div class="veri-brand-tagline">అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం</div>
+          <div class="veri-brand-badge">తెలుగు దినపత్రిక</div>
+        </a>
+      </div>
+
+      <div class="veri-red-bar">
+        🛡️ అధికారిక పాత్రికేయ డిజిటల్ గుర్తింపు కార్డు (OFFICIAL DIGITAL PRESS ID)
       </div>
     </header>
 
@@ -531,28 +654,28 @@
       <!-- Loading State -->
       <div class="loading-wrap" id="press-card-loading">
         <div class="spinner"></div>
-        <p style="font-weight: 600;">పాత్రికేయుని ధృవీకరణ వివరాలు లోడ్ అవుతున్నాయి...</p>
-        <p style="font-size: 0.8rem; margin-top: 4px; color: #94a3b8;">Verifying Press Accreditation Credential...</p>
+        <p style="font-weight: 700; color: #1e293b;">పాత్రికేయుని గుర్తింపు వివరాలు లోడ్ అవుతున్నాయి...</p>
+        <p style="font-size: 0.8rem; margin-top: 4px; color: #64748b;">Loading Press ID Card Verification...</p>
       </div>
 
       <!-- Injected Card Content Will Replace Spinner -->
       <div id="press-card-content" style="display: none;"></div>
     </main>
 
-    <!-- 3. VISIT MAIN NEWSPAPER WEBSITE (CLEAN LINK) -->
+    <!-- 3. VISIT MAIN NEWSPAPER WEBSITE (CLEAN BRAND BUTTON) -->
     <div class="visit-newspaper-wrap">
       <a href="/" class="btn-visit-main-site">
         <span>🌐</span>
-        <span>మమేక మహోదయం ప్రధాన దినపత్రిక (Visit Website) →</span>
+        <span>మమేక మహోదయం ప్రధాన దినపత్రిక (Visit Main Site) →</span>
       </a>
-      <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 10px;">
+      <p style="font-size: 0.72rem; color: #737373; margin-top: 14px;">
         &copy; 2026 Mameka Mahodayam Digital Media. All Rights Reserved.
       </p>
     </div>
 
     <!-- SCRIPTS -->
-    <script src="/js/config.js?v=20260924_6"></script>
-    <script src="/js/districts-config.js?v=20260924_6"></script>
-    <script src="/js/reporter-profile.js?v=20260924_6"></script>
+    <script src="/js/config.js?v=20260924_7"></script>
+    <script src="/js/districts-config.js?v=20260924_7"></script>
+    <script src="/js/reporter-profile.js?v=20260924_7"></script>
   </body>
 </html>
