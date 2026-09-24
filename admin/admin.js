@@ -59,6 +59,24 @@ function initAdminApp() {
         });
     }
 
+    const mobileSidebarClose = document.getElementById('mobile-sidebar-close');
+    if (mobileSidebarClose) {
+        mobileSidebarClose.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMobileSidebar(false);
+        });
+    }
+
+    const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
+    if (sidebarLogoutBtn) {
+        sidebarLogoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_username');
+            window.location.hash = '#/dashboard';
+            checkAuth();
+        });
+    }
+
     // Auto-close sidebar on mobile when any sidebar navigation link is clicked
     if (adminSidebar) {
         adminSidebar.querySelectorAll('.sidebar-nav a').forEach(link => {
@@ -120,7 +138,10 @@ function initAdminApp() {
         if (token) {
             if (loginView) loginView.style.display = 'none';
             if (dashboardView) dashboardView.style.display = 'flex';
-            if (adminUsernameDisplay) adminUsernameDisplay.textContent = localStorage.getItem('admin_username') || 'admin';
+            const user = localStorage.getItem('admin_username') || 'admin';
+            if (adminUsernameDisplay) adminUsernameDisplay.textContent = user;
+            const sidebarAdminUsername = document.getElementById('sidebar-admin-username');
+            if (sidebarAdminUsername) sidebarAdminUsername.textContent = user;
             initDropdowns();
             handleRoute();
         } else {
@@ -145,6 +166,14 @@ function initAdminApp() {
 
         // Update active class in sidebar nav
         document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('data-view') === routeName) {
+                item.classList.add('active');
+            }
+        });
+
+        // Update active class in mobile bottom quick nav bar
+        document.querySelectorAll('.mobile-nav-item').forEach(item => {
             item.classList.remove('active');
             if (item.getAttribute('data-view') === routeName) {
                 item.classList.add('active');

@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Mandali&family=Noto+Sans+Telugu:wght@400;600;700&family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles/design-system.css?v=20260924_5">
-    <link rel="stylesheet" href="/admin/admin.css?v=20260924_5">
+    <link rel="stylesheet" href="/styles/design-system.css?v=20260924_6">
+    <link rel="stylesheet" href="/admin/admin.css?v=20260924_6">
 </head>
 <body>
 
@@ -110,58 +110,98 @@
         <div class="admin-body-container">
             <!-- SIDEBAR NAVIGATION -->
             <aside class="admin-sidebar" id="admin-sidebar">
+                <!-- Mobile Drawer Header (Visible on Mobile/Tablet) -->
+                <div class="sidebar-drawer-header">
+                    <div class="sidebar-drawer-brand">
+                        <span class="sidebar-drawer-logo">మమేక మహోదయం</span>
+                        <span class="sidebar-drawer-sub">CMS ఎడిటోరియల్ పోర్టల్</span>
+                    </div>
+                    <button type="button" id="mobile-sidebar-close" class="btn-sidebar-close" aria-label="Close Navigation">✕</button>
+                </div>
+
+                <!-- Admin Profile Card in Mobile Drawer -->
+                <div class="sidebar-user-card">
+                    <div class="sidebar-user-avatar">👤</div>
+                    <div class="sidebar-user-details">
+                        <div class="sidebar-user-name" id="sidebar-admin-username">Admin Editor</div>
+                        <div class="sidebar-user-role">
+                            <span class="sidebar-status-dot"></span>
+                            <span>ఆన్‌లైన్ / ఎడిటోరియల్ డెస్క్</span>
+                        </div>
+                    </div>
+                </div>
+
                 <nav class="sidebar-nav">
                     <div class="nav-section-title">ప్రధాన విభాగాలు / Main Sections</div>
                     <a href="#/dashboard" class="nav-item active" data-view="dashboard">
+                        <span class="nav-icon">📊</span>
                         <div class="nav-label-wrap">
                             <span class="nav-title">డాష్‌బోర్డ్</span>
                             <span class="nav-sub">Dashboard Overview</span>
                         </div>
                     </a>
                     <a href="#/create-news" class="nav-item" data-view="create-news">
+                        <span class="nav-icon">✍️</span>
                         <div class="nav-label-wrap">
                             <span class="nav-title">కొత్త వార్త ప్రచురించు</span>
-                            <span class="nav-sub">Create News</span>
+                            <span class="nav-sub">Create News Article</span>
                         </div>
                         <span class="nav-badge-tag">+ కొత్తది</span>
                     </a>
                     <a href="#/upload" class="nav-item" data-view="upload">
+                        <span class="nav-icon">📤</span>
                         <div class="nav-label-wrap">
                             <span class="nav-title">ఈ-పేపర్ PDF అప్‌లోడ్</span>
                             <span class="nav-sub">Upload PDF Edition</span>
                         </div>
                     </a>
                     <a href="#/articles" class="nav-item" data-view="articles">
+                        <span class="nav-icon">📰</span>
                         <div class="nav-label-wrap">
                             <span class="nav-title">వార్తల నిర్వహణ</span>
                             <span class="nav-sub">All News &amp; Articles</span>
                         </div>
                     </a>
                     <a href="#/reporters" class="nav-item" data-view="reporters">
+                        <span class="nav-icon">👥</span>
                         <div class="nav-label-wrap">
                             <span class="nav-title">రిపోర్టర్ల నిర్వహణ</span>
                             <span class="nav-sub">Manage Reporters</span>
                         </div>
                     </a>
                     <a href="#/media" class="nav-item" data-view="media">
+                        <span class="nav-icon">🖼️</span>
                         <div class="nav-label-wrap">
                             <span class="nav-title">మీడియా లైబ్రరీ</span>
                             <span class="nav-sub">Media Library</span>
                         </div>
                     </a>
                     <a href="#/editions" class="nav-item" data-view="editions">
+                        <span class="nav-icon">📄</span>
                         <div class="nav-label-wrap">
                             <span class="nav-title">ఈ-పేపర్ &amp; సంచికలు</span>
                             <span class="nav-sub">E-Paper Archives</span>
                         </div>
                     </a>
                     <a href="#/settings" class="nav-item" data-view="settings">
+                        <span class="nav-icon">⚙️</span>
                         <div class="nav-label-wrap">
                             <span class="nav-title">సెట్టింగ్‌లు</span>
                             <span class="nav-sub">Settings</span>
                         </div>
                     </a>
                 </nav>
+
+                <!-- Drawer Quick Actions Footer -->
+                <div class="sidebar-drawer-footer">
+                    <a href="../index.html" target="_blank" class="sidebar-site-link">
+                        <span>🌐 ప్రధాన వెబ్‌సైట్ (Live Site)</span>
+                        <span>↗</span>
+                    </a>
+                    <button type="button" id="sidebar-logout-btn" class="sidebar-logout-btn">
+                        <span>🚪 నిర్గమించు (Logout)</span>
+                    </button>
+                </div>
             </aside>
             <!-- Mobile Sidebar Backdrop Overlay -->
             <div id="admin-sidebar-backdrop" class="admin-sidebar-backdrop" aria-hidden="true"></div>
@@ -229,6 +269,7 @@
                                     <h3>📄 ఇటీవల అప్‌లోడ్ చేసిన ఈ-పేపర్ సంచికలు (Recent E-Paper Editions)</h3>
                                     <a href="#/editions" class="btn btn-outline-sm">అన్నీ చూడండి (View All) →</a>
                                 </div>
+                                <div class="table-scroll-hint">👉 పట్టికను చూడటానికి ఎడమ/కుడికి స్వైప్ చేయండి (Swipe horizontally)</div>
                                 <div class="table-responsive">
                                     <table class="data-table">
                                         <thead>
@@ -252,6 +293,7 @@
                                     <h3>📰 తాజా ప్రచురించిన వార్తలు (Recent Articles Summary)</h3>
                                     <a href="#/articles" class="btn btn-outline-sm">అన్ని వార్తలు నిర్వహించండి →</a>
                                 </div>
+                                <div class="table-scroll-hint">👉 పట్టికను చూడటానికి ఎడమ/కుడికి స్వైప్ చేయండి (Swipe horizontally)</div>
                                 <div class="table-responsive">
                                     <table class="data-table">
                                         <thead>
@@ -434,6 +476,7 @@
                     </div>
 
                     <div class="card">
+                        <div class="table-scroll-hint">👉 పట్టికను చూడటానికి ఎడమ/కుడికి స్వైప్ చేయండి (Swipe horizontally)</div>
                         <div class="table-responsive">
                             <table class="data-table">
                                 <thead>
@@ -654,6 +697,7 @@
                     </div>
 
                     <div class="card">
+                        <div class="table-scroll-hint">👉 పట్టికను చూడటానికి ఎడమ/కుడికి స్వైప్ చేయండి (Swipe horizontally)</div>
                         <div class="table-responsive">
                             <table class="data-table">
                                 <thead>
@@ -1030,6 +1074,7 @@
 
                     <!-- REPORTERS DATA TABLE -->
                     <div class="card">
+                        <div class="table-scroll-hint">👉 పట్టికను చూడటానికి ఎడమ/కుడికి స్వైప్ చేయండి (Swipe horizontally)</div>
                         <div class="table-responsive">
                             <table class="data-table">
                                 <thead>
@@ -1144,11 +1189,35 @@
         </div>
     </div>
 
+    <!-- MOBILE BOTTOM QUICK NAVIGATION BAR (VISIBLE ON MOBILE <= 768px) -->
+    <nav class="admin-mobile-bottom-bar" id="admin-mobile-bottom-bar" aria-label="Mobile Navigation">
+        <a href="#/dashboard" class="mobile-nav-item active" data-view="dashboard">
+            <span class="mobile-nav-icon">📊</span>
+            <span class="mobile-nav-label">డాష్‌బోర్డ్</span>
+        </a>
+        <a href="#/create-news" class="mobile-nav-item" data-view="create-news">
+            <span class="mobile-nav-icon">✍️</span>
+            <span class="mobile-nav-label">కొత్త వార్త</span>
+        </a>
+        <a href="#/articles" class="mobile-nav-item" data-view="articles">
+            <span class="mobile-nav-icon">📰</span>
+            <span class="mobile-nav-label">వార్తలు</span>
+        </a>
+        <a href="#/reporters" class="mobile-nav-item" data-view="reporters">
+            <span class="mobile-nav-icon">👥</span>
+            <span class="mobile-nav-label">రిపోర్టర్లు</span>
+        </a>
+        <a href="#/upload" class="mobile-nav-item" data-view="upload">
+            <span class="mobile-nav-icon">📤</span>
+            <span class="mobile-nav-label">ఈ-పేపర్</span>
+        </a>
+    </nav>
+
     <!-- SCRIPT INCLUDES -->
-    <script src="/js/config.js?v=20260924_5"></script>
-    <script src="/js/categories-config.js?v=20260924_5"></script>
-    <script src="/js/districts-config.js?v=20260924_5"></script>
-    <script src="/js/i18n.js?v=20260924_5"></script>
-    <script src="/admin/admin.js?v=20260924_5"></script>
+    <script src="/js/config.js?v=20260924_6"></script>
+    <script src="/js/categories-config.js?v=20260924_6"></script>
+    <script src="/js/districts-config.js?v=20260924_6"></script>
+    <script src="/js/i18n.js?v=20260924_6"></script>
+    <script src="/admin/admin.js?v=20260924_6"></script>
 </body>
 </html>
