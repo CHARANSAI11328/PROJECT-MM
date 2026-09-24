@@ -290,6 +290,8 @@ async function initDatabase() {
       social_links TEXT,
       status TEXT CHECK(status IN ('active', 'inactive')) DEFAULT 'active',
       display_order INTEGER DEFAULT 0,
+      press_id TEXT,
+      jurisdiction TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -337,6 +339,8 @@ async function initDatabase() {
     "ALTER TABLE reporters ADD COLUMN display_order INTEGER DEFAULT 0",
     "ALTER TABLE reporters ADD COLUMN social_links TEXT",
     "ALTER TABLE reporters ADD COLUMN qr_code_url TEXT",
+    "ALTER TABLE reporters ADD COLUMN press_id TEXT",
+    "ALTER TABLE reporters ADD COLUMN jurisdiction TEXT",
     "CREATE INDEX IF NOT EXISTS idx_reporters_status ON reporters(status)",
     "CREATE INDEX IF NOT EXISTS idx_reporters_district ON reporters(district)"
   ];
@@ -378,7 +382,7 @@ async function initDatabase() {
         mandal: 'తెనాలి, సంగం జాగర్లమూడి',
         bio: 'సత్యమే ఆధారం... ప్రజాహితమే మా ధ్యేయం! మమేక మహోదయం దినపత్రిక స్థాపక ప్రధాన సంపాదకులు. ప్రజా సమస్యలపై స్వతంత్ర, నిర్భయ మరియు నిజాయితీగల జర్నలిజానికి నిరంతరం కట్టుబడి ఉన్నారు.',
         photo_url: '/uploads/reporters/vaka_srinivasa_rao.png',
-        phone: '+91 866 2456789',
+        phone: '+91 7075652808',
         email: 'editor@mamekamahodayam.com',
         social_links: JSON.stringify({ twitter: 'https://twitter.com', facebook: 'https://facebook.com' }),
         status: 'active',

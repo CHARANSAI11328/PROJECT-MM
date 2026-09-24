@@ -279,7 +279,7 @@
             <div>
               <div class="drawer-brand-title">మమేక మహోదయం</div>
               <div class="drawer-brand-tagline">అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం</div>
-              <div style="font-size: 0.68rem; color: #fbcfe8; margin-top: 4px; font-family: sans-serif;">RNI: APTEL/2026/89123 • తెలుగు దినపత్రిక</div>
+              <div style="font-size: 0.68rem; color: #fbcfe8; margin-top: 4px; font-family: sans-serif;">RNI: APTEL/26/5988 • తెలుగు దినపత్రిక</div>
             </div>
             <button type="button" id="mobile-drawer-close" class="drawer-close-btn" aria-label="మెనూ మూసివేయి">✕</button>
           </div>

@@ -2448,7 +2448,7 @@ function initAdminApp() {
         if (!tableBody) return;
 
         if (!reporters || reporters.length === 0) {
-            tableBody.innerHTML = '<tr class="empty-row"><td colspan="8" style="text-align: center; padding: 28px; color: #64748b;">రిపోర్టర్లేవీ అందుబాటులో లేవు. నూతన రిపోర్టర్‌ని నమోదు చేయడానికి పై ఫారమ్‌ని ఉపయోగించండి.</td></tr>';
+            tableBody.innerHTML = '<tr class="empty-row"><td colspan="9" style="text-align: center; padding: 28px; color: #64748b;">రిపోర్టర్లేవీ అందుబాటులో లేవు. నూతన రిపోర్టర్‌ని నమోదు చేయడానికి పై ఫారమ్‌ని ఉపయోగించండి.</td></tr>';
             return;
         }
 
@@ -2465,15 +2465,25 @@ function initAdminApp() {
                 photoHtml = `<div style="width: 44px; height: 44px; border-radius: 50%; background: #fce7f3; color: #be185d; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 2px solid #fbcfe8;">${escapeHTML(initial)}</div>`;
             }
 
-            // District display name
+            // Role / Leadership Tier badge
+            const desigLower = (r.designation || '').toLowerCase();
+            const isTopEditorial = r.display_order === 1 || r.display_order === 2 || 
+                                   desigLower.includes('founder') || desigLower.includes('వ్యవస్థాపక') || 
+                                   desigLower.includes('editor-in-chief') || desigLower.includes('ప్రధాన సంపాదకులు') || 
+                                   desigLower.includes('chief') || desigLower.includes('చీఫ్') ||
+                                   desigLower.includes('associate') || desigLower.includes('అసోసియేట్');
+
+            // District display name & Jurisdiction
             let distName = r.district || '-';
-            if (r.district && typeof MAMEKA_DISTRICTS !== 'undefined') {
+            if (r.jurisdiction) {
+                distName = r.jurisdiction;
+            } else if (isTopEditorial || r.district === 'all-ap-ts') {
+                distName = 'ఆంధ్రప్రదేశ్ & తెలంగాణ (AP & TS)';
+            } else if (r.district && typeof MAMEKA_DISTRICTS !== 'undefined') {
                 const dObj = MAMEKA_DISTRICTS.getDistrictByCodeOrSlug ? MAMEKA_DISTRICTS.getDistrictByCodeOrSlug(r.district) : null;
                 if (dObj) distName = dObj.name_te;
             }
 
-            // Role / Leadership Tier badge
-            const desigLower = (r.designation || '').toLowerCase();
             let tierBadge = '';
             if (r.display_order === 1 || desigLower.includes('founder') || (r.designation || '').includes('వ్యవస్థాపక') || desigLower.includes('editor-in-chief') || (r.designation || '').includes('ప్రధాన సంపాదకులు')) {
                 tierBadge = '<span style="display:inline-block; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:700; background:#fff1f2; color:#be185d; border:1px solid #fecdd3;">⭐ Top 1: Chief</span>';
@@ -2518,9 +2528,12 @@ function initAdminApp() {
                         ${escapeHTML(r.designation)}
                     </span>
                 </td>
+                <td style="font-family: monospace; font-size: 0.85rem; font-weight: 700; color: #be185d;">
+                    ${escapeHTML(r.press_id || '-')}
+                </td>
                 <td>
                     <strong style="font-size:0.85rem; color:#334155;">${escapeHTML(distName)}</strong>
-                    ${r.mandal ? `<span style="display:block; font-size:0.8rem; color:#64748b;">${escapeHTML(r.mandal)}</span>` : ''}
+                    ${(r.mandal && !r.jurisdiction && !isTopEditorial && r.district !== 'all-ap-ts') ? `<span style="display:block; font-size:0.8rem; color:#64748b;">${escapeHTML(r.mandal)}</span>` : ''}
                 </td>
                 <td style="font-size:0.825rem;">${contactHtml}</td>
                 <td>${tierBadge}</td>
@@ -2560,6 +2573,32 @@ function initAdminApp() {
         });
     }
 
+    function handleDesignationJurisdictionChange() {
+        const desigInput = document.getElementById('rep-designation');
+        const notice = document.getElementById('editorial-jurisdiction-notice');
+        const distGroup = document.getElementById('rep-district-group');
+        const mandalGroup = document.getElementById('rep-mandal-group');
+        const distSelect = document.getElementById('rep-district');
+
+        if (!desigInput) return;
+        const d = (desigInput.value || '').toLowerCase();
+        const isTopEditorial = d.includes('founder') || d.includes('వ్యవస్థాపక') || 
+                               d.includes('editor-in-chief') || d.includes('ప్రధాన సంపాదకులు') || 
+                               d.includes('chief') || d.includes('చీఫ్') ||
+                               d.includes('associate') || d.includes('అసోసియేట్');
+
+        if (isTopEditorial) {
+            if (notice) notice.style.display = 'block';
+            if (distGroup) distGroup.style.display = 'none';
+            if (mandalGroup) mandalGroup.style.display = 'none';
+            if (distSelect) distSelect.value = 'all-ap-ts';
+        } else {
+            if (notice) notice.style.display = 'none';
+            if (distGroup) distGroup.style.display = 'block';
+            if (mandalGroup) mandalGroup.style.display = 'block';
+        }
+    }
+
     function initReporterFormEvents() {
         const form = document.getElementById('form-manage-reporter');
         const alertBox = document.getElementById('reporters-alert');
@@ -2574,6 +2613,12 @@ function initAdminApp() {
         const refreshBtn = document.getElementById('btn-refresh-reporters');
         const toggleAddBtn = document.getElementById('btn-toggle-add-reporter');
         const resetBtn = document.getElementById('btn-reset-reporter-form');
+
+        const repDesigInput = document.getElementById('rep-designation');
+        if (repDesigInput) {
+            repDesigInput.addEventListener('input', handleDesignationJurisdictionChange);
+            repDesigInput.addEventListener('change', handleDesignationJurisdictionChange);
+        }
 
         // Search and filter inputs
         const searchInput = document.getElementById('rep-filter-search');
@@ -2787,6 +2832,8 @@ function initAdminApp() {
         if (editIdInput) editIdInput.value = r.id;
         if (nameInput) nameInput.value = r.name || '';
         if (desigInput) desigInput.value = r.designation || '';
+        const pressIdInput = document.getElementById('rep-press-id');
+        if (pressIdInput) pressIdInput.value = r.press_id || '';
         if (distSelect) {
             distSelect.value = r.district || '';
             updateMandalDropdown(r.district || '', r.mandal || '');
@@ -2794,6 +2841,7 @@ function initAdminApp() {
         if (phoneInput) phoneInput.value = r.phone || '';
         if (emailInput) emailInput.value = r.email || '';
         if (bioTextarea) bioTextarea.value = r.bio || '';
+        handleDesignationJurisdictionChange();
 
         if (photoUrlInput) photoUrlInput.value = r.photo_url || '';
         if (r.photo_url) {
@@ -2821,9 +2869,13 @@ function initAdminApp() {
         if (form) form.reset();
         const editIdInput = document.getElementById('rep-edit-id');
         if (editIdInput) editIdInput.value = '';
+        const pressIdInput = document.getElementById('rep-press-id');
+        if (pressIdInput) pressIdInput.value = '';
         const distSelect = document.getElementById('rep-district');
         if (distSelect) distSelect.value = '';
         updateMandalDropdown('', '');
+        handleDesignationJurisdictionChange();
+
         const formTitle = document.getElementById('reporter-form-title');
         if (formTitle) formTitle.textContent = '➕ కొత్త రిపోర్టర్‌ని నమోదు చేయండి (Add New Reporter)';
         const submitBtn = document.getElementById('btn-save-reporter');
@@ -2849,6 +2901,7 @@ function initAdminApp() {
         const editId = (document.getElementById('rep-edit-id') ? document.getElementById('rep-edit-id').value : '').trim();
         const name = (document.getElementById('rep-name') ? document.getElementById('rep-name').value : '').trim();
         const desig = (document.getElementById('rep-designation') ? document.getElementById('rep-designation').value : '').trim();
+        const pressId = (document.getElementById('rep-press-id') ? document.getElementById('rep-press-id').value : '').trim();
         const dist = document.getElementById('rep-district') ? document.getElementById('rep-district').value : '';
         
         let mandal = '';
@@ -2867,6 +2920,12 @@ function initAdminApp() {
         const status = 'active';
 
         // Auto-calculate priority: Top 1 = Chief / Founder, Top 2 = Associate Editor, 3 = Normal Block
+        const desigLower = String(desig || '').toLowerCase();
+        const isTopEditorial = desigLower.includes('founder') || desigLower.includes('వ్యవస్థాపక') || 
+                               desigLower.includes('editor-in-chief') || desigLower.includes('ప్రధాన సంపాదకులు') || 
+                               desigLower.includes('chief') || desigLower.includes('చీఫ్') ||
+                               desigLower.includes('associate') || desigLower.includes('అసోసియేట్');
+
         function calculateReporterPriority(desigText) {
             if (!desigText) return 3;
             const d = String(desigText).toLowerCase();
@@ -2879,6 +2938,10 @@ function initAdminApp() {
             return 3;
         }
         const order = calculateReporterPriority(desig);
+        const finalDist = isTopEditorial ? 'all-ap-ts' : dist;
+        const finalMandal = isTopEditorial ? 'ఉభయ తెలుగు రాష్ట్రాలు' : mandal;
+        const finalJurisdiction = isTopEditorial ? 'ఆంధ్రప్రదేశ్ & తెలంగాణ (ఉభయ తెలుగు రాష్ట్రాలు - AP & Telangana)' : '';
+
         const bio = (document.getElementById('rep-bio') ? document.getElementById('rep-bio').value : '').trim();
         const photoUrl = (document.getElementById('rep-photo-url') ? document.getElementById('rep-photo-url').value : '').trim();
         const photoFileInput = document.getElementById('rep-photo-file');
@@ -2914,8 +2977,10 @@ function initAdminApp() {
                 const formData = new FormData();
                 formData.append('name', name);
                 formData.append('designation', desig);
-                formData.append('district', dist);
-                formData.append('mandal', mandal);
+                formData.append('press_id', pressId);
+                formData.append('jurisdiction', finalJurisdiction);
+                formData.append('district', finalDist);
+                formData.append('mandal', finalMandal);
                 formData.append('phone', phone);
                 formData.append('email', email);
                 formData.append('status', status);
@@ -2936,8 +3001,10 @@ function initAdminApp() {
                     body: JSON.stringify({
                         name,
                         designation: desig,
-                        district: dist,
-                        mandal,
+                        press_id: pressId,
+                        jurisdiction: finalJurisdiction,
+                        district: finalDist,
+                        mandal: finalMandal,
                         phone,
                         email,
                         status,

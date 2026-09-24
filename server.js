@@ -1664,7 +1664,7 @@ app.get(['/api/public/reporters', '/api/reporters'], async (req, res) => {
     }
 
     const reporters = await dbAll(`
-      SELECT id, name, designation, district, mandal, bio, photo_url, phone, email, social_links, display_order, created_at
+      SELECT id, name, designation, district, mandal, bio, photo_url, phone, email, social_links, display_order, press_id, jurisdiction, created_at
       FROM reporters
       WHERE ${filters.join(' AND ')}
       ORDER BY 
@@ -1693,7 +1693,7 @@ app.get(['/api/public/reporters/:id', '/api/reporters/:id'], async (req, res) =>
     const cleanId = rawId.trim();
 
     const reporter = await dbGet(`
-      SELECT id, name, designation, district, mandal, bio, photo_url, phone, email, social_links, display_order, created_at
+      SELECT id, name, designation, district, mandal, bio, photo_url, phone, email, social_links, display_order, press_id, jurisdiction, created_at
       FROM reporters
       WHERE (id = ? OR name = ?) AND status = 'active'
     `, [cleanId, cleanId]);
@@ -1802,7 +1802,8 @@ app.post('/api/admin/reporters', authenticateToken, uploadReporterMulter.single(
   try {
     const {
       name, designation, district, mandal, bio,
-      photo_url, phone, email, social_links, status = 'active', display_order = 0
+      photo_url, phone, email, social_links, status = 'active', display_order = 0,
+      press_id, jurisdiction
     } = req.body;
 
     if (!name || !name.trim()) {
@@ -1838,17 +1839,34 @@ app.post('/api/admin/reporters', authenticateToken, uploadReporterMulter.single(
       socialLinksJson = JSON.stringify(social_links);
     }
 
+    const desigLower = String(designation || '').toLowerCase();
+    const isTopEditorial = desigLower.includes('founder') || desigLower.includes('వ్యవస్థాపక') || 
+                           desigLower.includes('editor-in-chief') || desigLower.includes('ప్రధాన సంపాదకులు') || 
+                           desigLower.includes('chief') || desigLower.includes('చీఫ్') ||
+                           desigLower.includes('associate') || desigLower.includes('అసోసియేట్');
+
+    let finalJurisdiction = (jurisdiction || '').trim();
+    if (!finalJurisdiction && isTopEditorial) {
+      finalJurisdiction = 'ఆంధ్రప్రదేశ్ & తెలంగాణ (ఉభయ తెలుగు రాష్ట్రాలు - AP & Telangana)';
+    }
+
+    let finalPressId = (press_id || '').trim();
+    if (!finalPressId) {
+      const rawNum = String(Date.now()).slice(-3);
+      finalPressId = `MM-PRESS-2026-${rawNum}`;
+    }
+
     await dbRun(`
       INSERT INTO reporters (
         id, name, designation, district, mandal, bio,
-        photo_url, phone, email, social_links, status, display_order
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        photo_url, phone, email, social_links, status, display_order, press_id, jurisdiction
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       id,
       name.trim(),
       designation.trim(),
-      district || '',
-      mandal || '',
+      district || (isTopEditorial ? 'all-ap-ts' : ''),
+      mandal || (isTopEditorial ? 'ఉభయ తెలుగు రాష్ట్రాలు' : ''),
       bio || '',
       finalPhotoUrl,
       phone || '',
@@ -1857,11 +1875,14 @@ app.post('/api/admin/reporters', authenticateToken, uploadReporterMulter.single(
       status === 'inactive' ? 'inactive' : 'active',
       (function() {
         if (display_order !== undefined && parseInt(display_order, 10) > 0) return parseInt(display_order, 10);
-        const d = String(designation || '').toLowerCase();
-        if (d.includes('founder') || d.includes('వ్యవస్థాపక') || d.includes('editor-in-chief') || d.includes('ప్రధాన సంపాదకులు') || d.includes('chief') || d.includes('చీఫ్')) return 1;
-        if (d.includes('associate') || d.includes('అసోసియేట్')) return 2;
+        if (isTopEditorial) {
+          if (desigLower.includes('associate') || desigLower.includes('అసోసియేట్')) return 2;
+          return 1;
+        }
         return 3;
-      })()
+      })(),
+      finalPressId,
+      finalJurisdiction
     ]);
 
     const created = await dbGet('SELECT * FROM reporters WHERE id = ?', [id]);
@@ -1885,7 +1906,8 @@ app.put('/api/admin/reporters/:id', authenticateToken, uploadReporterMulter.sing
 
     const {
       name, designation, district, mandal, bio,
-      photo_url, phone, email, social_links, status, display_order
+      photo_url, phone, email, social_links, status, display_order,
+      press_id, jurisdiction
     } = req.body;
 
     let finalPhotoUrl = existing.photo_url;
@@ -1913,6 +1935,18 @@ app.put('/api/admin/reporters/:id', authenticateToken, uploadReporterMulter.sing
       socialLinksJson = typeof social_links === 'object' ? JSON.stringify(social_links) : social_links;
     }
 
+    const desigText = designation !== undefined ? designation : existing.designation;
+    const desigLower = String(desigText || '').toLowerCase();
+    const isTopEditorial = desigLower.includes('founder') || desigLower.includes('వ్యవస్థాపక') || 
+                           desigLower.includes('editor-in-chief') || desigLower.includes('ప్రధాన సంపాదకులు') || 
+                           desigLower.includes('chief') || desigLower.includes('చీఫ్') ||
+                           desigLower.includes('associate') || desigLower.includes('అసోసియేట్');
+
+    let finalJurisdiction = jurisdiction !== undefined ? jurisdiction : existing.jurisdiction;
+    if (!finalJurisdiction && isTopEditorial) {
+      finalJurisdiction = 'ఆంధ్రప్రదేశ్ & తెలంగాణ (ఉభయ తెలుగు రాష్ట్రాలు - AP & Telangana)';
+    }
+
     await dbRun(`
       UPDATE reporters
       SET name = COALESCE(?, name),
@@ -1926,13 +1960,15 @@ app.put('/api/admin/reporters/:id', authenticateToken, uploadReporterMulter.sing
           social_links = ?,
           status = COALESCE(?, status),
           display_order = COALESCE(?, display_order),
+          press_id = COALESCE(?, press_id),
+          jurisdiction = COALESCE(?, jurisdiction),
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `, [
       name !== undefined ? name.trim() : null,
       designation !== undefined ? designation.trim() : null,
-      district !== undefined ? district : null,
-      mandal !== undefined ? mandal : null,
+      district !== undefined ? district : (isTopEditorial ? 'all-ap-ts' : null),
+      mandal !== undefined ? mandal : (isTopEditorial ? 'ఉభయ తెలుగు రాష్ట్రాలు' : null),
       bio !== undefined ? bio : null,
       finalPhotoUrl,
       phone !== undefined ? phone : null,
@@ -1941,11 +1977,14 @@ app.put('/api/admin/reporters/:id', authenticateToken, uploadReporterMulter.sing
       status !== undefined ? (status === 'inactive' ? 'inactive' : 'active') : null,
       (function() {
         if (display_order !== undefined && display_order !== null && parseInt(display_order, 10) > 0) return parseInt(display_order, 10);
-        const d = String(designation || existing.designation || '').toLowerCase();
-        if (d.includes('founder') || d.includes('వ్యవస్థాపక') || d.includes('editor-in-chief') || d.includes('ప్రధాన సంపాదకులు') || d.includes('chief') || d.includes('చీఫ్')) return 1;
-        if (d.includes('associate') || d.includes('అసోసియేట్')) return 2;
+        if (isTopEditorial) {
+          if (desigLower.includes('associate') || desigLower.includes('అసోసియేట్')) return 2;
+          return 1;
+        }
         return existing.display_order || 3;
       })(),
+      press_id !== undefined ? (press_id ? press_id.trim() : null) : null,
+      finalJurisdiction !== undefined ? finalJurisdiction : null,
       id
     ]);
 

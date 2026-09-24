@@ -896,11 +896,24 @@
                                     </datalist>
                                 </div>
 
-                                <!-- District -->
+                                <!-- Press ID Number (Admin Manual Entry) -->
                                 <div class="form-group">
+                                    <label for="rep-press-id" class="form-label-editorial">పాత్రికేయ గుర్తింపు నంబర్ (Press ID Number) *</label>
+                                    <input type="text" id="rep-press-id" class="form-control" placeholder="ఉదా: MM-PRESS-2026-001 లేదా MM/AP/2026/045">
+                                    <small style="color: #64748b; font-size: 0.75rem;">కార్డు మరియు QR ప్రొఫైల్ పై కనిపించే అధికారిక Press ID</small>
+                                </div>
+
+                                <!-- Editorial Jurisdiction Notice (Auto for Chief / Founder / Associate Editor) -->
+                                <div id="editorial-jurisdiction-notice" style="display: none; grid-column: 1 / -1; background: #fff1f2; border: 1.5px solid #fecdd3; border-radius: 8px; padding: 12px 16px; color: #be185d; font-size: 0.88rem; font-weight: 700;">
+                                    ✨ ఎడిటర్-ఇన్-చీఫ్ / వ్యవస్థాపకులు / చీఫ్ ఎడిటర్ / అసోసియేట్ ఎడిటర్ హోదాకు ఆంధ్రప్రదేశ్ మరియు తెలంగాణ ఉభయ రాష్ట్రాల సమన్వయ పరిధి (AP &amp; Telangana Jurisdiction) స్వయంచాలకంగా వర్తిస్తుంది. జిల్లా మరియు మండలాలను విడిగా ఎంచుకోవాల్సిన అవసరం లేదు.
+                                </div>
+
+                                <!-- District -->
+                                <div class="form-group" id="rep-district-group">
                                     <label for="rep-district" class="form-label-editorial">కేటాయించిన జిల్లా (Assigned District)</label>
                                     <select id="rep-district" class="form-control">
                                         <option value="">-- జిల్లాను ఎంచుకోండి (Select District) --</option>
+                                        <option value="all-ap-ts">ఆంధ్రప్రదేశ్ &amp; తెలంగాణ (AP &amp; Telangana - Both States)</option>
                                         <option value="all-ap">ఆంధ్రప్రదేశ్ రాష్ట్ర స్థాయి (State Bureau / All AP)</option>
                                         <option value="all-ts">తెలంగాణ రాష్ట్ర స్థాయి (Telangana Bureau)</option>
                                         <option value="all-delhi">ఢిల్లీ / జాతీయ బ్యూరో (Delhi / National Bureau)</option>
@@ -935,7 +948,7 @@
                                 </div>
 
                                 <!-- Mandal / Region -->
-                                <div class="form-group">
+                                <div class="form-group" id="rep-mandal-group">
                                     <label for="rep-mandal" class="form-label-editorial">మండలం / ప్రాంతం (Mandal / Region)</label>
                                     <select id="rep-mandal" class="form-control">
                                         <option value="">ముందుగా జిల్లాను ఎంచుకోండి...</option>
@@ -1024,7 +1037,8 @@
                                         <th style="width: 60px;">ఫొటో</th>
                                         <th>రిపోర్టర్ పేరు</th>
                                         <th>హోదా (Position)</th>
-                                        <th>జిల్లా / మండలం</th>
+                                        <th>Press ID</th>
+                                        <th>పరిధి / జిల్లా</th>
                                         <th>సంప్రదింపు</th>
                                         <th style="width: 130px;">ప్రాధాన్యత (Tier)</th>
                                         <th style="width: 150px;">QR కోడ్ (ID కార్డ్)</th>
@@ -1032,7 +1046,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="reporters-table-body">
-                                    <tr class="empty-row"><td colspan="8">రిపోర్టర్ల వివరాలు లోడ్ అవుతున్నాయి...</td></tr>
+                                    <tr class="empty-row"><td colspan="9">రిపోర్టర్ల వివరాలు లోడ్ అవుతున్నాయి...</td></tr>
                                 </tbody>
                             </table>
                         </div>

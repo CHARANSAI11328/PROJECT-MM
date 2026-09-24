@@ -91,17 +91,31 @@
     const photoUrl = hasPhoto ? resolvePhotoUrl(r.photo_url) : '';
     const initial = escapeHtml((r.name || 'R').charAt(0));
     
-    // Resolve authentic Telugu district & mandal
-    const distName = getDistrictName(r.district) || 'ఆంధ్రప్రదేశ్ రాష్ట్ర బ్యూరో';
-    const mandalName = r.mandal ? escapeHtml(r.mandal) : 'ప్రధాన కార్యాలయం';
-    const locationDisplay = r.district ? `${distName} • ${mandalName}` : 'రాష్ట్ర బ్యూరో (State Bureau)';
-
-    // Press ID Number (Valid upto 2028)
-    const rawNum = String(r.id || '101').replace(/\D/g, '').slice(-3).padStart(3, '0');
-    const pressId = `MM-PRESS-2026-${rawNum}`;
-
     // Priority Tier & Badge Styling
     const desigLower = (r.designation || '').toLowerCase();
+    const isTopEditorial = r.display_order === 1 || r.display_order === 2 || 
+                           desigLower.includes('founder') || desigLower.includes('chief') || 
+                           desigLower.includes('associate') || desigLower.includes('editor') ||
+                           (r.designation || '').includes('వ్యవస్థాపక') || (r.designation || '').includes('సంపాదక');
+
+    // Resolve authentic Telugu jurisdiction
+    let locationDisplay = '';
+    if (r.jurisdiction && r.jurisdiction.trim()) {
+      locationDisplay = escapeHtml(r.jurisdiction.trim());
+    } else if (isTopEditorial || r.district === 'all-ap-ts') {
+      locationDisplay = 'ఆంధ్రప్రదేశ్ & తెలంగాణ (ఉభయ తెలుగు రాష్ట్రాలు - AP & Telangana)';
+    } else {
+      const distName = getDistrictName(r.district) || 'ఆంధ్రప్రదేశ్ రాష్ట్ర బ్యూరో';
+      const mandalName = r.mandal ? escapeHtml(r.mandal) : 'ప్రధాన కార్యాలయం';
+      locationDisplay = r.district ? `${distName} • ${mandalName}` : 'రాష్ట్ర బ్యూరో (State Bureau)';
+    }
+
+    // Press ID Number (Admin Manual Entry with fallback)
+    const rawNum = String(r.id || '101').replace(/\D/g, '').slice(-3).padStart(3, '0');
+    const pressId = (r.press_id && r.press_id.trim()) 
+      ? escapeHtml(r.press_id.trim()) 
+      : `MM-PRESS-2026-${rawNum}`;
+
     let tierText = escapeHtml(r.designation || 'పాత్రికేయులు (Journalist)');
     let tierClass = 'tier-standard';
 
@@ -203,9 +217,9 @@
             </a>
           ` : ''}
 
-          <a href="tel:+918662456789" class="action-btn hotline-btn">
+          <a href="tel:+917075652808" class="action-btn hotline-btn">
             <span>🏢</span>
-            <span>ప్రధాన కార్యాలయం వెరిఫికేషన్ హెల్ప్‌లైన్: 0866-2456789</span>
+            <span>ప్రధాన కార్యాలయం వెరిఫికేషన్ హెల్ప్‌లైన్: 7075652808</span>
           </a>
 
           <button type="button" id="btn-share-credential" class="action-btn share-btn">
