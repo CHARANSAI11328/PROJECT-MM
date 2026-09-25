@@ -25,7 +25,6 @@
       brand_slogan: "అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం",
 
       // Utility & Header
-      top_weather_placeholder: "విజయవాడ: 31°C | తేమ: 68%",
       top_edition_placeholder: "ఆంధ్రప్రదేశ్ & తెలంగాణ ఎడిషన్",
       top_epaper_link: "ఈ-పేపర్",
       top_admin_link: "🔒 అడ్మిన్ లాగిన్",
@@ -126,7 +125,6 @@
       brand_slogan: "Integrity in Words - Truth in News",
 
       // Utility & Header
-      top_weather_placeholder: "Vijayawada: 31°C | Humidity: 68%",
       top_edition_placeholder: "Andhra Pradesh & Telangana Edition",
       top_epaper_link: "E-Paper",
       top_admin_link: "🔒 Admin CMS",
