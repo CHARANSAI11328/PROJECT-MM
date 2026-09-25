@@ -827,9 +827,11 @@ app.get(['/api/public/articles', '/api/articles'], async (req, res) => {
       if (d === 'all') {
         filters.push("(LOWER(a.category) = 'district' OR (a.district IS NOT NULL AND a.district != '' AND LOWER(a.district) != 'all'))");
       } else if (d === 'bapatla') {
-        filters.push("(LOWER(a.district) = 'bapatla' OR a.title_te LIKE '%బాపట్ల%' OR a.title_te LIKE '%చీరాల%' OR a.title_te LIKE '%అద్దంకి%' OR a.content_te LIKE '%బాపట్ల%')");
+        filters.push("(LOWER(a.district) = 'bapatla' OR a.title_te LIKE '%బాపట్ల%' OR a.title_te LIKE '%చీరాల%')");
       } else if (d === 'prakasam') {
-        filters.push("(LOWER(a.district) = 'prakasam' OR a.title_te LIKE '%ప్రకాశం%' OR a.title_te LIKE '%ఒంగోలు%' OR a.title_te LIKE '%మార్కాపురం%')");
+        filters.push("(LOWER(a.district) = 'prakasam' OR a.title_te LIKE '%ప్రకాశం%' OR a.title_te LIKE '%ఒంగోలు%' OR a.title_te LIKE '%అద్దంకి%')");
+      } else if (d === 'markapuram') {
+        filters.push("(LOWER(a.district) = 'markapuram' OR a.title_te LIKE '%మార్కాపురం%' OR a.title_te LIKE '%గిద్దలూరు%' OR a.title_te LIKE '%కనిగిరి%')");
       } else if (d === 'guntur') {
         filters.push("(LOWER(a.district) = 'guntur' OR a.title_te LIKE '%గుంటూరు%' OR a.title_te LIKE '%తెనాలి%' OR a.title_te LIKE '%మంగళగిరి%')");
       } else {

@@ -2476,18 +2476,42 @@ function initAdminApp() {
         mandalSelect.appendChild(defaultOpt);
 
         let matched = false;
-        mandals.forEach(m => {
-            const opt = document.createElement('option');
-            const teName = m.name_te || m;
-            const enName = m.name_en || '';
-            opt.value = teName;
-            opt.textContent = enName ? `${teName} (${enName})` : teName;
-            if (preselectedMandal && (preselectedMandal === teName || preselectedMandal === enName || preselectedMandal.includes(teName))) {
-                opt.selected = true;
-                matched = true;
-            }
-            mandalSelect.appendChild(opt);
-        });
+        const revDivs = (typeof MAMEKA_DISTRICTS !== 'undefined' && MAMEKA_DISTRICTS.getRevenueDivisionsForDistrict)
+            ? MAMEKA_DISTRICTS.getRevenueDivisionsForDistrict(selectedDistrict)
+            : [];
+
+        if (revDivs && revDivs.length > 0) {
+            revDivs.forEach(div => {
+                const group = document.createElement('optgroup');
+                group.label = `📍 ${div.name_te} (${div.name_en})`;
+                div.mandals.forEach(m => {
+                    const opt = document.createElement('option');
+                    const teName = m.name_te || m;
+                    const enName = m.name_en || '';
+                    opt.value = teName;
+                    opt.textContent = enName ? `${teName} (${enName})` : teName;
+                    if (preselectedMandal && (preselectedMandal === teName || preselectedMandal === enName || preselectedMandal.includes(teName))) {
+                        opt.selected = true;
+                        matched = true;
+                    }
+                    group.appendChild(opt);
+                });
+                mandalSelect.appendChild(group);
+            });
+        } else {
+            mandals.forEach(m => {
+                const opt = document.createElement('option');
+                const teName = m.name_te || m;
+                const enName = m.name_en || '';
+                opt.value = teName;
+                opt.textContent = enName ? `${teName} (${enName})` : teName;
+                if (preselectedMandal && (preselectedMandal === teName || preselectedMandal === enName || preselectedMandal.includes(teName))) {
+                    opt.selected = true;
+                    matched = true;
+                }
+                mandalSelect.appendChild(opt);
+            });
+        }
 
         const customOpt = document.createElement('option');
         customOpt.value = '__custom__';
