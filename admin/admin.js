@@ -129,6 +129,36 @@ function initAdminApp() {
         }
     }
 
+    // Helper: Download High-Res Reporter QR Code via Authenticated Blob Fetch
+    window.downloadReporterQR = async function(id, name) {
+        try {
+            const downloadUrl = `/api/admin/reporters/${encodeURIComponent(id)}/download-qr`;
+            const response = await apiFetch(downloadUrl);
+            if (!response.ok) {
+                let errorMsg = 'డౌన్‌లోడ్ విఫలమైంది (Download failed)';
+                try {
+                    const errJson = await response.json();
+                    if (errJson && errJson.error) errorMsg = errJson.error;
+                } catch (_) {}
+                alert('QR కోడ్ డౌన్‌లోడ్ లోపం: ' + errorMsg);
+                return;
+            }
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            const cleanName = (name || 'Reporter').replace(/[\\/:*?"<>|]/g, '_').trim();
+            a.download = `Reporter_${cleanName}_ID_QR.png`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+        } catch (err) {
+            console.error('Download QR error:', err);
+            alert('QR కోడ్ డౌన్‌లోడ్ లోపం: ' + err.message);
+        }
+    };
+
     // Check Auth Token & Verify Session on Initialization
     checkAuth();
     window.addEventListener('hashchange', handleRoute);
@@ -2538,13 +2568,16 @@ function initAdminApp() {
             // QR Code & ID Card Print Actions
             const qrUrl = r.qr_code_url || `/uploads/qr_codes/Reporter_${r.id}_QR.png`;
             const profilePageUrl = `/reporter-profile.html?id=${encodeURIComponent(r.id)}`;
+            const token = localStorage.getItem('admin_token') || '';
+            const downloadApiUrl = `/api/admin/reporters/${encodeURIComponent(r.id)}/download-qr?token=${encodeURIComponent(token)}`;
+            const safeReporterName = escapeHTML(r.name || '').replace(/'/g, "\\'");
             const qrHtml = `
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
                     <a href="${escapeHTML(qrUrl)}" target="_blank" title="పెద్దగా చూడండి (View High-Res QR)">
                         <img src="${escapeHTML(qrUrl)}" alt="QR" style="width: 40px; height: 40px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px; background: #fff;" onerror="this.style.display='none';">
                     </a>
                     <div style="display: flex; gap: 4px;">
-                        <a href="/api/admin/reporters/${encodeURIComponent(r.id)}/download-qr" download class="btn btn-outline-sm" style="padding: 2px 6px; font-size: 0.72rem; text-decoration: none;" title="PVC ID కార్డ్ ప్రింటింగ్ కోసం హై-రెస్ PNG డౌన్‌లోడ్ చేయండి">
+                        <a href="${downloadApiUrl}" onclick="event.preventDefault(); downloadReporterQR('${escapeHTML(r.id)}', '${safeReporterName}');" download class="btn btn-outline-sm" style="padding: 2px 6px; font-size: 0.72rem; text-decoration: none;" title="PVC ID కార్డ్ ప్రింటింగ్ కోసం హై-రెస్ PNG డౌన్‌లోడ్ చేయండి">
                             📥 PNG
                         </a>
                         <a href="${profilePageUrl}" target="_blank" class="btn btn-outline-sm" style="padding: 2px 6px; font-size: 0.72rem; text-decoration: none;" title="లైవ్ ప్రొఫైల్ పేజీ చూడండి">

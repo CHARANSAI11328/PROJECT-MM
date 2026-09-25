@@ -322,7 +322,11 @@ function isValidPdfBuffer(filePath) {
 // Authentication Middleware for Protected Admin API Routes (Strict Security Enforcement)
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  let token = authHeader && authHeader.split(' ')[1];
+
+  if (!token && req.query && req.query.token) {
+    token = req.query.token;
+  }
 
   if (!token) {
     return res.status(401).json({ success: false, error: 'Access token required. Please log in.' });
@@ -2157,12 +2161,15 @@ app.get('/api/admin/reporters/:id/download-qr', authenticateToken, async (req, r
     const cleanName = (reporter.name || 'Reporter').replace(/[\\/:*?"<>|]/g, '_').trim();
     const downloadFilename = `Reporter_${cleanName}_ID_QR.png`;
 
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadFilename)}"`);
-    res.sendFile(qrPath);
+    return res.download(qrPath, downloadFilename, (err) => {
+      if (err && !res.headersSent) {
+        console.error('Download QR send error:', err);
+        return res.status(500).json({ success: false, error: 'Failed to download QR code: ' + err.message });
+      }
+    });
   } catch (err) {
     console.error('Download QR error:', err);
-    res.status(500).json({ success: false, error: 'Failed to download QR code: ' + err.message });
+    return res.status(500).json({ success: false, error: 'Failed to download QR code: ' + err.message });
   }
 });
 
