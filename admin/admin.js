@@ -2675,10 +2675,13 @@ function initAdminApp() {
 
         if (!desigInput) return;
         const d = (desigInput.value || '').toLowerCase();
-        const isTopEditorial = d.includes('founder') || d.includes('వ్యవస్థాపక') || 
-                               d.includes('editor-in-chief') || d.includes('ప్రధాన సంపాదకులు') || 
-                               d.includes('chief') || d.includes('చీఫ్') ||
-                               d.includes('associate') || d.includes('అసోసియేట్');
+        const isTopEditorial = (
+            d.includes('founder') || d.includes('వ్యవస్థాపక') || 
+            d.includes('editor-in-chief') || d.includes('ప్రధాన సంపాదకులు') || 
+            d.includes('chief editor') || d.includes('చీఫ్ ఎడిటర్') ||
+            d.includes('associate editor') || d.includes('అసోసియేట్ ఎడిటర్') ||
+            d.includes('executive editor') || d.includes('ఎగ్జిక్యూటివ్ ఎడిటర్')
+        ) && !d.includes('bureau') && !d.includes('బ్యూరో') && !d.includes('reporter') && !d.includes('రిపోర్టర్');
 
         if (isTopEditorial) {
             if (notice) notice.style.display = 'block';
