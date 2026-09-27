@@ -1346,6 +1346,9 @@ function initAdminApp() {
         }
         if (imgCaption) imgCaption.value = art.image_caption_te || '';
 
+        // Bind image buttons & file upload handlers
+        initArticleEditImageHandlers();
+
         // 4. Compute Extraction Warnings & Confidence Badges
         evaluateExtractionWarnings(art);
     }
@@ -1441,80 +1444,90 @@ function initAdminApp() {
     // ----------------------------------------------------------------------
     // IMAGE UPLOAD & IMAGE PICKER LOGIC
     // ----------------------------------------------------------------------
-    const triggerImgBtn = document.getElementById('art-btn-trigger-img-upload');
-    const imgFileInput = document.getElementById('art-edit-image-file');
-    const removeImgBtn = document.getElementById('art-btn-remove-img');
-    const pickMediaBtn = document.getElementById('art-btn-pick-edition-media');
+    function initArticleEditImageHandlers() {
+        const triggerImgBtn = document.getElementById('art-btn-trigger-img-upload');
+        const imgFileInput = document.getElementById('art-edit-image-file');
+        const removeImgBtn = document.getElementById('art-btn-remove-img');
+        const pickMediaBtn = document.getElementById('art-btn-pick-edition-media');
+        const editPasteBtn = document.getElementById('art-btn-paste-img');
 
-    if (triggerImgBtn && imgFileInput) {
-        triggerImgBtn.onclick = (e) => {
-            e.preventDefault();
-            imgFileInput.click();
-        };
-        imgFileInput.onchange = () => {
-            if (imgFileInput.files && imgFileInput.files.length > 0) {
-                if (typeof window.uploadImageFiles === 'function') {
-                    window.uploadImageFiles(Array.from(imgFileInput.files), 'edit');
-                }
-                imgFileInput.value = '';
-            }
-        };
-    }
-    const editPasteBtn = document.getElementById('art-btn-paste-img');
-    if (editPasteBtn) {
-        editPasteBtn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (typeof window.handlePasteImageButtonClick === 'function') {
-                window.handlePasteImageButtonClick('edit');
-            }
-        };
-    }
-
-    if (removeImgBtn) {
-        removeImgBtn.onclick = () => {
-            window.editImagesArray = [];
-            if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
-            if (imgFileInput) imgFileInput.value = '';
-        };
-    }
-
-    // Media Picker Modal
-    const mediaModal = document.getElementById('media-picker-modal');
-    const closeMediaBtn = document.getElementById('close-media-modal-btn');
-    if (pickMediaBtn && mediaModal) {
-        pickMediaBtn.onclick = async () => {
-            const token = localStorage.getItem('admin_token');
-            const artId = document.getElementById('art-edit-id').value;
-            if (!token || !artId) return;
-
-            const grid = document.getElementById('media-picker-grid');
-            if (grid) grid.innerHTML = '<p>ఫొటోలు లోడ్ అవుతున్నాయి...</p>';
-            mediaModal.style.display = 'block';
-
-            try {
-                const res = await apiFetch(`/api/admin/articles/${artId}`);
-                if (res && res.ok) {
-                    const data = await res.json();
-                    const editionMedia = data.editionMedia || [];
-                    if (editionMedia.length === 0) {
-                        grid.innerHTML = '<p class="empty-row">ఈ పేజీలో ఇతర ఫొటోలేవీ లేవు.</p>';
-                    } else {
-                        grid.innerHTML = editionMedia.map(m => `
-                            <div class="media-thumb-item" onclick="selectMediaImage('${m.file_path}')" style="cursor:pointer; border:1px solid #ccc; border-radius:4px; overflow:hidden;">
-                                <img src="${m.file_path}" style="width:100%; height:80px; object-fit:cover; display:block;">
-                            </div>
-                        `).join('');
+        if (triggerImgBtn && imgFileInput) {
+            triggerImgBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                imgFileInput.click();
+            };
+            imgFileInput.onchange = () => {
+                if (imgFileInput.files && imgFileInput.files.length > 0) {
+                    if (typeof window.uploadImageFiles === 'function') {
+                        window.uploadImageFiles(Array.from(imgFileInput.files), 'edit');
                     }
+                    imgFileInput.value = '';
                 }
-            } catch (err) {
-                if (grid) grid.innerHTML = '<p>ఫొటోల సేకరణ లోపం.</p>';
-            }
-        };
-    }
+            };
+        }
 
-    if (closeMediaBtn && mediaModal) {
-        closeMediaBtn.onclick = () => mediaModal.style.display = 'none';
+        if (editPasteBtn) {
+            editPasteBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof window.handlePasteImageButtonClick === 'function') {
+                    window.handlePasteImageButtonClick('edit');
+                }
+            };
+        }
+
+        if (removeImgBtn) {
+            removeImgBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                window.editImagesArray = [];
+                if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
+                if (imgFileInput) imgFileInput.value = '';
+            };
+        }
+
+        const mediaModal = document.getElementById('media-picker-modal');
+        const closeMediaBtn = document.getElementById('close-media-modal-btn');
+        if (pickMediaBtn && mediaModal) {
+            pickMediaBtn.onclick = async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const token = localStorage.getItem('admin_token');
+                const artId = document.getElementById('art-edit-id')?.value;
+                if (!token || !artId) return;
+
+                const grid = document.getElementById('media-picker-grid');
+                if (grid) grid.innerHTML = '<p>ఫొటోలు లోడ్ అవుతున్నాయి...</p>';
+                mediaModal.style.display = 'block';
+
+                try {
+                    const res = await apiFetch(`/api/admin/articles/${artId}`);
+                    if (res && res.ok) {
+                        const data = await res.json();
+                        const editionMedia = data.editionMedia || [];
+                        if (editionMedia.length === 0) {
+                            grid.innerHTML = '<p class="empty-row">ఈ పేజీలో ఇతర ఫొటోలేవీ లేవు.</p>';
+                        } else {
+                            grid.innerHTML = editionMedia.map(m => `
+                                <div class="media-thumb-item" onclick="selectMediaImage('${m.file_path}')" style="cursor:pointer; border:1px solid #ccc; border-radius:4px; overflow:hidden;">
+                                    <img src="${resolveAdminImageUrl(m.file_path)}" style="width:100%; height:80px; object-fit:cover; display:block;">
+                                </div>
+                            `).join('');
+                        }
+                    }
+                } catch (err) {
+                    if (grid) grid.innerHTML = '<p>ఫొటోల సేకరణ లోపం.</p>';
+                }
+            };
+        }
+
+        if (closeMediaBtn && mediaModal) {
+            closeMediaBtn.onclick = (e) => {
+                e.preventDefault();
+                mediaModal.style.display = 'none';
+            };
+        }
     }
 
     window.selectMediaImage = function(filePath) {
@@ -1799,18 +1812,53 @@ function initAdminApp() {
         }
     };
 
+    function resolveAdminImageUrl(url) {
+        if (!url || typeof url !== 'string') return '';
+        const trimmed = url.trim();
+        if (!trimmed) return '';
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
+            return trimmed;
+        }
+        const baseUrl = getApiBaseUrl();
+        const cleanPath = trimmed.startsWith('/') ? trimmed : '/' + trimmed;
+        return baseUrl ? `${baseUrl}${cleanPath}` : cleanPath;
+    }
+
     window.renderEditImagesGrid = function() {
         const grid = document.getElementById('art-edit-multi-images-grid');
         const preview = document.getElementById('art-edit-img-preview');
         const placeholder = document.getElementById('art-edit-img-placeholder');
 
-        if (!grid) return;
         const arr = window.editImagesArray || [];
+        const coverUrl = arr[0] || '';
+        const resolvedCover = resolveAdminImageUrl(coverUrl);
+
+        if (preview) {
+            if (resolvedCover) {
+                preview.onerror = function() {
+                    preview.style.display = 'none';
+                    if (placeholder) placeholder.style.display = 'block';
+                };
+                preview.onload = function() {
+                    preview.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                };
+                preview.src = resolvedCover;
+                preview.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            } else {
+                preview.src = '';
+                preview.style.display = 'none';
+                if (placeholder) placeholder.style.display = 'block';
+            }
+        } else if (placeholder) {
+            placeholder.style.display = resolvedCover ? 'none' : 'block';
+        }
+
+        if (!grid) return;
         if (arr.length === 0) {
             grid.style.display = 'none';
             grid.innerHTML = '';
-            if (preview) { preview.src = ''; preview.style.display = 'none'; }
-            if (placeholder) placeholder.style.display = 'block';
             return;
         }
 
@@ -1821,32 +1869,20 @@ function initAdminApp() {
                 <span style="font-size: 0.75rem; color: #64748b;">(ముఖ్య చిత్రం కోసం ⭐ Cover నొక్కండి)</span>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%;">
-                ${arr.map((url, idx) => `
+                ${arr.map((url, idx) => {
+                    const resolved = resolveAdminImageUrl(url);
+                    return `
                     <div style="position: relative; width: 85px; height: 85px; border-radius: 6px; overflow: hidden; border: ${idx === 0 ? '3px solid #2563eb' : '1px solid #cbd5e1'}; background: #f8fafc;">
-                        <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src=window.MM_DEFAULT_PLACEHOLDER||''">
+                        <img src="${resolved}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src=window.MM_DEFAULT_PLACEHOLDER||''">
                         ${idx === 0 ? `<span style="position: absolute; top: 2px; left: 2px; background: #2563eb; color: #fff; font-size: 0.65rem; padding: 1px 4px; border-radius: 3px; font-weight: 700;">Cover</span>` : `
                             <button type="button" onclick="window.setEditCoverImage(${idx})" style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.65); color: #fff; border: none; font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; cursor: pointer;">⭐ Cover</button>
                         `}
                         <button type="button" onclick="window.removeEditImage(${idx})" style="position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
                     </div>
-                `).join('')}
+                `;
+                }).join('')}
             </div>
         `;
-
-        const coverUrl = arr[0] || '';
-        if (preview) {
-            preview.onerror = function() {
-                preview.style.display = 'none';
-                if (placeholder) placeholder.style.display = 'block';
-            };
-            preview.onload = function() {
-                preview.style.display = 'block';
-                if (placeholder) placeholder.style.display = 'none';
-            };
-            preview.src = coverUrl;
-            preview.style.display = coverUrl ? 'block' : 'none';
-        }
-        if (placeholder) placeholder.style.display = coverUrl ? 'none' : 'block';
     };
 
     window.setEditCoverImage = function(idx) {
@@ -1864,9 +1900,77 @@ function initAdminApp() {
         }
     };
 
-    // ----------------------------------------------------------------------
-    // CREATE NEWS VIEW & DIRECT PUBLISHING WORKFLOW
-    // ----------------------------------------------------------------------
+    // Universal Clipboard Paste Event Listener for Work-Reducing Direct Image Pasting (Ctrl+V)
+    window.addEventListener('paste', (e) => {
+        const createNewsSection = document.getElementById('view-create-news');
+        const editViewSection = document.getElementById('view-article-edit');
+
+        const isCreateViewActive = createNewsSection && (getComputedStyle(createNewsSection).display !== 'none');
+        const isEditViewActive = editViewSection && (getComputedStyle(editViewSection).display !== 'none');
+
+        if (!isCreateViewActive && !isEditViewActive) return;
+
+        const clipboardData = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
+        if (!clipboardData) return;
+
+        let pastedFiles = [];
+
+        if (clipboardData.files && clipboardData.files.length > 0) {
+            for (let i = 0; i < clipboardData.files.length; i++) {
+                const file = clipboardData.files[i];
+                if (file && file.type && file.type.startsWith('image/')) {
+                    pastedFiles.push(file);
+                }
+            }
+        }
+
+        if (pastedFiles.length === 0 && clipboardData.items && clipboardData.items.length > 0) {
+            for (let i = 0; i < clipboardData.items.length; i++) {
+                const item = clipboardData.items[i];
+                if (item && item.kind === 'file' && item.type && item.type.startsWith('image/')) {
+                    const file = item.getAsFile();
+                    if (file) pastedFiles.push(file);
+                }
+            }
+        }
+
+        if (pastedFiles.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (isCreateViewActive) {
+                window.uploadImageFiles(pastedFiles, 'create');
+            } else if (isEditViewActive) {
+                window.uploadImageFiles(pastedFiles, 'edit');
+            }
+            return;
+        }
+
+        const pastedText = (clipboardData.getData('text/plain') || '').trim();
+        const activeElem = document.activeElement;
+        const isTextOrTitleFocused = activeElem && (
+            activeElem.id === 'create-title-te' ||
+            activeElem.id === 'create-content-te' ||
+            activeElem.id === 'art-edit-title-te' ||
+            activeElem.id === 'art-edit-content-te'
+        );
+
+        if (!isTextOrTitleFocused && pastedText && (pastedText.match(/\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i) || pastedText.startsWith('data:image/'))) {
+            e.preventDefault();
+            if (isCreateViewActive) {
+                window.createImagesArray = window.createImagesArray || [];
+                if (!window.createImagesArray.includes(pastedText)) window.createImagesArray.push(pastedText);
+                window.renderCreateImagesGrid();
+                const alertBox = document.getElementById('create-news-alert');
+                if (alertBox) showAlert(alertBox, '✓ ఫొటో URL విజయవంతంగా జత చేయబడింది!', 'success');
+            } else if (isEditViewActive) {
+                window.editImagesArray = window.editImagesArray || [];
+                if (!window.editImagesArray.includes(pastedText)) window.editImagesArray.push(pastedText);
+                window.renderEditImagesGrid();
+            }
+        }
+    });
+
     let createNewsInitialized = false;
 
     function initCreateNewsView() {
@@ -1885,76 +1989,6 @@ function initAdminApp() {
 
         if (createNewsInitialized) return;
         createNewsInitialized = true;
-
-        // Universal Clipboard Paste Event Listener for Work-Reducing Direct Image Pasting (Ctrl+V)
-        window.addEventListener('paste', (e) => {
-            const createNewsSection = document.getElementById('view-create-news');
-            const editViewSection = document.getElementById('view-article-edit');
-
-            const isCreateViewActive = createNewsSection && (getComputedStyle(createNewsSection).display !== 'none');
-            const isEditViewActive = editViewSection && (getComputedStyle(editViewSection).display !== 'none');
-
-            if (!isCreateViewActive && !isEditViewActive) return;
-
-            const clipboardData = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
-            if (!clipboardData) return;
-
-            let pastedFiles = [];
-
-            if (clipboardData.files && clipboardData.files.length > 0) {
-                for (let i = 0; i < clipboardData.files.length; i++) {
-                    const file = clipboardData.files[i];
-                    if (file && file.type && file.type.startsWith('image/')) {
-                        pastedFiles.push(file);
-                    }
-                }
-            }
-
-            if (pastedFiles.length === 0 && clipboardData.items && clipboardData.items.length > 0) {
-                for (let i = 0; i < clipboardData.items.length; i++) {
-                    const item = clipboardData.items[i];
-                    if (item && item.kind === 'file' && item.type && item.type.startsWith('image/')) {
-                        const file = item.getAsFile();
-                        if (file) pastedFiles.push(file);
-                    }
-                }
-            }
-
-            if (pastedFiles.length > 0) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (isCreateViewActive) {
-                    uploadImageFiles(pastedFiles, 'create');
-                } else if (isEditViewActive) {
-                    uploadImageFiles(pastedFiles, 'edit');
-                }
-                return;
-            }
-
-            const pastedText = (clipboardData.getData('text/plain') || '').trim();
-            const activeElem = document.activeElement;
-            const isTextOrTitleFocused = activeElem && (
-                activeElem.id === 'create-title-te' ||
-                activeElem.id === 'create-content-te' ||
-                activeElem.id === 'art-edit-title-te' ||
-                activeElem.id === 'art-edit-content-te'
-            );
-
-            if (!isTextOrTitleFocused && pastedText && (pastedText.match(/\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i) || pastedText.startsWith('data:image/'))) {
-                e.preventDefault();
-                if (isCreateViewActive) {
-                    window.createImagesArray = window.createImagesArray || [];
-                    if (!window.createImagesArray.includes(pastedText)) window.createImagesArray.push(pastedText);
-                    window.renderCreateImagesGrid();
-                    showAlert(alertBox, '✓ ఫొటో URL విజయవంతంగా జత చేయబడింది!', 'success');
-                } else if (isEditViewActive) {
-                    window.editImagesArray = window.editImagesArray || [];
-                    if (!window.editImagesArray.includes(pastedText)) window.editImagesArray.push(pastedText);
-                    window.renderEditImagesGrid();
-                }
-            }
-        });
 
         if (dropArea && fileInput) {
             dropArea.onclick = (e) => {
