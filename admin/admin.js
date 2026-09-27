@@ -2371,21 +2371,25 @@ function initAdminApp() {
                 return;
             }
 
-            grid.innerHTML = mediaList.map(item => `
-                <div class="card" style="padding:10px; display:flex; flex-direction:column; justify-content:space-between; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
-                    <div style="width:100%; height:140px; background:#f1f5f9; border-radius:6px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
-                        <img src="${item.url}" alt="${escapeHTML(item.filename)}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100%\\' height=\\'100%\\' fill=\\'%23ccc\\'><rect width=\\'100%\\' height=\\'100%\\'/></svg>';">
+            grid.innerHTML = mediaList.map(item => {
+                const sizeKb = item.size_bytes ? Math.round(item.size_bytes / 1024) + ' KB' : 'N/A';
+                return `
+                    <div class="card" style="padding:12px; display:flex; flex-direction:column; justify-content:space-between; background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+                        <div style="width:100%; height:150px; background:#f1f5f9; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center; position:relative; cursor:pointer;" onclick="window.open('${item.url}', '_blank')">
+                            <img src="${item.url}" alt="${escapeHTML(item.filename)}" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.onerror=null; this.src=window.MM_DEFAULT_PLACEHOLDER||'';">
+                            <div style="position:absolute; bottom:6px; right:6px; background:rgba(15,23,42,0.75); color:#fff; font-size:0.68rem; padding:2px 6px; border-radius:4px; font-weight:600;">👁️ View</div>
+                        </div>
+                        <div style="margin-top:10px;">
+                            <div style="font-weight:700; font-size:0.82rem; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; color:#0f172a;" title="${escapeHTML(item.filename)}">${escapeHTML(item.filename)}</div>
+                            <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">📁 ${item.folder || 'media'} | 💾 ${sizeKb}</div>
+                        </div>
+                        <div style="margin-top:12px; display:flex; gap:6px;">
+                            <button type="button" class="btn btn-outline-sm" onclick="event.stopPropagation(); navigator.clipboard.writeText('${item.url}'); alert('✓ ఫొటో లింక్ కాపీ చేయబడింది! (Image URL Copied)');" style="font-size:0.75rem; padding:6px 10px; flex:1; text-align:center; justify-content:center; font-weight:600;">📋 Copy URL</button>
+                            <button type="button" class="btn btn-danger-sm" onclick="event.stopPropagation(); deleteMediaFile('${item.filename}')" style="font-size:0.75rem; padding:6px 10px;" title="తొలగించు">🗑️</button>
+                        </div>
                     </div>
-                    <div style="margin-top:10px;">
-                        <div style="font-weight:600; font-size:0.8rem; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; color:#1e293b;" title="${escapeHTML(item.filename)}">${escapeHTML(item.filename)}</div>
-                        <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">${Math.round(item.size_bytes / 1024)} KB</div>
-                    </div>
-                    <div style="margin-top:10px; display:flex; gap:6px;">
-                        <button type="button" class="btn btn-outline-sm btn-block" onclick="navigator.clipboard.writeText('${item.url}'); alert('Image URL Copied!');" style="font-size:0.75rem; padding:4px 8px;">📋 Copy URL</button>
-                        <button type="button" class="btn btn-danger-sm" onclick="deleteMediaFile('${item.filename}')" style="font-size:0.75rem; padding:4px 8px;">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
         } catch (err) {
             console.error('Media view error:', err);

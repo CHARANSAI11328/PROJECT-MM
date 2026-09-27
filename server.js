@@ -1498,23 +1498,72 @@ app.delete('/api/admin/articles/:id', authenticateToken, async (req, res) => {
 // Admin List Uploaded Media Library API Endpoint
 app.get('/api/admin/media', authenticateToken, async (req, res) => {
   try {
-    const { mediaDir } = require('./db');
-    if (!fs.existsSync(mediaDir)) {
-      return res.json({ success: true, media: [] });
-    }
-    const files = fs.readdirSync(mediaDir);
-    const imageFiles = files.filter(f => /\.(jpg|jpeg|png|webp|gif)$/i.test(f));
+    const { mediaDir, imagesDir } = require('./db');
+    const mediaList = [];
+    const addedUrls = new Set();
 
-    const mediaList = imageFiles.map(filename => {
-      const filePath = path.join(mediaDir, filename);
-      const stat = fs.statSync(filePath);
-      return {
-        filename,
-        url: `/uploads/media/${filename}`,
-        size_bytes: stat.size,
-        created_at: stat.birthtime || stat.mtime
-      };
-    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    // 1. Scan imagesDir (where article uploaded photos are saved)
+    if (fs.existsSync(imagesDir)) {
+      const files = fs.readdirSync(imagesDir);
+      files.filter(f => /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(f)).forEach(filename => {
+        const filePath = path.join(imagesDir, filename);
+        try {
+          const stat = fs.statSync(filePath);
+          const url = `/uploads/images/${filename}`;
+          if (!addedUrls.has(url)) {
+            addedUrls.add(url);
+            mediaList.push({
+              filename,
+              url,
+              folder: 'images',
+              size_bytes: stat.size,
+              created_at: stat.birthtime || stat.mtime
+            });
+          }
+        } catch(e) {}
+      });
+    }
+
+    // 2. Scan mediaDir
+    if (fs.existsSync(mediaDir)) {
+      const files = fs.readdirSync(mediaDir);
+      files.filter(f => /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(f)).forEach(filename => {
+        const filePath = path.join(mediaDir, filename);
+        try {
+          const stat = fs.statSync(filePath);
+          const url = `/uploads/media/${filename}`;
+          if (!addedUrls.has(url)) {
+            addedUrls.add(url);
+            mediaList.push({
+              filename,
+              url,
+              folder: 'media',
+              size_bytes: stat.size,
+              created_at: stat.birthtime || stat.mtime
+            });
+          }
+        } catch(e) {}
+      });
+    }
+
+    // 3. Scan media_assets table in DB
+    const dbAssets = await dbAll('SELECT * FROM media_assets ORDER BY created_at DESC LIMIT 100');
+    if (Array.isArray(dbAssets)) {
+      dbAssets.forEach(item => {
+        if (item.file_path && !addedUrls.has(item.file_path)) {
+          addedUrls.add(item.file_path);
+          mediaList.push({
+            filename: item.file_name || path.basename(item.file_path),
+            url: item.file_path,
+            folder: 'edition_media',
+            size_bytes: item.file_size_bytes || 0,
+            created_at: item.created_at || new Date()
+          });
+        }
+      });
+    }
+
+    mediaList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     res.json({ success: true, media: mediaList });
   } catch (err) {
@@ -1531,25 +1580,24 @@ app.delete('/api/admin/media/:filename', authenticateToken, async (req, res) => 
       return res.status(400).json({ success: false, error: 'Invalid filename parameter.' });
     }
 
-    const { mediaDir } = require('./db');
+    const { mediaDir, imagesDir } = require('./db');
     const filename = path.basename(rawFilename);
-    const filePath = path.resolve(mediaDir, filename);
+    const mediaPath = path.resolve(mediaDir, filename);
+    const imagesPath = path.resolve(imagesDir, filename);
 
-    // Path traversal safety boundary check
-    if (!filePath.startsWith(path.resolve(mediaDir))) {
-      return res.status(403).json({ success: false, error: 'Forbidden: Path traversal attempt blocked.' });
+    let deleted = false;
+    if (mediaPath.startsWith(path.resolve(mediaDir)) && fs.existsSync(mediaPath)) {
+      try { fs.unlinkSync(mediaPath); deleted = true; } catch (e) {}
+    }
+    if (imagesPath.startsWith(path.resolve(imagesDir)) && fs.existsSync(imagesPath)) {
+      try { fs.unlinkSync(imagesPath); deleted = true; } catch (e) {}
     }
 
-    if (!fs.existsSync(filePath)) {
+    // Also delete from DB media_assets if present
+    await dbRun('DELETE FROM media_assets WHERE file_name = ? OR file_path LIKE ?', [filename, `%/${filename}`]);
+
+    if (!deleted) {
       return res.status(404).json({ success: false, error: 'Media file not found.' });
-    }
-
-    fs.unlinkSync(filePath);
-
-    // Remove thumbnail if present
-    const thumbPath = path.resolve(mediaDir, 'thumbnails', `thumb_600_${filename}`);
-    if (fs.existsSync(thumbPath)) {
-      try { fs.unlinkSync(thumbPath); } catch (e) {}
     }
 
     res.json({ success: true, message: 'Media asset deleted successfully.' });
