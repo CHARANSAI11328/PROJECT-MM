@@ -1719,6 +1719,129 @@ function initAdminApp() {
     }
 
     // ----------------------------------------------------------------------
+    // GLOBAL MULTI-PHOTO & CLIPBOARD PASTE MANAGEMENT ENGINE
+    // ----------------------------------------------------------------------
+    window.createImagesArray = window.createImagesArray || [];
+    window.editImagesArray = window.editImagesArray || [];
+
+    window.renderCreateImagesGrid = function() {
+        const grid = document.getElementById('create-multi-images-grid');
+        const mainUrlInput = document.getElementById('create-image-url');
+        const preview = document.getElementById('create-img-preview');
+        const box = document.getElementById('create-img-preview-box');
+        const rmBtn = document.getElementById('create-btn-remove-img');
+
+        if (!grid) return;
+        const arr = window.createImagesArray || [];
+        if (arr.length === 0) {
+            grid.style.display = 'none';
+            grid.innerHTML = '';
+            if (mainUrlInput) mainUrlInput.value = '';
+            if (preview) { preview.src = ''; }
+            if (box) box.style.display = 'none';
+            if (rmBtn) rmBtn.style.display = 'none';
+            return;
+        }
+
+        grid.style.display = 'flex';
+        grid.innerHTML = `
+            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">📸 జతచేసిన ఫొటోలు (${arr.length}):</span>
+                <span style="font-size: 0.75rem; color: #64748b;">(ముఖ్య చిత్రం కోసం ⭐ Cover నొక్కండి)</span>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%;">
+                ${arr.map((url, idx) => `
+                    <div style="position: relative; width: 85px; height: 85px; border-radius: 6px; overflow: hidden; border: ${idx === 0 ? '3px solid #2563eb' : '1px solid #cbd5e1'}; background: #f8fafc;">
+                        <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;">
+                        ${idx === 0 ? `<span style="position: absolute; top: 2px; left: 2px; background: #2563eb; color: #fff; font-size: 0.65rem; padding: 1px 4px; border-radius: 3px; font-weight: 700;">Cover</span>` : `
+                            <button type="button" onclick="window.setCreateCoverImage(${idx})" style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.65); color: #fff; border: none; font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; cursor: pointer;">⭐ Cover</button>
+                        `}
+                        <button type="button" onclick="window.removeCreateImage(${idx})" style="position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        const coverUrl = arr[0] || '';
+        if (mainUrlInput) mainUrlInput.value = coverUrl;
+        if (preview) preview.src = coverUrl;
+        if (box) box.style.display = coverUrl ? 'flex' : 'none';
+        if (rmBtn) rmBtn.style.display = arr.length > 0 ? 'inline-block' : 'none';
+    };
+
+    window.setCreateCoverImage = function(idx) {
+        if (idx > 0 && idx < window.createImagesArray.length) {
+            const item = window.createImagesArray.splice(idx, 1)[0];
+            window.createImagesArray.unshift(item);
+            window.renderCreateImagesGrid();
+        }
+    };
+
+    window.removeCreateImage = function(idx) {
+        if (idx >= 0 && idx < window.createImagesArray.length) {
+            window.createImagesArray.splice(idx, 1);
+            window.renderCreateImagesGrid();
+        }
+    };
+
+    window.renderEditImagesGrid = function() {
+        const grid = document.getElementById('art-edit-multi-images-grid');
+        const preview = document.getElementById('art-edit-img-preview');
+        const placeholder = document.getElementById('art-edit-img-placeholder');
+
+        if (!grid) return;
+        const arr = window.editImagesArray || [];
+        if (arr.length === 0) {
+            grid.style.display = 'none';
+            grid.innerHTML = '';
+            if (preview) { preview.src = ''; preview.style.display = 'none'; }
+            if (placeholder) placeholder.style.display = 'block';
+            return;
+        }
+
+        grid.style.display = 'flex';
+        grid.innerHTML = `
+            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">📸 వార్తా ఫొటోల గ్యాలరీ (${arr.length}):</span>
+                <span style="font-size: 0.75rem; color: #64748b;">(ముఖ్య చిత్రం కోసం ⭐ Cover నొక్కండి)</span>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%;">
+                ${arr.map((url, idx) => `
+                    <div style="position: relative; width: 85px; height: 85px; border-radius: 6px; overflow: hidden; border: ${idx === 0 ? '3px solid #2563eb' : '1px solid #cbd5e1'}; background: #f8fafc;">
+                        <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;">
+                        ${idx === 0 ? `<span style="position: absolute; top: 2px; left: 2px; background: #2563eb; color: #fff; font-size: 0.65rem; padding: 1px 4px; border-radius: 3px; font-weight: 700;">Cover</span>` : `
+                            <button type="button" onclick="window.setEditCoverImage(${idx})" style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.65); color: #fff; border: none; font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; cursor: pointer;">⭐ Cover</button>
+                        `}
+                        <button type="button" onclick="window.removeEditImage(${idx})" style="position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        const coverUrl = arr[0] || '';
+        if (preview) {
+            preview.src = coverUrl;
+            preview.style.display = coverUrl ? 'block' : 'none';
+        }
+        if (placeholder) placeholder.style.display = coverUrl ? 'none' : 'block';
+    };
+
+    window.setEditCoverImage = function(idx) {
+        if (idx > 0 && idx < window.editImagesArray.length) {
+            const item = window.editImagesArray.splice(idx, 1)[0];
+            window.editImagesArray.unshift(item);
+            window.renderEditImagesGrid();
+        }
+    };
+
+    window.removeEditImage = function(idx) {
+        if (idx >= 0 && idx < window.editImagesArray.length) {
+            window.editImagesArray.splice(idx, 1);
+            window.renderEditImagesGrid();
+        }
+    };
+
+    // ----------------------------------------------------------------------
     // CREATE NEWS VIEW & DIRECT PUBLISHING WORKFLOW
     // ----------------------------------------------------------------------
     let createNewsInitialized = false;
@@ -1736,125 +1859,6 @@ function initAdminApp() {
         const dropArea = document.getElementById('create-image-drop-area');
         const alertBox = document.getElementById('create-news-alert');
         const saveDraftBtn = document.getElementById('create-btn-save-draft');
-
-        window.createImagesArray = window.createImagesArray || [];
-        window.editImagesArray = window.editImagesArray || [];
-
-        window.renderCreateImagesGrid = function() {
-            const grid = document.getElementById('create-multi-images-grid');
-            const mainUrlInput = document.getElementById('create-image-url');
-            const preview = document.getElementById('create-img-preview');
-            const box = document.getElementById('create-img-preview-box');
-            const rmBtn = document.getElementById('create-btn-remove-img');
-
-            if (!grid) return;
-            const arr = window.createImagesArray || [];
-            if (arr.length === 0) {
-                grid.style.display = 'none';
-                grid.innerHTML = '';
-                if (mainUrlInput) mainUrlInput.value = '';
-                if (box) box.style.display = 'none';
-                if (rmBtn) rmBtn.style.display = 'none';
-                return;
-            }
-
-            grid.style.display = 'flex';
-            grid.innerHTML = `
-                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <span style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">📸 జతచేసిన ఫొటోలు (${arr.length}):</span>
-                    <span style="font-size: 0.75rem; color: #64748b;">(ముఖ్య చిత్రం కోసం ⭐ Cover నొక్కండి)</span>
-                </div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%;">
-                    ${arr.map((url, idx) => `
-                        <div style="position: relative; width: 85px; height: 85px; border-radius: 6px; overflow: hidden; border: ${idx === 0 ? '3px solid #2563eb' : '1px solid #cbd5e1'}; background: #f8fafc;">
-                            <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;">
-                            ${idx === 0 ? `<span style="position: absolute; top: 2px; left: 2px; background: #2563eb; color: #fff; font-size: 0.65rem; padding: 1px 4px; border-radius: 3px; font-weight: 700;">Cover</span>` : `
-                                <button type="button" onclick="window.setCreateCoverImage(${idx})" style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.65); color: #fff; border: none; font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; cursor: pointer;">⭐ Cover</button>
-                            `}
-                            <button type="button" onclick="window.removeCreateImage(${idx})" style="position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-
-            const coverUrl = arr[0] || '';
-            if (mainUrlInput) mainUrlInput.value = coverUrl;
-            if (preview) preview.src = coverUrl;
-            if (box) box.style.display = coverUrl ? 'flex' : 'none';
-            if (rmBtn) rmBtn.style.display = arr.length > 0 ? 'inline-block' : 'none';
-        };
-
-        window.setCreateCoverImage = function(idx) {
-            if (idx > 0 && idx < window.createImagesArray.length) {
-                const item = window.createImagesArray.splice(idx, 1)[0];
-                window.createImagesArray.unshift(item);
-                window.renderCreateImagesGrid();
-            }
-        };
-
-        window.removeCreateImage = function(idx) {
-            if (idx >= 0 && idx < window.createImagesArray.length) {
-                window.createImagesArray.splice(idx, 1);
-                window.renderCreateImagesGrid();
-            }
-        };
-
-        window.renderEditImagesGrid = function() {
-            const grid = document.getElementById('art-edit-multi-images-grid');
-            const preview = document.getElementById('art-edit-img-preview');
-            const placeholder = document.getElementById('art-edit-img-placeholder');
-
-            if (!grid) return;
-            const arr = window.editImagesArray || [];
-            if (arr.length === 0) {
-                grid.style.display = 'none';
-                grid.innerHTML = '';
-                if (preview) { preview.src = ''; preview.style.display = 'none'; }
-                if (placeholder) placeholder.style.display = 'block';
-                return;
-            }
-
-            grid.style.display = 'flex';
-            grid.innerHTML = `
-                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <span style="font-weight: 700; font-size: 0.85rem; color: #1e293b;">📸 వార్తా ఫొటోల గ్యాలరీ (${arr.length}):</span>
-                    <span style="font-size: 0.75rem; color: #64748b;">(ముఖ్య చిత్రం కోసం ⭐ Cover నొక్కండి)</span>
-                </div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%;">
-                    ${arr.map((url, idx) => `
-                        <div style="position: relative; width: 85px; height: 85px; border-radius: 6px; overflow: hidden; border: ${idx === 0 ? '3px solid #2563eb' : '1px solid #cbd5e1'}; background: #f8fafc;">
-                            <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;">
-                            ${idx === 0 ? `<span style="position: absolute; top: 2px; left: 2px; background: #2563eb; color: #fff; font-size: 0.65rem; padding: 1px 4px; border-radius: 3px; font-weight: 700;">Cover</span>` : `
-                                <button type="button" onclick="window.setEditCoverImage(${idx})" style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.65); color: #fff; border: none; font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; cursor: pointer;">⭐ Cover</button>
-                            `}
-                            <button type="button" onclick="window.removeEditImage(${idx})" style="position: absolute; top: 2px; right: 2px; background: #ef4444; color: #fff; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-
-            const coverUrl = arr[0] || '';
-            if (preview) {
-                preview.src = coverUrl;
-                preview.style.display = coverUrl ? 'block' : 'none';
-            }
-            if (placeholder) placeholder.style.display = coverUrl ? 'none' : 'block';
-        };
-
-        window.setEditCoverImage = function(idx) {
-            if (idx > 0 && idx < window.editImagesArray.length) {
-                const item = window.editImagesArray.splice(idx, 1)[0];
-                window.editImagesArray.unshift(item);
-                window.renderEditImagesGrid();
-            }
-        };
-
-        window.removeEditImage = function(idx) {
-            if (idx >= 0 && idx < window.editImagesArray.length) {
-                window.editImagesArray.splice(idx, 1);
-                window.renderEditImagesGrid();
-            }
-        };
 
         if (createNewsInitialized) return;
         createNewsInitialized = true;
