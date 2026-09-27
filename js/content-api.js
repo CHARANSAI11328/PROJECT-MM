@@ -137,7 +137,7 @@
 
   function createStandardCard(article) {
     const card = document.createElement('article');
-    card.className = 'card-standard flex flex-col justify-between h-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden';
+    card.className = 'card-standard';
 
     const categoryLabel = getCategoryLabel(article.category);
     const categoryCode = article.category || 'state';
@@ -158,33 +158,31 @@
     let mediaHtml = '';
     const imagesList = Array.isArray(article.images) && article.images.length > 0 ? article.images : (Array.isArray(article.image_urls) ? article.image_urls : []);
     const photoCount = imagesList.length > 0 ? imagesList.length : (displayImg ? 1 : 0);
-    const photoBadge = photoCount > 1 ? `<span class="multi-photo-badge" style="position: absolute; bottom: 8px; right: 8px; background: rgba(15,23,42,0.85); color: #ffffff; font-size: 0.725rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; backdrop-filter: blur(4px); z-index: 10; display: flex; align-items: center; gap: 4px;">📷 ${photoCount} ఫొటోలు</span>` : '';
+    const photoBadge = photoCount > 1 ? `<span class="multi-photo-badge" style="position: absolute; bottom: 8px; right: 8px; background: rgba(15,23,42,0.85); color: #ffffff; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; z-index: 10; display: flex; align-items: center; gap: 4px;">📷 ${photoCount} ఫొటోలు</span>` : '';
 
     if (displayImg && displayImg.trim()) {
       mediaHtml = `
-        <div class="media-placeholder block w-full relative overflow-hidden bg-slate-100" style="aspect-ratio: 16/9;">
-          <a href="${categoryUrl}" class="absolute top-3 left-3 bg-red-600 hover:bg-red-700 text-white text-xs px-2.5 py-1 rounded-md font-semibold z-10 shadow-sm" style="text-decoration: none;">${categoryLabel}</a>
+        <div class="media-placeholder" style="aspect-ratio: 16/9; width: 100%; position: relative; overflow: hidden; background: #f1f5f9;">
+          <a href="${categoryUrl}" class="card-category-badge" style="position: absolute; top: 10px; left: 10px; background: #be185d; color: #ffffff; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.18); z-index: 10; text-decoration: none; display: inline-block; line-height: 1.2;">${categoryLabel}</a>
           ${photoBadge}
-          <a href="${articleUrl}" class="block w-full h-full">
-            <img src="${resolvedImg}" alt="${escapeText(article.headline)}" loading="lazy" decoding="async" class="w-full h-full object-cover object-center" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
+          <a href="${articleUrl}" class="block w-full h-full" style="display: block; width: 100%; height: 100%;">
+            <img src="${resolvedImg}" alt="${escapeText(article.headline)}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
           </a>
         </div>
       `;
     }
 
-    const readMoreText = window.MM_i18n ? window.MM_i18n.getText('read_more', 'ఇంకా చదవండి →') : 'ఇంకా చదవండి →';
-
     card.innerHTML = `
       ${mediaHtml}
-      <div class="card-body flex-1 p-4 flex flex-col justify-between">
+      <div class="card-body" style="padding: 14px 16px 16px 16px; display: flex; flex-direction: column; justify-content: space-between; flex: 1;">
         <div>
           ${!displayImg ? `<a href="${categoryUrl}" class="inline-block text-xs font-bold text-red-600 uppercase tracking-wide mb-1" style="text-decoration:none;">${categoryLabel}</a>` : ''}
-          <h3 class="card-title font-bold text-gray-900 leading-snug line-clamp-2 hover:text-red-600 transition-colors" style="font-size: 1.1rem; margin-bottom: 8px;">
+          <h3 class="card-title">
             <a href="${articleUrl}" style="color: inherit; text-decoration: none;">${escapeText(article.headline)}</a>
           </h3>
         </div>
-        <div class="card-footer-meta flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100 mt-3">
-          <span class="card-author font-medium text-gray-700">${escapeText(article.source_newspaper || article.author_name || 'మమేక మహోదయం')}</span>
+        <div class="card-footer-meta">
+          <span class="card-author">${escapeText(article.source_newspaper || article.author_name || 'మమేక మహోదయం')}</span>
           ${date ? `<span class="card-date">${date}</span>` : ''}
         </div>
       </div>
@@ -195,7 +193,7 @@
 
   function createHorizontalCard(article) {
     const card = document.createElement('article');
-    card.className = 'card-horizontal bg-white rounded-lg border border-gray-200 p-3 flex gap-3 items-start overflow-hidden shadow-sm';
+    card.className = 'card-horizontal';
 
     const categoryLabel = getCategoryLabel(article.category);
     const articleUrl = getArticleUrl(article);
@@ -204,13 +202,13 @@
 
     card.innerHTML = `
       ${displayImg ? `
-        <a href="${articleUrl}" class="media-placeholder block relative overflow-hidden rounded-md bg-slate-100 flex-shrink-0" style="width: 100px; height: 75px; aspect-ratio: 4/3;">
-          <img src="${resolvedImg}" alt="${escapeText(article.headline)}" loading="lazy" decoding="async" class="w-full h-full object-cover object-center" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
+        <a href="${articleUrl}" class="media-placeholder" style="width: 100px; height: 75px; aspect-ratio: 4/3; flex-shrink: 0; display: block; border-radius: 6px; overflow: hidden;">
+          <img src="${resolvedImg}" alt="${escapeText(article.headline)}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
         </a>
       ` : ''}
-      <div class="flex-1">
-        <span class="card-category text-xs font-semibold text-red-600 uppercase tracking-wide">${categoryLabel}</span>
-        <h3 class="card-title font-bold text-gray-900 text-sm leading-snug line-clamp-2 hover:text-red-600 transition-colors mt-1">
+      <div style="flex: 1;">
+        <span class="card-category" style="font-size: 0.72rem; font-weight: 700; color: #be185d; text-transform: uppercase;">${categoryLabel}</span>
+        <h3 class="card-title">
           <a href="${articleUrl}" style="color: inherit; text-decoration: none;">${escapeText(article.headline)}</a>
         </h3>
       </div>
