@@ -85,7 +85,15 @@
     return '';
   }
 
-  const DEFAULT_PLACEHOLDER_SVG = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3Cg fill='%2394a3b8' transform='translate(250, 140)'%3E%3Cpath d='M10 0C4.48 0 0 4.48 0 10v80c0 5.52 4.48 10 10 10h80c5.52 0 10-4.48 10-10V10c0-5.52-4.48-10-10-10H10zm0 10h80v60H10V10zm10 10v10h60V20H20zm0 20v10h40V40H20zm0 20v10h60V60H20z'/%3E%3C/g%3E%3Ctext x='50%25' y='72%25' fill='%2364748b' font-family='sans-serif' font-size='16' font-weight='700' text-anchor='middle'%3EMAMEKA MAHODAYAM%3C/text%3E%3C/svg%3E";
+  const DEFAULT_PLACEHOLDER_SVG = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22 viewBox=%220 0 600 400%22%3E%3Crect width=%22100%25%22 height=%22100%25%22 fill=%22%23f1f5f9%22/%3E%3Cg fill=%22%2394a3b8%22 transform=%22translate(250, 140)%22%3E%3Cpath d=%22M10 0C4.48 0 0 4.48 0 10v80c0 5.52 4.48 10 10 10h80c5.52 0 10-4.48 10-10V10c0-5.52-4.48-10-10-10H10zm0 10h80v60H10V10zm10 10v10h60V20H20zm0 20v10h40V40H20zm0 20v10h60V60H20z%22/%3E%3C/g%3E%3Ctext x=%2250%25%22 y=%2272%25%22 fill=%22%2364748b%22 font-family=%22sans-serif%22 font-size=%2216%22 font-weight=%22700%22 text-anchor=%22middle%22%3EMAMEKA MAHODAYAM%3C/text%3E%3C/svg%3E";
+
+  window.MM_DEFAULT_PLACEHOLDER = DEFAULT_PLACEHOLDER_SVG;
+  window.MM_handleImgError = function(img) {
+    if (img) {
+      img.onerror = null;
+      img.src = DEFAULT_PLACEHOLDER_SVG;
+    }
+  };
 
   function resolvePhotoUrl(url) {
     if (!url || typeof url !== 'string') return '';
@@ -158,7 +166,7 @@
           <a href="${categoryUrl}" class="absolute top-3 left-3 bg-red-600 hover:bg-red-700 text-white text-xs px-2.5 py-1 rounded-md font-semibold z-10 shadow-sm" style="text-decoration: none;">${categoryLabel}</a>
           ${photoBadge}
           <a href="${articleUrl}" class="block w-full h-full">
-            <img src="${resolvedImg}" alt="${escapeText(article.headline)}" loading="lazy" decoding="async" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='${DEFAULT_PLACEHOLDER_SVG}';" />
+            <img src="${resolvedImg}" alt="${escapeText(article.headline)}" loading="lazy" decoding="async" class="w-full h-full object-cover object-center" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
           </a>
         </div>
       `;
@@ -197,7 +205,7 @@
     card.innerHTML = `
       ${displayImg ? `
         <a href="${articleUrl}" class="media-placeholder block relative overflow-hidden rounded-md bg-slate-100 flex-shrink-0" style="width: 100px; height: 75px; aspect-ratio: 4/3;">
-          <img src="${resolvedImg}" alt="${escapeText(article.headline)}" loading="lazy" decoding="async" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='${DEFAULT_PLACEHOLDER_SVG}';" />
+          <img src="${resolvedImg}" alt="${escapeText(article.headline)}" loading="lazy" decoding="async" class="w-full h-full object-cover object-center" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
         </a>
       ` : ''}
       <div class="flex-1">
@@ -224,7 +232,7 @@
     if (leadImg && leadImg.trim()) {
       leadMedia = `
         <a href="${leadUrl}" class="media-placeholder block w-full relative overflow-hidden rounded-lg bg-slate-100" style="aspect-ratio: 16/9; max-height: 400px;">
-          <img src="${resolvedLeadImg}" alt="${escapeText(lead.headline)}" loading="eager" decoding="async" class="w-full h-full object-cover object-center rounded-lg" onerror="this.onerror=null; this.src='${DEFAULT_PLACEHOLDER_SVG}';" />
+          <img src="${resolvedLeadImg}" alt="${escapeText(lead.headline)}" loading="eager" decoding="async" class="w-full h-full object-cover object-center rounded-lg" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
         </a>
       `;
     }
@@ -250,7 +258,7 @@
               <article class="card-horizontal bg-white rounded-lg border border-gray-200 p-3 flex gap-3 items-start overflow-hidden shadow-sm">
                 ${artImg ? `
                   <a href="${artUrl}" class="media-placeholder block relative overflow-hidden rounded-md bg-slate-100 flex-shrink-0" style="width: 110px; height: 80px; aspect-ratio: 4/3;">
-                    <img src="${resolvedStackImg}" alt="${escapeText(art.headline)}" loading="lazy" decoding="async" class="w-full h-full object-cover object-center" onerror="this.onerror=null; this.src='${DEFAULT_PLACEHOLDER_SVG}';" />
+                    <img src="${resolvedStackImg}" alt="${escapeText(art.headline)}" loading="lazy" decoding="async" class="w-full h-full object-cover object-center" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
                   </a>
                 ` : ''}
                 <div class="flex-1">
@@ -645,7 +653,7 @@
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
                 ${allArticleImages.map((imgUrl, i) => `
                   <div class="gallery-item-box" style="position: relative; aspect-ratio: 4/3; border-radius: 6px; overflow: hidden; background: #ffffff; border: 1px solid #cbd5e1; cursor: zoom-in; transition: transform 0.2s;" title="🔍 క్లిక్ చేసి చూడు" data-img-src="${imgUrl}">
-                    <img src="${imgUrl}" alt="${escapeText(article.headline)} — Photo ${i + 1}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='${DEFAULT_PLACEHOLDER_SVG}';" />
+                    <img src="${imgUrl}" alt="${escapeText(article.headline)} — Photo ${i + 1}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
                     <span style="position: absolute; bottom: 4px; right: 4px; background: rgba(15,23,42,0.8); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;">📷 ${i + 1}/${allArticleImages.length}</span>
                   </div>
                 `).join('')}
@@ -659,8 +667,7 @@
           mainImgElem.alt = escapeText(article.headline);
           mainImgElem.style.cursor = 'zoom-in';
           mainImgElem.onerror = function() {
-            this.onerror = null;
-            this.src = DEFAULT_PLACEHOLDER_SVG;
+            if (window.MM_handleImgError) window.MM_handleImgError(this);
           };
         }
         if (captionElem) {
@@ -670,7 +677,7 @@
         if (mediaContainer) {
           mediaContainer.innerHTML = `
             <figure class="article-hero-media" style="margin: 20px 0; cursor: zoom-in; text-align: center; background-color: #f8fafc; border-radius: 8px; padding: 4px; border: 1px solid #e2e8f0;">
-              <img src="${coverImg}" alt="${escapeText(article.headline)}" style="width: 100%; height: auto; max-height: 580px; object-fit: contain; background-color: #f8fafc; border-radius: 6px; cursor: zoom-in; display: block; margin: 0 auto;" onerror="this.onerror=null; this.src='${DEFAULT_PLACEHOLDER_SVG}';" />
+              <img src="${coverImg}" alt="${escapeText(article.headline)}" style="width: 100%; height: auto; max-height: 580px; object-fit: contain; background-color: #f8fafc; border-radius: 6px; cursor: zoom-in; display: block; margin: 0 auto;" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
               ${article.image_caption_te ? `<figcaption style="font-size: 0.85rem; color: #64748b; margin-top: 8px; text-align: center; font-style: italic;">${escapeText(article.image_caption_te)}</figcaption>` : ''}
             </figure>
             ${galleryHtml}
@@ -809,7 +816,7 @@
       mediaHtml = `
         <div class="media-placeholder block w-full md:w-1/2 relative overflow-hidden rounded-lg bg-slate-100 flex-shrink-0" style="aspect-ratio: 16/9; min-height: 220px;">
           <a href="${articleUrl}" class="block w-full h-full">
-            <img src="${resolvedImg}" alt="${escapeText(article.headline)}" loading="lazy" decoding="async" class="w-full h-full object-cover object-center rounded-lg" onerror="this.onerror=null; this.src='${DEFAULT_PLACEHOLDER_SVG}';" />
+            <img src="${resolvedImg}" alt="${escapeText(article.headline)}" loading="lazy" decoding="async" class="w-full h-full object-cover object-center rounded-lg" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
           </a>
         </div>
       `;
