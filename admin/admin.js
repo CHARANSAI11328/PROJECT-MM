@@ -1314,20 +1314,35 @@ function initAdminApp() {
 
         let images = [];
         if (art.images_json) {
-            try { images = JSON.parse(art.images_json); } catch(e) { images = []; }
+            try {
+                if (typeof art.images_json === 'string') {
+                    images = JSON.parse(art.images_json);
+                } else if (Array.isArray(art.images_json)) {
+                    images = art.images_json;
+                }
+            } catch(e) { images = []; }
         }
-        if (!Array.isArray(images) || images.length === 0) {
-            if (art.image_url) images = [art.image_url];
-        }
-        window.editImagesArray = images;
-        if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
+        if (!Array.isArray(images)) images = [];
 
-        if (art.image_url) {
-            if (imgPreview) { imgPreview.src = art.image_url; imgPreview.style.display = 'block'; }
-            if (imgPlaceholder) imgPlaceholder.style.display = 'none';
+        if (art.image_url && typeof art.image_url === 'string' && art.image_url.trim()) {
+            const trimmedUrl = art.image_url.trim();
+            if (!images.includes(trimmedUrl)) {
+                images.unshift(trimmedUrl);
+            }
+        }
+
+        window.editImagesArray = images;
+        if (typeof window.renderEditImagesGrid === 'function') {
+            window.renderEditImagesGrid();
         } else {
-            if (imgPreview) imgPreview.style.display = 'none';
-            if (imgPlaceholder) imgPlaceholder.style.display = 'inline';
+            const coverUrl = images[0] || '';
+            if (imgPreview) {
+                imgPreview.src = coverUrl;
+                imgPreview.style.display = coverUrl ? 'block' : 'none';
+            }
+            if (imgPlaceholder) {
+                imgPlaceholder.style.display = coverUrl ? 'none' : 'block';
+            }
         }
         if (imgCaption) imgCaption.value = art.image_caption_te || '';
 

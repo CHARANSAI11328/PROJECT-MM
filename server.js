@@ -1456,6 +1456,10 @@ app.get('/api/admin/articles/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ success: false, error: 'Article not found.' });
     }
 
+    if (!article.images_json && article.image_url) {
+      article.images_json = JSON.stringify([article.image_url]);
+    }
+
     const images = await dbAll('SELECT * FROM article_images WHERE article_id = ? ORDER BY display_order ASC', [id]);
     const editionMedia = await dbAll('SELECT * FROM media_assets WHERE edition_id = ? AND page_number = ?', [article.edition_id, article.page_number]);
 
