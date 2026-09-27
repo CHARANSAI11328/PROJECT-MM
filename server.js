@@ -9,6 +9,7 @@ const jwt = require('jsonwebtoken');
 
 const { db, dbRun, dbAll, dbGet, initDatabase, editionsDir, pagesDir } = require('./db');
 const { processEdition } = require('./ingestion');
+const { uploadFile } = require('./services/storage');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -1122,9 +1123,14 @@ app.post('/api/admin/upload-image', authenticateToken, uploadImageMulter.any(), 
     const uploadedUrls = [];
 
     if (files.length > 0) {
-      files.forEach(f => {
-        uploadedUrls.push(`/uploads/images/${f.filename}`);
-      });
+      for (const f of files) {
+        const finalUrl = await uploadFile({
+          localFilePath: f.path,
+          destinationKey: `images/${f.filename}`,
+          contentType: f.mimetype
+        });
+        uploadedUrls.push(finalUrl);
+      }
     }
 
     // Also check Base64 payload (for clipboard pasted images or canvas data)
@@ -1145,7 +1151,12 @@ app.post('/api/admin/upload-image', authenticateToken, uploadImageMulter.any(), 
         const filename = `img_${Date.now()}_${Math.floor(Math.random() * 10000)}${ext}`;
         const savePath = path.join(imagesDir, filename);
         fs.writeFileSync(savePath, buffer);
-        uploadedUrls.push(`/uploads/images/${filename}`);
+        const finalUrl = await uploadFile({
+          localFilePath: savePath,
+          destinationKey: `images/${filename}`,
+          contentType: `image/${ext.replace('.', '')}`
+        });
+        uploadedUrls.push(finalUrl);
       }
     }
 
@@ -1552,10 +1563,14 @@ app.post('/api/admin/articles/:id/image', authenticateToken, uploadImageMulter.s
       return res.status(400).json({ success: false, error: 'Please select a valid image file.' });
     }
 
-    const relativePath = `/uploads/images/${req.file.filename}`;
-    await dbRun('UPDATE articles SET image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [relativePath, id]);
+    const finalUrl = await uploadFile({
+      localFilePath: req.file.path,
+      destinationKey: `images/${req.file.filename}`,
+      contentType: req.file.mimetype
+    });
+    await dbRun('UPDATE articles SET image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [finalUrl, id]);
 
-    res.json({ success: true, message: 'Image uploaded successfully.', image_url: relativePath });
+    res.json({ success: true, message: 'Image uploaded successfully.', image_url: finalUrl });
   } catch (err) {
     console.error('Admin article image upload error:', err);
     res.status(500).json({ success: false, error: 'Failed to upload article image.' });

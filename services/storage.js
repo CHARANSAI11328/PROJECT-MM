@@ -25,19 +25,19 @@ if (isCloudStorageConfigured) {
     });
     console.log(`✓ Cloud Storage (Cloudflare R2 / S3) configured for bucket: ${R2_BUCKET}`);
   } catch (err) {
-    console.warn('! Cloud Storage SDK (@aws-sdk/client-s3) not loaded, falling back to local file storage:', err.message);
+    console.warn('! Cloud Storage SDK (@aws-sdk/client-s3) not loaded, falling back to persistent data storage:', err.message);
   }
 } else {
-  console.log('Using Local Disk Storage for media uploads (Specify R2_* environment variables for Cloud Storage)');
+  console.log('Using Persistent Media Storage for media uploads (R2_* environment variables can also be used for Cloud Storage)');
 }
 
 /**
- * Uploads a file to Cloudflare R2 / S3 if configured, or keeps local file path if unconfigured.
+ * Uploads a file to Cloudflare R2 / S3 if configured, or converts image to persistent Data URI / relative path so it is never lost on redeployment.
  * @param {Object} options
  * @param {string} options.localFilePath - Absolute path to local file on disk
- * @param {string} options.destinationKey - Target object key in bucket (e.g., 'editions/2026-09-22/main.pdf')
+ * @param {string} options.destinationKey - Target object key in bucket (e.g., 'images/img_123.png')
  * @param {string} [options.contentType] - MIME content type
- * @returns {Promise<string>} Public URL or relative local URL
+ * @returns {Promise<string>} Public URL or Data URI or relative URL
  */
 async function uploadFile({ localFilePath, destinationKey, contentType }) {
   if (s3Client && isCloudStorageConfigured) {
@@ -59,12 +59,27 @@ async function uploadFile({ localFilePath, destinationKey, contentType }) {
       }
       return `https://${R2_BUCKET}.${R2_ENDPOINT}/${destinationKey}`;
     } catch (err) {
-      console.error(`Cloud Storage Upload Failed for ${destinationKey}, falling back to local path:`, err.message);
-      return `/uploads/${destinationKey}`;
+      console.error(`Cloud Storage Upload Failed for ${destinationKey}, using persistent fallback:`, err.message);
     }
   }
 
-  // Local fallback path
+  // Fallback for ephemeral cloud disk hosts (e.g. Render / Railway container rebuilds):
+  // Convert images up to 4MB to persistent Data URIs so they are stored inside the database and survive code re-deployments!
+  if (localFilePath && fs.existsSync(localFilePath)) {
+    try {
+      const stats = fs.statSync(localFilePath);
+      const ext = path.extname(localFilePath).toLowerCase();
+      const isImage = ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'].includes(ext);
+      if (isImage && stats.size <= 4 * 1024 * 1024) {
+        const fileBuffer = fs.readFileSync(localFilePath);
+        const mimeType = contentType || (ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : ext === '.webp' ? 'image/webp' : ext === '.svg' ? 'image/svg+xml' : 'image/png');
+        return `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
+      }
+    } catch (err) {
+      console.warn('Persistent image conversion notice:', err.message);
+    }
+  }
+
   return `/uploads/${destinationKey}`;
 }
 
