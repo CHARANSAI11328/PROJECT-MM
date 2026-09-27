@@ -669,9 +669,9 @@
         if (figureElem) figureElem.style.display = 'block';
         if (mediaContainer) {
           mediaContainer.innerHTML = `
-            <figure class="article-hero-media" style="margin: 20px 0; cursor: zoom-in;">
-              <img src="${coverImg}" alt="${escapeText(article.headline)}" style="width: 100%; max-height: 520px; object-fit: cover; border-radius: 8px; cursor: zoom-in;" onerror="this.onerror=null; this.src='${DEFAULT_PLACEHOLDER_SVG}';" />
-              ${article.image_caption_te ? `<figcaption style="font-size: 0.85rem; color: #64748b; margin-top: 6px; text-align: center; font-style: italic;">${escapeText(article.image_caption_te)}</figcaption>` : ''}
+            <figure class="article-hero-media" style="margin: 20px 0; cursor: zoom-in; text-align: center; background-color: #f8fafc; border-radius: 8px; padding: 4px; border: 1px solid #e2e8f0;">
+              <img src="${coverImg}" alt="${escapeText(article.headline)}" style="width: 100%; height: auto; max-height: 580px; object-fit: contain; background-color: #f8fafc; border-radius: 6px; cursor: zoom-in; display: block; margin: 0 auto;" onerror="this.onerror=null; this.src='${DEFAULT_PLACEHOLDER_SVG}';" />
+              ${article.image_caption_te ? `<figcaption style="font-size: 0.85rem; color: #64748b; margin-top: 8px; text-align: center; font-style: italic;">${escapeText(article.image_caption_te)}</figcaption>` : ''}
             </figure>
             ${galleryHtml}
           `;

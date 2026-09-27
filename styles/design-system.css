@@ -2866,13 +2866,17 @@ body {
 
   .brand-stacked-wrap {
     margin: 0 auto !important;
-    align-items: center !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+    width: fit-content !important;
   }
 
   .brand-prefix-stacked {
     font-size: clamp(0.7rem, 2.8vw, 0.95rem) !important;
-    margin-left: 0 !important;
-    margin-bottom: -0.2em !important;
+    margin-left: 2px !important;
+    margin-bottom: -0.18em !important;
+    align-self: flex-start !important;
+    text-align: left !important;
   }
 
   .brand-main-stacked {
@@ -3119,13 +3123,17 @@ body {
 
   .media-placeholder {
     min-height: 200px !important;
-    max-height: 380px !important;
+    max-height: 480px !important;
+    background-color: #f8fafc !important;
   }
 
+  .article-hero-media img,
   #article-main-img {
-    max-height: 360px !important;
+    max-height: 580px !important;
     width: 100% !important;
+    height: auto !important;
     object-fit: contain !important;
+    background-color: #f8fafc !important;
   }
 
   /* 9. E-PAPER DIGITAL PAGE */
@@ -4307,22 +4315,22 @@ body {
     left: 0 !important;
     width: 100% !important;
     height: 54px !important;
-    background: rgba(255, 255, 255, 0.98) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
+    background: #ffffff !important;
     border-bottom: 2px solid var(--color-brand-magenta) !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
     z-index: 9990 !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 0 12px !important;
+    padding: 0 10px !important;
     box-sizing: border-box !important;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
 
   .mobile-app-left {
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 8px !important;
   }
 
   .mobile-menu-btn {
@@ -4338,32 +4346,79 @@ body {
     font-size: 1.25rem !important;
     cursor: pointer !important;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    touch-action: manipulation !important;
   }
 
   .mobile-app-brand-title {
-    font-size: 1.18rem !important;
-    font-weight: 800 !important;
-    color: #be185d !important;
-    text-decoration: none !important;
-    display: flex !important;
+    display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
-    font-family: var(--font-telugu) !important;
+    gap: 5px !important;
+    text-decoration: none !important;
+  }
+
+  .mobile-brand-stacked-wrap {
+    display: inline-flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    line-height: 0.95 !important;
+    text-align: left !important;
+  }
+
+  .mobile-brand-prefix {
+    font-size: 0.58rem !important;
+    font-weight: 700 !important;
+    color: #d97706 !important;
+    font-family: var(--font-serif-te, serif) !important;
+    margin-left: 1px !important;
     line-height: 1 !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .mobile-brand-main {
+    font-size: 1.15rem !important;
+    font-weight: 900 !important;
+    color: #be185d !important;
+    font-family: var(--font-serif-te, serif) !important;
+    line-height: 1 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .drawer-brand-stacked-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    line-height: 0.95 !important;
+    text-align: left !important;
+  }
+
+  .drawer-brand-prefix {
+    font-size: 0.65rem !important;
+    font-weight: 700 !important;
+    color: #ffcc00 !important;
+    margin-left: 1px !important;
+  }
+
+  .drawer-brand-main {
+    font-size: 1.35rem !important;
+    font-weight: 900 !important;
+    color: #ffffff !important;
   }
 
   .mobile-live-indicator {
-    width: 7px !important;
-    height: 7px !important;
+    width: 8px !important;
+    height: 8px !important;
     background: #dc2626 !important;
     border-radius: 50% !important;
     display: inline-block !important;
+    box-shadow: 0 0 6px rgba(220, 38, 38, 0.6) !important;
     animation: liveBlink 1.5s infinite !important;
+    flex-shrink: 0 !important;
+    margin-left: 2px !important;
   }
 
   @keyframes liveBlink {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 0.25; transform: scale(0.75); }
   }
 
   .mobile-app-right {

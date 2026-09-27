@@ -253,8 +253,11 @@
       topBar.innerHTML = `
         <div class="mobile-app-left">
           <button type="button" id="mobile-drawer-toggle" class="mobile-menu-btn" aria-label="ఓపెన్ మెనూ (Open Menu)">☰</button>
-          <a href="/" class="mobile-app-brand-title">
-            <span>మమేక మహోదయం</span>
+          <a href="/" class="mobile-app-brand-title" title="మమేక మహోదయం">
+            <span class="mobile-brand-stacked-wrap">
+              <span class="mobile-brand-prefix">మమేక</span>
+              <span class="mobile-brand-main">మహోదయం</span>
+            </span>
             <span class="mobile-live-indicator" title="లైవ్ వార్తలు"></span>
           </a>
         </div>
@@ -277,7 +280,10 @@
         <div class="mobile-drawer">
           <div class="drawer-header">
             <div>
-              <div class="drawer-brand-title">మమేక మహోదయం</div>
+              <div class="drawer-brand-stacked-wrap">
+                <span class="drawer-brand-prefix">మమేక</span>
+                <span class="drawer-brand-main">మహోదయం</span>
+              </div>
               <div class="drawer-brand-tagline">అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం</div>
               <div style="font-size: 0.68rem; color: #fbcfe8; margin-top: 4px; font-family: sans-serif;">RNI: APTEL/26/A5988 • తెలుగు దినపత్రిక</div>
             </div>
@@ -383,12 +389,14 @@
       drawerToggle.onclick = () => {
         drawerOverlay.classList.add('active');
         document.body.style.overflow = 'hidden';
+        document.body.style.touchAction = 'none';
       };
     }
     if (drawerClose && drawerOverlay) {
       drawerClose.onclick = () => {
         drawerOverlay.classList.remove('active');
         document.body.style.overflow = '';
+        document.body.style.touchAction = '';
       };
     }
     if (drawerOverlay) {
@@ -396,6 +404,7 @@
         if (e.target === drawerOverlay) {
           drawerOverlay.classList.remove('active');
           document.body.style.overflow = '';
+          document.body.style.touchAction = '';
         }
       };
     }

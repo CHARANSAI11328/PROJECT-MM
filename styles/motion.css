@@ -35,8 +35,8 @@ body {
 
 @keyframes applePageFadeIn {
   from {
-    opacity: 0;
-    transform: translateY(6px);
+    opacity: 0.95;
+    transform: translateY(2px);
   }
   to {
     opacity: 1;
@@ -87,7 +87,7 @@ button:not(.lang-btn):not(.btn-menu-toggle),
               border-color var(--motion-fast) var(--ease-apple),
               box-shadow var(--motion-fast) var(--ease-apple),
               color var(--motion-fast) var(--ease-apple);
-  will-change: transform;
+  touch-action: manipulation;
 }
 
 .btn:hover,
@@ -129,7 +129,7 @@ button:not(.lang-btn):not(.btn-menu-toggle):active,
   transition: transform var(--motion-normal) var(--ease-apple),
               box-shadow var(--motion-normal) var(--ease-apple),
               border-color var(--motion-normal) var(--ease-apple);
-  will-change: transform;
+  touch-action: manipulation;
 }
 
 .card-standard:hover,
@@ -158,7 +158,6 @@ button:not(.lang-btn):not(.btn-menu-toggle):active,
 .media-thumb img {
   transition: transform var(--motion-slow) var(--ease-apple),
               opacity var(--motion-normal) var(--ease-apple);
-  will-change: transform;
 }
 
 .card-standard:hover img,
@@ -179,6 +178,7 @@ textarea {
   transition: border-color var(--motion-fast) var(--ease-apple),
               box-shadow var(--motion-fast) var(--ease-apple),
               background-color var(--motion-fast) var(--ease-apple);
+  touch-action: manipulation;
 }
 
 .search-bar-input:focus,
@@ -207,10 +207,9 @@ img.smooth-image-loaded {
    -------------------------------------------------------------------------- */
 .reveal-on-scroll {
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity var(--motion-slow) var(--ease-apple),
-              transform var(--motion-slow) var(--ease-apple);
-  will-change: opacity, transform;
+  transform: translateY(8px);
+  transition: opacity var(--motion-normal) var(--ease-apple),
+              transform var(--motion-normal) var(--ease-apple);
 }
 
 .reveal-on-scroll.is-revealed {
@@ -231,8 +230,26 @@ img.smooth-image-loaded {
 }
 
 /* --------------------------------------------------------------------------
-   9. ACCESSIBILITY — REDUCED MOTION SUPPORT
+   9. MOBILE PERFORMANCE OPTIMIZATION & REDUCED MOTION SUPPORT
    -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  body {
+    animation: none !important;
+  }
+  
+  .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .card-standard:hover,
+  .card-hero:hover,
+  .card-horizontal:hover {
+    transform: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
