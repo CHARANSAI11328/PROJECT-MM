@@ -724,113 +724,223 @@
 
                 <!-- SECTION 6: ADMIN ARTICLE EDITOR SYSTEM -->
                 <section id="view-article-edit" class="view-section" style="display: none;">
-                    <div class="page-title-bar flex-between">
+                    <div class="page-title-bar flex-between" style="align-items: center; margin-bottom: 20px;">
                         <div>
                             <button class="btn btn-outline-sm" onclick="location.hash='#/articles'">← వార్తల జాబితాకి తిరిగి వెళ్ళు</button>
-                            <h2 style="margin-top: 8px;">✏️ వార్తా సంపాదకుడు & ప్రచురణ (Article Editor)</h2>
-                            <p class="page-subtitle">వార్తా అంశాలను, చిత్రాలు మరియు ప్రచురణ వివరాలను సవరించి ప్రచురించండి.</p>
+                            <h2 style="margin-top: 8px; font-size: 1.4rem; color: #0f172a;">✏️ వార్తా సంపాదకుడు &amp; ప్రచురణ (Article Editor)</h2>
+                            <p class="page-subtitle" style="margin-bottom: 0;">వార్తా అంశాలను, శీర్షిక, చిత్రాలు మరియు ప్రచురణ వివరాలను సవరించి ప్రచురించండి.</p>
                         </div>
                         <div class="actions flex-between" style="gap:10px;">
-                            <button id="art-btn-save-draft" class="btn btn-outline-sm">💾 Save Draft</button>
-                            <button id="art-btn-preview" class="btn btn-outline-sm">👁️ Live Preview</button>
-                            <button id="art-btn-publish" class="btn btn-primary">🚀 Publish Article</button>
+                            <button type="button" id="art-btn-save-draft" class="btn btn-outline-sm" style="padding: 8px 16px;">💾 Save Draft</button>
+                            <button type="button" id="art-btn-preview" class="btn btn-outline-sm" style="padding: 8px 16px;">👁️ Live Preview</button>
+                            <button type="button" id="art-btn-publish" class="btn btn-primary" style="padding: 8px 20px; font-weight: 700; background: #16a34a; border-color: #15803d;">🚀 Publish Article</button>
                         </div>
                     </div>
 
-                    <div id="art-edit-alert" class="alert" style="display: none;"></div>
+                    <div id="art-edit-alert" class="alert" style="display: none; margin-bottom: 20px;"></div>
 
-                    <!-- FULL WIDTH EDITOR CARD -->
-                    <div class="editor-full-container">
-                        <div class="card editor-panel">
-                            <div class="editor-header" style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-                                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">📝 వార్తా వివరాల సవరణ (Edit Article Details)</h3>
+                    <!-- Hidden compatibility fields -->
+                    <input type="hidden" id="art-edit-id">
+                    <input type="hidden" id="art-raw-content-display">
+                    <img id="art-source-page-img" style="display:none;" src="">
+                    <a id="open-full-pdf-link" style="display:none;" href="#"></a>
+
+                    <!-- 2-COLUMN PROFESSIONAL LAYOUT -->
+                    <form id="art-edit-form" style="display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start;">
+                        <!-- MAIN CONTENT COLUMN (LEFT) -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+
+                            <!-- CARD 1: HEADLINE & SUBHEADLINE -->
+                            <div class="card" style="padding: 24px; border-radius: 10px; border: 1px solid #e2e8f0; background: #ffffff;">
+                                <div class="form-group" style="margin-bottom: 16px;">
+                                    <label for="art-edit-title-te" class="form-label-editorial" style="font-weight: 700; font-size: 0.95rem; color: #1e293b; margin-bottom: 8px; display: block;">
+                                        తెలుగు వార్తా శీర్షిక (Telugu Headline) *
+                                    </label>
+                                    <input type="text" id="art-edit-title-te" class="form-control" required style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; padding: 12px 14px; border-radius: 6px; border: 1.5px solid #cbd5e1;" placeholder="వార్తా ప్రధాన శీర్షిక ఇక్కడ నమోదు చేయండి...">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="art-edit-subheadline-te" class="form-label-editorial" style="font-weight: 600; font-size: 0.85rem; color: #64748b; margin-bottom: 6px; display: block;">
+                                        ఉప శీర్షిక (Subheadline / Tagline)
+                                    </label>
+                                    <input type="text" id="art-edit-subheadline-te" class="form-control" style="font-size: 1rem; padding: 10px 12px; border-radius: 6px;" placeholder="ఉప శీర్షిక ఉంటే ఇక్కడ రాయిరి...">
+                                </div>
                             </div>
 
-                            <form id="art-edit-form">
-                                <input type="hidden" id="art-edit-id">
-
-                                <!-- Headline & Subheadline -->
-                                <div class="form-group">
-                                    <label for="art-edit-title-te" class="form-label-editorial">తెలుగు శీర్షిక (Telugu Headline) *</label>
-                                    <input type="text" id="art-edit-title-te" class="form-control" required style="font-family: var(--font-heading); font-size: 1.15rem; font-weight:700;">
+                            <!-- CARD 2: ULTRA CLEAN MULTI-PHOTO MANAGER -->
+                            <div class="card" style="padding: 24px; border-radius: 10px; border: 1px solid #e2e8f0; background: #ffffff;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+                                    <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                                        📷 వార్తా చిత్రాల నిర్వహణ (Multi-Photo Manager)
+                                    </h3>
+                                    <span style="font-size: 0.8rem; color: #64748b; background: #f1f5f9; padding: 4px 10px; border-radius: 12px; font-weight: 600;">Full HD Media Supported</span>
                                 </div>
 
-                                <!-- Metadata Row -->
-                                <div class="form-row" style="margin-top: 14px;">
-                                    <div class="form-group col">
-                                        <label for="art-edit-category" class="form-label-editorial">విభాగం (Category) *</label>
-                                        <select id="art-edit-category" class="form-control" required></select>
-                                    </div>
-                                    <div class="form-group col">
-                                        <label for="art-edit-district" class="form-label-editorial">జిల్లా (AP District)</label>
-                                        <select id="art-edit-district" class="form-control"></select>
-                                    </div>
-                                    <div class="form-group col">
-                                        <label for="art-edit-status" class="form-label-editorial">స్థితి (Status) *</label>
-                                        <select id="art-edit-status" class="form-control" required>
-                                            <option value="draft">Draft (ఖరారు కానిది)</option>
-                                            <option value="pending_review">Review Pending (పరిశీలనలో ఉన్నది)</option>
-                                            <option value="published">Published (ప్రచురించు)</option>
-                                        </select>
-                                    </div>
+                                <!-- Image Control Buttons Bar -->
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+                                    <button type="button" id="art-btn-trigger-img-upload" class="btn btn-outline-sm" style="padding: 8px 14px; font-weight: 600; background: #f8fafc; border-color: #cbd5e1;">
+                                        📤 ఫొటో(లు) అప్‌లోడ్
+                                    </button>
+                                    <button type="button" id="art-btn-paste-img" class="btn btn-outline-sm" style="padding: 8px 14px; background: #eff6ff; color: #2563eb; border-color: #93c5fd; font-weight: 600;">
+                                        📋 ఫొటో పేస్ట్ చేయండి (Ctrl+V)
+                                    </button>
+                                    <button type="button" id="art-btn-pick-edition-media" class="btn btn-outline-sm" style="padding: 8px 14px; font-weight: 600;">
+                                        🖼️ సంచిక ఫొటోలు
+                                    </button>
+                                    <button type="button" id="art-btn-remove-img" class="btn btn-danger-sm" style="padding: 8px 14px; font-weight: 600;">
+                                        🗑️ అన్ని ఫొటోలు తొలగించు
+                                    </button>
+                                    <input type="file" id="art-edit-image-file" accept="image/*" multiple style="display:none;">
                                 </div>
 
-                                <div class="form-row" style="margin-top: 14px;">
-                                    <div class="form-group col">
-                                        <label for="art-edit-author" class="form-label-editorial">రచయిత / డెస్క్ (Author / Byline)</label>
-                                        <input type="text" id="art-edit-author" class="form-control" value="మమేక మహోదయం డెస్క్">
-                                    </div>
-                                    <div class="form-group col">
-                                        <label for="art-edit-date" class="form-label-editorial">ప్రచురణ తేదీ (Date)</label>
-                                        <input type="date" id="art-edit-date" class="form-control">
-                                    </div>
-                                </div>
-
-                                <!-- IMAGE MANAGEMENT BOX -->
-                                <div class="card image-manager-card" style="margin-top: 16px; margin-bottom: 20px;">
-                                    <label class="form-label-editorial" style="margin-bottom:10px; display:block;">📷 వార్తా చిత్రాల నిర్వహణ (Multi-Photo Manager)</label>
-                                    <div class="image-preview-flex" style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
-                                        <div class="img-preview-box" style="width: 120px; height: 90px; border-radius: 6px; overflow: hidden; background: #f1f5f9; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center;">
-                                            <img id="art-edit-img-preview" src="" alt="No Image" style="max-width:100%; max-height:100%; object-fit:cover; display:none;">
-                                            <span id="art-edit-img-placeholder" style="font-size:0.75rem; color:#64748b;">ఫొటో లేదు</span>
-                                        </div>
-                                        <div class="img-controls flex-1" style="display:flex; flex-direction:column; gap:8px; min-width:220px;">
-                                            <input type="text" id="art-edit-img-caption" class="form-control" placeholder="చిత్ర శీర్షిక (Image Caption)...">
-                                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                                <button type="button" id="art-btn-trigger-img-upload" class="btn btn-outline-sm">📤 ఫొటో(లు) అప్‌లోడ్</button>
-                                                <button type="button" id="art-btn-paste-img" class="btn btn-outline-sm" style="background: #eff6ff; color: #2563eb; border-color: #93c5fd; font-weight: 600;">📋 ఫొటో పేస్ట్ చేయండి (Ctrl+V)</button>
-                                                <button type="button" id="art-btn-pick-edition-media" class="btn btn-outline-sm">🖼️ సంచిక ఫొటోలు</button>
-                                                <button type="button" id="art-btn-remove-img" class="btn btn-danger-sm">🗑️ అన్ని ఫొటోలు తొలగించు</button>
-                                                <input type="file" id="art-edit-image-file" accept="image/*" multiple style="display:none;">
-                                            </div>
+                                <!-- Main Cover Photo Preview Container -->
+                                <div style="display: flex; gap: 20px; align-items: flex-start; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1.5px dashed #cbd5e1; margin-bottom: 16px;">
+                                    <div style="width: 220px; height: 140px; border-radius: 8px; overflow: hidden; background: #e2e8f0; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0;">
+                                        <img id="art-edit-img-preview" src="" alt="Cover Photo" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                                        <div id="art-edit-img-placeholder" style="text-align: center; color: #64748b; padding: 10px;">
+                                            <div style="font-size: 2rem; margin-bottom: 4px;">🖼️</div>
+                                            <span style="font-size: 0.85rem; font-weight: 600; display: block;">ఫొటో లేదు</span>
+                                            <span style="font-size: 0.75rem; color: #94a3b8;">(No photo selected)</span>
                                         </div>
                                     </div>
-                                    <div id="art-edit-multi-images-grid" style="display: none; margin-top: 12px; gap: 10px; flex-wrap: wrap; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;"></div>
+                                    <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                                        <div>
+                                            <label for="art-edit-img-caption" style="font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 4px; display: block;">
+                                                చిత్ర శీర్షిక / వివరణ (Image Caption)
+                                            </label>
+                                            <input type="text" id="art-edit-img-caption" class="form-control" placeholder="చిత్రం గురించిన వివరాలు (ఉదా: ఫైల్ ఫొటో)..." style="font-size: 0.9rem; padding: 8px 12px;">
+                                        </div>
+                                        <p style="font-size: 0.8rem; color: #64748b; margin: 0; line-height: 1.4;">
+                                            💡 <strong>చిట్కా:</strong> కంప్యూటర్‌ నుండి ఫొటోలను నేరుగా పేస్ట్ (Ctrl+V) చేయవచ్చు లేదా Drag &amp; Drop చేయవచ్చు.
+                                        </p>
+                                    </div>
                                 </div>
 
-                                <!-- Placement Flags -->
-                                <div class="checkbox-flags-card">
-                                    <label class="checkbox-flag-item">
-                                        <input type="checkbox" id="art-edit-homepage" value="1">
+                                <!-- Gallery Grid for Attached Images -->
+                                <div id="art-edit-multi-images-grid" style="display: none; gap: 10px; flex-wrap: wrap; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;"></div>
+                            </div>
+
+                            <!-- CARD 3: FULL ARTICLE BODY CONTENT EDITOR -->
+                            <div class="card" style="padding: 24px; border-radius: 10px; border: 1px solid #e2e8f0; background: #ffffff;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                                    <label for="art-edit-content-te" class="form-label-editorial" style="font-weight: 700; font-size: 1rem; color: #0f172a; margin: 0;">
+                                        పూర్తి వార్తా వివరాలు (Telugu Content Body) *
+                                    </label>
+                                    <span style="font-size: 0.8rem; color: #64748b;">(Rich Text Formatting Supported)</span>
+                                </div>
+                                <textarea id="art-edit-content-te" class="form-control" rows="18" placeholder="పూర్తి వార్తా పాఠాన్ని ఇక్కడ స్పష్టంగా నమోదు చేయండి..." style="font-size: 1.05rem; line-height: 1.7; padding: 16px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-family: inherit; min-height: 380px;"></textarea>
+
+                                <div style="margin-top: 18px;">
+                                    <label for="art-edit-summary-te" class="form-label-editorial" style="font-weight: 600; font-size: 0.85rem; color: #475569; margin-bottom: 6px; display: block;">
+                                        వార్త సారాంశం (Article Summary / Excerpt)
+                                    </label>
+                                    <textarea id="art-edit-summary-te" class="form-control" rows="3" placeholder="వార్తా ముఖ్యాంశాల సారాంశం (ఐచ్ఛికం)..." style="font-size: 0.92rem; padding: 10px 12px; border-radius: 6px;"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SIDEBAR COLUMN (RIGHT) -->
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+
+                            <!-- SIDEBAR CARD 1: PUBLISH ACTIONS & STATUS -->
+                            <div class="card" style="padding: 20px; border-radius: 10px; border: 1px solid #cbd5e1; background: #f8fafc;">
+                                <h3 style="font-size: 1rem; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;">
+                                    🚀 ప్రచురణ స్థితి (Publish Status)
+                                </h3>
+                                <div class="form-group" style="margin-bottom: 16px;">
+                                    <label for="art-edit-status" class="form-label-editorial" style="font-weight: 700; font-size: 0.85rem; color: #334155; margin-bottom: 6px; display: block;">
+                                        స్థితి (Current Status) *
+                                    </label>
+                                    <select id="art-edit-status" class="form-control" required style="font-weight: 700; font-size: 0.95rem; padding: 10px;">
+                                        <option value="published">🚀 Published (ప్రచురించు)</option>
+                                        <option value="draft">💾 Draft (ఖరారు కానిది)</option>
+                                        <option value="pending_review">⏳ Review Pending (పరిశీలనలో)</option>
+                                    </select>
+                                </div>
+
+                                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 16px;">
+                                    <button type="button" onclick="document.getElementById('art-btn-publish').click()" class="btn btn-primary btn-lg" style="width: 100%; font-weight: 700; background: #16a34a; border-color: #15803d; padding: 12px;">
+                                        🚀 ప్రచురించు (Publish Live)
+                                    </button>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                        <button type="button" onclick="document.getElementById('art-btn-save-draft').click()" class="btn btn-outline-sm" style="width: 100%; text-align: center; justify-content: center; padding: 8px;">
+                                            💾 Save Draft
+                                        </button>
+                                        <button type="button" onclick="document.getElementById('art-btn-preview').click()" class="btn btn-outline-sm" style="width: 100%; text-align: center; justify-content: center; padding: 8px;">
+                                            👁️ Preview
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SIDEBAR CARD 2: CATEGORY & AP DISTRICT -->
+                            <div class="card" style="padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; background: #ffffff;">
+                                <h3 style="font-size: 1rem; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;">
+                                    📂 వర్గీకరణ (Category &amp; Location)
+                                </h3>
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label for="art-edit-category" class="form-label-editorial" style="font-weight: 700; font-size: 0.85rem; color: #334155; margin-bottom: 6px; display: block;">
+                                        వార్తా విభాగం (Category) *
+                                    </label>
+                                    <select id="art-edit-category" class="form-control" required style="font-size: 0.95rem; padding: 10px;"></select>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="art-edit-district" class="form-label-editorial" style="font-weight: 700; font-size: 0.85rem; color: #334155; margin-bottom: 6px; display: block;">
+                                        ఆంధ్రప్రదేశ్ జిల్లా (AP District)
+                                    </label>
+                                    <select id="art-edit-district" class="form-control" style="font-size: 0.95rem; padding: 10px;"></select>
+                                </div>
+                            </div>
+
+                            <!-- SIDEBAR CARD 3: BYLINE & METADATA -->
+                            <div class="card" style="padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; background: #ffffff;">
+                                <h3 style="font-size: 1rem; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;">
+                                    ✍️ ప్రచురణ వివరాలు (Author &amp; Placement)
+                                </h3>
+                                <div class="form-group" style="margin-bottom: 14px;">
+                                    <label for="art-edit-author" class="form-label-editorial" style="font-weight: 600; font-size: 0.85rem; color: #334155; margin-bottom: 6px; display: block;">
+                                        రచయిత / డెస్క్ (Author / Byline)
+                                    </label>
+                                    <input type="text" id="art-edit-author" class="form-control" value="మమేక మహోదయం డెస్క్" style="font-size: 0.9rem; padding: 8px 12px;">
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 16px;">
+                                    <label for="art-edit-date" class="form-label-editorial" style="font-weight: 600; font-size: 0.85rem; color: #334155; margin-bottom: 6px; display: block;">
+                                        ప్రచురణ తేదీ (Date)
+                                    </label>
+                                    <input type="date" id="art-edit-date" class="form-control" style="font-size: 0.9rem; padding: 8px 12px;">
+                                </div>
+
+                                <!-- Homepage Flags -->
+                                <div style="display: flex; flex-direction: column; gap: 10px; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                    <label style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: 600; color: #1e293b; cursor: pointer;">
+                                        <input type="checkbox" id="art-edit-homepage" value="1" style="width: 16px; height: 16px; accent-color: #2563eb;">
                                         <span>హోమ్‌పేజీలో చూపించు (Show on Homepage)</span>
                                     </label>
-                                    <label class="checkbox-flag-item">
-                                        <input type="checkbox" id="art-edit-featured" value="1">
+                                    <label style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: 600; color: #1e293b; cursor: pointer;">
+                                        <input type="checkbox" id="art-edit-featured" value="1" style="width: 16px; height: 16px; accent-color: #2563eb;">
                                         <span>ముఖ్యాంశం (Featured News)</span>
                                     </label>
-                                    <label class="checkbox-flag-item">
-                                        <input type="checkbox" id="art-edit-breaking" value="1">
-                                        <span>బ్రేకింగ్ న్యూస్ (Breaking News)</span>
+                                    <label style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: 600; color: #1e293b; cursor: pointer;">
+                                        <input type="checkbox" id="art-edit-breaking" value="1" style="width: 16px; height: 16px; accent-color: #dc2626;">
+                                        <span style="color: #dc2626;">బ్రేకింగ్ న్యూస్ (Breaking News)</span>
                                     </label>
                                 </div>
+                            </div>
 
-                                <div id="container-edited-content" class="form-group" style="margin-top: 18px;">
-                                    <label for="art-edit-content-te" class="form-label-editorial">పూర్తి వార్తా వివరాలు (Telugu Full Content) *</label>
-                                    <textarea id="art-edit-content-te" class="form-control" rows="14" placeholder="పూర్తి వార్తా పాఠాన్ని ఇక్కడ నమోదు చేయండి..."></textarea>
+                            <!-- SIDEBAR CARD 4: QUALITY SCORE & EXTRACTION WARNINGS -->
+                            <div class="card" style="padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; background: #ffffff;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <h3 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0;">
+                                        🛡️ క్వాలిటీ చెక్ (Quality Status)
+                                    </h3>
+                                    <div id="confidence-badges-container"></div>
                                 </div>
-                            </form>
+                                <div id="warnings-list-container" style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px;"></div>
+                            </div>
+
                         </div>
-                    </div>
+                    </form>
                 </section>
 
                 <!-- SECTION: REPORTERS MANAGEMENT VIEW -->

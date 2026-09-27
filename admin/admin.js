@@ -1823,7 +1823,7 @@ function initAdminApp() {
             <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%;">
                 ${arr.map((url, idx) => `
                     <div style="position: relative; width: 85px; height: 85px; border-radius: 6px; overflow: hidden; border: ${idx === 0 ? '3px solid #2563eb' : '1px solid #cbd5e1'}; background: #f8fafc;">
-                        <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src=window.MM_DEFAULT_PLACEHOLDER||''">
                         ${idx === 0 ? `<span style="position: absolute; top: 2px; left: 2px; background: #2563eb; color: #fff; font-size: 0.65rem; padding: 1px 4px; border-radius: 3px; font-weight: 700;">Cover</span>` : `
                             <button type="button" onclick="window.setEditCoverImage(${idx})" style="position: absolute; top: 2px; left: 2px; background: rgba(0,0,0,0.65); color: #fff; border: none; font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; cursor: pointer;">⭐ Cover</button>
                         `}
@@ -1835,6 +1835,14 @@ function initAdminApp() {
 
         const coverUrl = arr[0] || '';
         if (preview) {
+            preview.onerror = function() {
+                preview.style.display = 'none';
+                if (placeholder) placeholder.style.display = 'block';
+            };
+            preview.onload = function() {
+                preview.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            };
             preview.src = coverUrl;
             preview.style.display = coverUrl ? 'block' : 'none';
         }
