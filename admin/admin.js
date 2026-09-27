@@ -1503,13 +1503,25 @@ function initAdminApp() {
     }
 
     window.selectMediaImage = function(filePath) {
+        if (!filePath) return;
+        window.editImagesArray = window.editImagesArray || [];
+        if (!window.editImagesArray.includes(filePath)) {
+            window.editImagesArray.unshift(filePath);
+        }
+        if (typeof window.renderEditImagesGrid === 'function') {
+            window.renderEditImagesGrid();
+        }
+
         const imgPreview = document.getElementById('art-edit-img-preview');
         const imgPlaceholder = document.getElementById('art-edit-img-placeholder');
         if (imgPreview) { imgPreview.src = filePath; imgPreview.style.display = 'block'; }
         if (imgPlaceholder) imgPlaceholder.style.display = 'none';
         if (currentArticleData) currentArticleData.image_url = filePath;
+        const mediaModal = document.getElementById('media-picker-modal');
         if (mediaModal) mediaModal.style.display = 'none';
-        evaluateExtractionWarnings(currentArticleData);
+        if (typeof evaluateExtractionWarnings === 'function' && currentArticleData) {
+            evaluateExtractionWarnings(currentArticleData);
+        }
     };
 
     // ----------------------------------------------------------------------
@@ -1938,6 +1950,7 @@ function initAdminApp() {
             const editAlert = document.getElementById('art-edit-alert');
             const activeAlert = targetMode === 'create' ? createAlert : editAlert;
 
+            // 1. Try reading binary image files from Clipboard API
             try {
                 if (navigator.clipboard && typeof navigator.clipboard.read === 'function') {
                     const items = await navigator.clipboard.read();
@@ -1958,7 +1971,20 @@ function initAdminApp() {
                     }
                 }
             } catch (err) {
-                console.log('Clipboard read API error or permission denied:', err);
+                console.log('Binary clipboard read notice:', err.message || err);
+            }
+
+            // 2. Fallback: Try reading text/URL/Base64 from Clipboard API
+            try {
+                if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+                    const text = (await navigator.clipboard.readText() || '').trim();
+                    if (text && (text.startsWith('data:image/') || text.match(/\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i) || text.startsWith('http://') || text.startsWith('https://') || text.startsWith('/uploads/'))) {
+                        await window.uploadImageFiles(text, targetMode);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.log('Text clipboard read notice:', err.message || err);
             }
 
             if (activeAlert) {
@@ -1995,14 +2021,55 @@ function initAdminApp() {
             };
         }
 
-        window.uploadImageFiles = async function(files, targetMode = 'create') {
-            if (!files || !files.length) return;
-            const formData = new FormData();
-            files.forEach(f => formData.append('images', f));
-
+        window.uploadImageFiles = async function(filesOrUrl, targetMode = 'create') {
             const createAlert = document.getElementById('create-news-alert');
             const editAlert = document.getElementById('art-edit-alert');
             const activeAlert = targetMode === 'create' ? createAlert : editAlert;
+
+            if (typeof filesOrUrl === 'string') {
+                const urlStr = filesOrUrl.trim();
+                if (!urlStr) return;
+                if (urlStr.startsWith('data:image/')) {
+                    try {
+                        if (activeAlert) showAlert(activeAlert, 'ఫొటో సర్వర్‌కు అప్‌లోడ్ అవుతోంది...', 'info');
+                        const res = await apiFetch('/api/admin/upload-image', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ image_base64: urlStr })
+                        });
+                        const data = await res.json();
+                        if (res.ok && data.success) {
+                            const newUrl = data.image_url || data.url || data.image_urls[0];
+                            if (targetMode === 'create') {
+                                window.createImagesArray = (window.createImagesArray || []).concat([newUrl]);
+                                if (typeof window.renderCreateImagesGrid === 'function') window.renderCreateImagesGrid();
+                            } else {
+                                window.editImagesArray = (window.editImagesArray || []).concat([newUrl]);
+                                if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
+                            }
+                            if (activeAlert) showAlert(activeAlert, '✓ ఫొటో విజయవంతంగా జత చేయబడింది!', 'success');
+                            return;
+                        }
+                    } catch (e) {
+                        console.error('Base64 upload failed, using data URL fallback:', e);
+                    }
+                }
+
+                if (targetMode === 'create') {
+                    window.createImagesArray = (window.createImagesArray || []).concat([urlStr]);
+                    if (typeof window.renderCreateImagesGrid === 'function') window.renderCreateImagesGrid();
+                } else {
+                    window.editImagesArray = (window.editImagesArray || []).concat([urlStr]);
+                    if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
+                }
+                if (activeAlert) showAlert(activeAlert, '✓ ఫొటో విజయవంతంగా జత చేయబడింది!', 'success');
+                return;
+            }
+
+            if (!filesOrUrl || !filesOrUrl.length) return;
+            const files = Array.from(filesOrUrl);
+            const formData = new FormData();
+            files.forEach(f => formData.append('images', f));
 
             try {
                 if (activeAlert) {
