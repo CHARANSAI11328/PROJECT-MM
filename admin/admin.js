@@ -1445,6 +1445,16 @@ function initAdminApp() {
             }
         };
     }
+    const editPasteBtn = document.getElementById('art-btn-paste-img');
+    if (editPasteBtn) {
+        editPasteBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof window.handlePasteImageButtonClick === 'function') {
+                window.handlePasteImageButtonClick('edit');
+            }
+        };
+    }
 
     if (removeImgBtn) {
         removeImgBtn.onclick = () => {
@@ -1909,10 +1919,52 @@ function initAdminApp() {
 
         if (dropArea && fileInput) {
             dropArea.onclick = (e) => {
-                if (e.target === fileInput) return;
+                if (e.target === fileInput || (e.target && e.target.closest && e.target.closest('button'))) return;
                 fileInput.click();
             };
         }
+
+        const createPasteBtn = document.getElementById('create-btn-paste-img');
+        if (createPasteBtn) {
+            createPasteBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                window.handlePasteImageButtonClick('create');
+            };
+        }
+
+        window.handlePasteImageButtonClick = async function(targetMode = 'create') {
+            const createAlert = document.getElementById('create-news-alert');
+            const editAlert = document.getElementById('art-edit-alert');
+            const activeAlert = targetMode === 'create' ? createAlert : editAlert;
+
+            try {
+                if (navigator.clipboard && typeof navigator.clipboard.read === 'function') {
+                    const items = await navigator.clipboard.read();
+                    let pastedFiles = [];
+                    for (const item of items) {
+                        for (const type of item.types) {
+                            if (type.startsWith('image/')) {
+                                const blob = await item.getType(type);
+                                const ext = type.split('/')[1] || 'png';
+                                const file = new File([blob], `pasted_image_${Date.now()}.${ext}`, { type: blob.type || type });
+                                pastedFiles.push(file);
+                            }
+                        }
+                    }
+                    if (pastedFiles.length > 0) {
+                        await window.uploadImageFiles(pastedFiles, targetMode);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.log('Clipboard read API error or permission denied:', err);
+            }
+
+            if (activeAlert) {
+                showAlert(activeAlert, '📋 క్లిప్‌బోర్డ్‌లోని బొమ్మను జతచేయడానికి కీబోర్డ్‌పై Ctrl + V నొక్కండి! (Press Ctrl+V on keyboard)', 'info');
+            }
+        };
 
         if (dropArea) {
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {

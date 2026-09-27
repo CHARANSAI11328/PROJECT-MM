@@ -412,9 +412,14 @@
                                             (Paste Screenshots/Images via Ctrl+V, Drag & Drop, or Browse Multiple)
                                         </div>
                                         <input type="file" id="create-image-file" accept="image/*" multiple style="display: none;">
-                                        <button type="button" id="create-btn-trigger-upload" class="btn btn-outline-sm" style="margin-top: 10px; width: 100%;">
-                                            📤 ఫొటోలు ఎంచుకోండి (Browse Multiple Photos)
-                                        </button>
+                                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                                            <button type="button" id="create-btn-trigger-upload" class="btn btn-outline-sm" style="flex: 1;">
+                                                📤 ఫొటోలు ఎంచుకోండి (Browse)
+                                            </button>
+                                            <button type="button" id="create-btn-paste-img" class="btn btn-outline-sm" style="flex: 1; background: #eff6ff; color: #2563eb; border-color: #93c5fd; font-weight: 600;">
+                                                📋 ఫొటో పేస్ట్ చేయండి (Paste Ctrl+V)
+                                            </button>
+                                        </div>
                                     </div>
                                     <div id="create-multi-images-grid" style="display: none; margin-top: 12px; gap: 10px; flex-wrap: wrap; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;"></div>
                                     <div class="image-preview-box" id="create-img-preview-box" style="display: none; position: relative;">
@@ -793,6 +798,7 @@
                                             <input type="text" id="art-edit-img-caption" class="form-control" placeholder="చిత్ర శీర్షిక (Image Caption)...">
                                             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                                                 <button type="button" id="art-btn-trigger-img-upload" class="btn btn-outline-sm">📤 ఫొటో(లు) అప్‌లోడ్</button>
+                                                <button type="button" id="art-btn-paste-img" class="btn btn-outline-sm" style="background: #eff6ff; color: #2563eb; border-color: #93c5fd; font-weight: 600;">📋 ఫొటో పేస్ట్ చేయండి (Ctrl+V)</button>
                                                 <button type="button" id="art-btn-pick-edition-media" class="btn btn-outline-sm">🖼️ సంచిక ఫొటోలు</button>
                                                 <button type="button" id="art-btn-remove-img" class="btn btn-danger-sm">🗑️ అన్ని ఫొటోలు తొలగించు</button>
                                                 <input type="file" id="art-edit-image-file" accept="image/*" multiple style="display:none;">
