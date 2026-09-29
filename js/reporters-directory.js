@@ -101,43 +101,7 @@
     }
   }
 
-  function animateTypewriterAndFadeIn(nameEl, fadeEl, nameText, speed = 55) {
-    if (!nameEl) return;
-    nameEl.innerHTML = '';
-    let idx = 0;
 
-    const cursor = document.createElement('span');
-    cursor.className = 'typewriter-cursor';
-    cursor.style.backgroundColor = '#be185d';
-    cursor.style.width = '8px';
-    cursor.style.height = '1.1em';
-    cursor.style.display = 'inline-block';
-    cursor.style.marginLeft = '4px';
-    cursor.style.verticalAlign = 'middle';
-    cursor.style.borderRadius = '2px';
-    nameEl.appendChild(cursor);
-
-    function typeNextChar() {
-      if (idx < nameText.length) {
-        const char = nameText.charAt(idx);
-        const textNode = document.createTextNode(char);
-        nameEl.insertBefore(textNode, cursor);
-        idx++;
-        setTimeout(typeNextChar, speed);
-      } else {
-        setTimeout(() => {
-          cursor.remove();
-          if (fadeEl) {
-            fadeEl.style.opacity = '1';
-            fadeEl.style.transform = 'translateY(0)';
-            fadeEl.classList.add('visible');
-          }
-        }, 150);
-      }
-    }
-
-    setTimeout(typeNextChar, 100);
-  }
 
   function renderReporterCards(reporters) {
     const gridContainer = getGridContainer();
@@ -205,16 +169,16 @@
             : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #fdf2f8; color: #be185d; font-size: 3rem; font-weight: 800;">${founderInitial}</div>`}
         </div>
 
-        <!-- RIGHT SIDE CONTENT (TYPEWRITER NAME TOP + ELEVATED FADE-IN DETAILS BELOW) -->
+        <!-- RIGHT SIDE CONTENT (NAME + DETAILS) -->
         <div class="founder-right-content" style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; text-align: left;">
           
-          <!-- TYPEWRITER NAME -->
-          <div class="founder-typewriter-wrap" style="min-height: 40px; display: flex; align-items: center; margin-bottom: 6px;">
-            <h1 class="founder-typewriter-title" id="founder-typewriter-target" style="font-size: clamp(1.5rem, 3.2vw, 2.1rem); font-weight: 800; color: #0f172a; margin: 0; font-family: Georgia, 'Times New Roman', serif; line-height: 1.2;"></h1>
+          <!-- FOUNDER NAME (rendered normally like all other names) -->
+          <div style="margin-bottom: 6px;">
+            <h1 style="font-size: clamp(1.5rem, 3.2vw, 2.1rem); font-weight: 800; color: #0f172a; margin: 0; font-family: Georgia, 'Times New Roman', serif; line-height: 1.2;">${escapeHtml(founder.name || 'వాకా శ్రీనివాసరావు')}</h1>
           </div>
 
-          <!-- ELEVATED FADE-IN DETAILS -->
-          <div class="founder-fade-details" id="founder-fade-target" style="opacity: 0; transform: translateY(16px); transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);">
+          <!-- FOUNDER DETAILS -->
+          <div class="founder-fade-details">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
               <span class="founder-badge-tag" style="display: inline-flex; align-items: center; gap: 4px; background: #fff1f2; color: #be185d; border: 1px solid #fecdd3; font-size: 0.8rem; font-weight: 700; padding: 3px 12px; border-radius: 16px; text-transform: uppercase;">
                 ⭐ TOP 1 • FOUNDER &amp; EDITOR-IN-CHIEF / వ్యవస్థాపక ప్రధాన సంపాదకులు
@@ -242,14 +206,8 @@
 
       mainWrap.appendChild(founderCard);
 
-      // Trigger Typewriter animation then Elevated Fade-in
-      setTimeout(() => {
-        const nameEl = founderCard.querySelector('#founder-typewriter-target');
-        const fadeEl = founderCard.querySelector('#founder-fade-target');
-        const founderNameText = founder.name || 'వాకా శ్రీనివాసరావు';
-        
-        animateTypewriterAndFadeIn(nameEl, fadeEl, founderNameText, 55);
-      }, 80);
+
+
 
       const founderBtn = founderCard.querySelector('#btn-view-founder-modal');
       if (founderBtn) {
