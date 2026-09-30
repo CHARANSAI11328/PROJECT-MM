@@ -433,48 +433,220 @@
     }
   }
 
-  function openImageLightbox(src, captionText = '') {
+  let currentLightboxImages = [];
+  let currentLightboxIndex = 0;
+  let currentLightboxCaption = '';
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  async function triggerImageDownload(url, filename) {
+    const cleanName = filename || 'mameka-mahodayam-photo.jpg';
+    try {
+      const resp = await fetch(url, { mode: 'cors' });
+      const blob = await resp.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = cleanName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+    } catch (e) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = cleanName;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+  }
+
+  function updateLightboxView() {
+    const modal = document.getElementById('image-lightbox-modal');
+    if (!modal) return;
+    const imgEl = modal.querySelector('#lightbox-img');
+    const captionEl = modal.querySelector('#lightbox-caption');
+    const counterEl = modal.querySelector('#lightbox-counter-text');
+    const prevBtn = modal.querySelector('#lightbox-prev-btn');
+    const nextBtn = modal.querySelector('#lightbox-next-btn');
+    const thumbsContainer = modal.querySelector('#lightbox-thumbs-container');
+    const dlBtn = modal.querySelector('#lightbox-download-btn');
+
+    const total = currentLightboxImages.length;
+    if (total === 0) return;
+
+    if (currentLightboxIndex < 0) currentLightboxIndex = total - 1;
+    if (currentLightboxIndex >= total) currentLightboxIndex = 0;
+
+    const currentSrc = currentLightboxImages[currentLightboxIndex];
+    imgEl.style.opacity = '0.3';
+    imgEl.src = currentSrc;
+    imgEl.onload = () => { imgEl.style.opacity = '1'; };
+
+    if (captionEl) {
+      const cap = currentLightboxCaption || '';
+      captionEl.textContent = cap;
+      captionEl.style.display = cap ? 'block' : 'none';
+    }
+
+    if (counterEl) {
+      counterEl.textContent = `${currentLightboxIndex + 1} / ${total}`;
+    }
+
+    if (prevBtn) prevBtn.style.display = total > 1 ? 'flex' : 'none';
+    if (nextBtn) nextBtn.style.display = total > 1 ? 'flex' : 'none';
+
+    if (dlBtn) {
+      dlBtn.onclick = (e) => {
+        e.stopPropagation();
+        triggerImageDownload(currentSrc, `mameka-photo-${currentLightboxIndex + 1}.jpg`);
+      };
+    }
+
+    if (thumbsContainer) {
+      if (total > 1) {
+        thumbsContainer.style.display = 'flex';
+        thumbsContainer.innerHTML = currentLightboxImages.map((src, idx) => `
+          <button type="button" class="lightbox-thumb-btn" data-idx="${idx}" style="width: 52px; height: 52px; padding: 0; border-radius: 6px; overflow: hidden; border: 2px solid ${idx === currentLightboxIndex ? '#38bdf8' : 'rgba(255,255,255,0.3)'}; background: #000; cursor: pointer; flex-shrink: 0; opacity: ${idx === currentLightboxIndex ? '1' : '0.6'}; transition: all 0.2s;" title="Photo ${idx + 1}">
+            <img src="${src}" alt="Thumb ${idx + 1}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.style.display='none'" />
+          </button>
+        `).join('');
+
+        thumbsContainer.querySelectorAll('.lightbox-thumb-btn').forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            currentLightboxIndex = parseInt(btn.dataset.idx, 10) || 0;
+            updateLightboxView();
+          };
+        });
+
+        const activeThumb = thumbsContainer.querySelector(`[data-idx="${currentLightboxIndex}"]`);
+        if (activeThumb) {
+          activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      } else {
+        thumbsContainer.style.display = 'none';
+      }
+    }
+  }
+
+  function openImageLightbox(src, captionText = '', imagesList = [], initialIndex = 0) {
     if (!src || src.includes('data:image/svg+xml')) return;
+    if (Array.isArray(imagesList) && imagesList.length > 0) {
+      currentLightboxImages = imagesList;
+      currentLightboxIndex = (initialIndex >= 0 && initialIndex < imagesList.length) ? initialIndex : imagesList.indexOf(src);
+      if (currentLightboxIndex < 0) currentLightboxIndex = 0;
+    } else {
+      currentLightboxImages = [src];
+      currentLightboxIndex = 0;
+    }
+    currentLightboxCaption = captionText || '';
+
     let modal = document.getElementById('image-lightbox-modal');
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'image-lightbox-modal';
       modal.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(15, 23, 42, 0.95); z-index: 999999; display: flex;
-        flex-direction: column; align-items: center; justify-content: center;
-        padding: 24px; opacity: 0; transition: opacity 0.25s ease;
-        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        background: rgba(10, 15, 30, 0.96); z-index: 999999; display: flex;
+        flex-direction: column; align-items: center; justify-content: space-between;
+        padding: 12px 16px; opacity: 0; transition: opacity 0.25s ease;
+        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        box-sizing: border-box;
       `;
       modal.innerHTML = `
-        <button type="button" id="lightbox-close-btn" aria-label="Close Lightbox" style="position: absolute; top: 20px; right: 24px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #ffffff; font-size: 2rem; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; z-index: 1000000; line-height: 1; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">✕</button>
-        <div id="lightbox-content-wrapper" style="max-width: 95vw; max-height: 85vh; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 10px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); background: #000000; position: relative;">
-          <img id="lightbox-img" src="" alt="Full Screen Preview" style="max-width: 95vw; max-height: 85vh; object-fit: contain; border-radius: 8px; display: block;" />
+        <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; z-index: 1000001; padding: 6px 4px;">
+          <div id="lightbox-counter-badge" style="color: #ffffff; font-size: 0.9rem; font-weight: 700; background: rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; gap: 6px;">
+            <span>📷</span> <span id="lightbox-counter-text">1 / 1</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" id="lightbox-download-btn" title="చిత్రాన్ని డౌన్‌లోడ్ చేసుకోండి (Download image to device)" style="background: #2563eb; border: 1px solid rgba(255,255,255,0.4); color: #ffffff; font-size: 0.85rem; font-weight: 600; padding: 7px 15px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: background 0.2s;">
+              <span>⬇️ డౌన్‌లోడ్</span>
+            </button>
+            <button type="button" id="lightbox-close-btn" aria-label="Close Lightbox" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); color: #ffffff; font-size: 1.6rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; line-height: 1;">✕</button>
+          </div>
         </div>
-        <div id="lightbox-caption" style="margin-top: 16px; color: #f8fafc; font-size: 1.05rem; font-weight: 500; text-align: center; max-width: 850px; font-style: normal; text-shadow: 0 2px 4px rgba(0,0,0,0.9); line-height: 1.5; padding: 0 12px;"></div>
+
+        <div id="lightbox-main-stage" style="position: relative; width: 100%; flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 8px 0; touch-action: pan-y;">
+          <button type="button" id="lightbox-prev-btn" aria-label="Previous Photo" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.3); color: #ffffff; font-size: 1.8rem; width: 46px; height: 46px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1000000; box-shadow: 0 4px 14px rgba(0,0,0,0.5); user-select: none;">❮</button>
+          
+          <div id="lightbox-content-wrapper" style="max-width: 95vw; max-height: calc(85vh - 90px); display: flex; align-items: center; justify-content: center; position: relative;">
+            <img id="lightbox-img" src="" alt="Full Screen Preview" style="max-width: 95vw; max-height: calc(85vh - 90px); object-fit: contain; border-radius: 8px; display: block; box-shadow: 0 20px 50px rgba(0,0,0,0.9); transition: opacity 0.2s ease;" />
+          </div>
+
+          <button type="button" id="lightbox-next-btn" aria-label="Next Photo" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.3); color: #ffffff; font-size: 1.8rem; width: 46px; height: 46px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1000000; box-shadow: 0 4px 14px rgba(0,0,0,0.5); user-select: none;">❯</button>
+        </div>
+
+        <div style="width: 100%; max-width: 860px; display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 1000001; padding-bottom: 6px;">
+          <div id="lightbox-caption" style="color: #f1f5f9; font-size: 0.95rem; font-weight: 500; text-align: center; max-width: 800px; line-height: 1.4; padding: 0 12px; text-shadow: 0 2px 4px rgba(0,0,0,0.9);"></div>
+          <div id="lightbox-thumbs-container" style="display: flex; gap: 8px; overflow-x: auto; padding: 4px 8px; max-width: 100%; scrollbar-width: thin;"></div>
+        </div>
       `;
       document.body.appendChild(modal);
 
       const closeBtn = modal.querySelector('#lightbox-close-btn');
-      closeBtn.onmouseenter = () => { closeBtn.style.background = 'rgba(239, 68, 68, 0.9)'; };
-      closeBtn.onmouseleave = () => { closeBtn.style.background = 'rgba(255,255,255,0.15)'; };
-      closeBtn.onclick = (e) => {
-        e.stopPropagation();
-        closeLightbox();
-      };
+      closeBtn.onclick = (e) => { e.stopPropagation(); closeLightbox(); };
+
+      const prevBtn = modal.querySelector('#lightbox-prev-btn');
+      if (prevBtn) {
+        prevBtn.onclick = (e) => {
+          e.stopPropagation();
+          currentLightboxIndex--;
+          updateLightboxView();
+        };
+      }
+
+      const nextBtn = modal.querySelector('#lightbox-next-btn');
+      if (nextBtn) {
+        nextBtn.onclick = (e) => {
+          e.stopPropagation();
+          currentLightboxIndex++;
+          updateLightboxView();
+        };
+      }
+
       modal.onclick = (e) => {
-        if (e.target === modal || e.target.id === 'lightbox-close-btn' || e.target.id === 'lightbox-content-wrapper') closeLightbox();
+        if (e.target === modal || e.target.id === 'lightbox-main-stage') closeLightbox();
       };
+
       document.addEventListener('keydown', (e) => {
+        const m = document.getElementById('image-lightbox-modal');
+        if (!m || m.style.display === 'none') return;
         if (e.key === 'Escape') closeLightbox();
+        else if (e.key === 'ArrowLeft') {
+          currentLightboxIndex--;
+          updateLightboxView();
+        } else if (e.key === 'ArrowRight') {
+          currentLightboxIndex++;
+          updateLightboxView();
+        }
       });
+
+      const stage = modal.querySelector('#lightbox-main-stage');
+      if (stage) {
+        stage.addEventListener('touchstart', (e) => {
+          if (e.touches && e.touches.length > 0) touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+
+        stage.addEventListener('touchend', (e) => {
+          if (e.changedTouches && e.changedTouches.length > 0) {
+            touchEndX = e.changedTouches[0].clientX;
+            const diffX = touchStartX - touchEndX;
+            if (diffX > 50) {
+              currentLightboxIndex++;
+              updateLightboxView();
+            } else if (diffX < -50) {
+              currentLightboxIndex--;
+              updateLightboxView();
+            }
+          }
+        }, { passive: true });
+      }
     }
 
-    const imgEl = modal.querySelector('#lightbox-img');
-    const captionEl = modal.querySelector('#lightbox-caption');
-    imgEl.src = src;
-    captionEl.textContent = captionText || '';
-
+    updateLightboxView();
     modal.style.display = 'flex';
     setTimeout(() => { modal.style.opacity = '1'; }, 10);
     document.body.style.overflow = 'hidden';
@@ -490,6 +662,9 @@
       }, 250);
     }
   }
+
+  window.openImageLightbox = openImageLightbox;
+  window.closeImageLightbox = closeLightbox;
 
   function makeImagesClickable(container = document.body) {
     if (!container) return;
@@ -522,7 +697,12 @@
           e.preventDefault();
           e.stopPropagation();
           const cleanCaption = (targetCaption && !targetCaption.includes('Click to view')) ? targetCaption : '';
-          openImageLightbox(targetSrc, cleanCaption);
+          const imgIndex = elem.hasAttribute('data-img-index') ? parseInt(elem.getAttribute('data-img-index'), 10) : -1;
+          if (window._currentArticleImages && window._currentArticleImages.length > 0) {
+            openImageLightbox(targetSrc, cleanCaption, window._currentArticleImages, imgIndex >= 0 ? imgIndex : 0);
+          } else {
+            openImageLightbox(targetSrc, cleanCaption, [targetSrc], 0);
+          }
         });
       }
     });
@@ -637,6 +817,7 @@
         : ((Array.isArray(article.image_urls) && article.image_urls.length > 0) ? article.image_urls : (displayImg ? [displayImg] : []));
 
       const allArticleImages = rawImages.map(img => resolvePhotoUrl(img)).filter(Boolean);
+      window._currentArticleImages = allArticleImages;
 
       if (allArticleImages.length > 0) {
         const coverImg = allArticleImages[0];
@@ -644,15 +825,19 @@
 
         if (allArticleImages.length > 1) {
           galleryHtml = `
-            <div class="article-photo-gallery" style="margin-top: 24px; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-              <h4 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                <span>📸 ఈ వార్తా ఫొటోల గ్యాలరీ (Photo Gallery - ${allArticleImages.length} ఫొటోలు)</span>
-              </h4>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
+            <div class="article-photo-gallery" style="margin-top: 24px; padding: 18px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                <h4 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 8px;">
+                  <span>📸 ఈ వార్తా ఫొటోల గ్యాలరీ (Photo Gallery — ${allArticleImages.length} ఫొటోలు)</span>
+                </h4>
+                <span style="font-size: 0.85rem; color: #64748b;">(అన్ని ఫొటోలను పెద్దదిగా చూడడానికి ఫొటోపై క్లిక్ చేయండి)</span>
+              </div>
+              <div class="article-gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px;">
                 ${allArticleImages.map((imgUrl, i) => `
-                  <div class="gallery-item-box" style="position: relative; aspect-ratio: 4/3; border-radius: 6px; overflow: hidden; background: #ffffff; border: 1px solid #cbd5e1; cursor: zoom-in; transition: transform 0.2s;" title="🔍 క్లిక్ చేసి చూడు" data-img-src="${imgUrl}">
+                  <div class="gallery-item-box" style="position: relative; aspect-ratio: 4/3; border-radius: 8px; overflow: hidden; background: #ffffff; border: 2px solid ${i === 0 ? '#3b82f6' : '#cbd5e1'}; cursor: zoom-in; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.06);" title="🔍 క్లిక్ చేసి పెద్దదిగా చూడు (Click to view full photo)" data-img-index="${i}" data-img-src="${imgUrl}">
                     <img src="${imgUrl}" alt="${escapeText(article.headline)} — Photo ${i + 1}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
-                    <span style="position: absolute; bottom: 4px; right: 4px; background: rgba(15,23,42,0.8); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;">📷 ${i + 1}/${allArticleImages.length}</span>
+                    <span style="position: absolute; bottom: 6px; right: 6px; background: rgba(15,23,42,0.85); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; backdrop-filter: blur(4px);">📷 ${i + 1}/${allArticleImages.length}</span>
+                    ${i === 0 ? '<span style="position: absolute; top: 6px; left: 6px; background: #2563eb; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;">కవర్ ఫొటో</span>' : ''}
                   </div>
                 `).join('')}
               </div>
@@ -674,13 +859,30 @@
         if (figureElem) figureElem.style.display = 'block';
         if (mediaContainer) {
           mediaContainer.innerHTML = `
-            <figure class="article-hero-media" style="margin: 20px 0; cursor: zoom-in; text-align: center; background-color: #f8fafc; border-radius: 8px; padding: 4px; border: 1px solid #e2e8f0;">
-              <img src="${coverImg}" alt="${escapeText(article.headline)}" style="width: 100%; height: auto; max-height: 580px; object-fit: contain; background-color: #f8fafc; border-radius: 6px; cursor: zoom-in; display: block; margin: 0 auto;" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
-              ${article.image_caption_te ? `<figcaption style="font-size: 0.85rem; color: #64748b; margin-top: 8px; text-align: center; font-style: italic;">${escapeText(article.image_caption_te)}</figcaption>` : ''}
+            <figure class="article-hero-media" style="margin: 20px 0; cursor: zoom-in; text-align: center; background-color: #f8fafc; border-radius: 12px; padding: 6px; border: 1px solid #e2e8f0; position: relative;" data-img-index="0" title="🔍 క్లిక్ చేసి పెద్దదిగా చూడు (Click to view full photo)">
+              <div style="position: relative; overflow: hidden; border-radius: 8px; background: #000;">
+                <img src="${coverImg}" alt="${escapeText(article.headline)}" style="width: 100%; height: auto; max-height: 560px; object-fit: contain; background-color: #0f172a08; border-radius: 8px; cursor: zoom-in; display: block; margin: 0 auto;" onerror="window.MM_handleImgError &amp;&amp; window.MM_handleImgError(this)" />
+                ${allArticleImages.length > 1 ? `
+                  <div style="position: absolute; bottom: 12px; right: 12px; background: rgba(15,23,42,0.88); color: #fff; font-size: 0.85rem; font-weight: 600; padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 4px 12px rgba(0,0,0,0.4);" title="ఈ వార్తలోని మొత్తం ${allArticleImages.length} ఫొటోలను వీక్షించండి">
+                    <span>📸</span> <span>1 / ${allArticleImages.length} ఫొటోలు (అన్నీ చూడండి)</span>
+                  </div>
+                ` : ''}
+              </div>
+              ${article.image_caption_te ? `<figcaption style="font-size: 0.9rem; color: #64748b; margin-top: 10px; text-align: center; font-style: italic;">${escapeText(article.image_caption_te)}</figcaption>` : ''}
             </figure>
             ${galleryHtml}
           `;
           mediaContainer.style.display = 'block';
+
+          // Explicitly wire clicks on hero figure & gallery items
+          mediaContainer.querySelectorAll('[data-img-index]').forEach(box => {
+            box.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const idx = parseInt(box.getAttribute('data-img-index'), 10) || 0;
+              openImageLightbox(allArticleImages[idx] || coverImg, article.headline, allArticleImages, idx);
+            });
+          });
         }
       } else {
         if (figureElem) figureElem.style.display = 'none';

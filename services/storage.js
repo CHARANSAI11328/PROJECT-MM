@@ -65,7 +65,37 @@ async function uploadFile({ localFilePath, destinationKey, contentType }) {
 
   // Return clean, fast static URL served by Express
   const normalizedKey = (destinationKey || '').replace(/\\/g, '/').replace(/^\/+/, '');
-  return `/uploads/${normalizedKey}`;
+  const publicUrl = `/uploads/${normalizedKey}`;
+
+  // Persist into database so ephemeral containers (Render/Railway/Vercel) never lose images on redeployment
+  if (localFilePath && fs.existsSync(localFilePath)) {
+    try {
+      const stats = fs.statSync(localFilePath);
+      const ext = path.extname(localFilePath).toLowerCase();
+      const mime = contentType || (ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : ext === '.webp' ? 'image/webp' : ext === '.gif' ? 'image/gif' : ext === '.svg' ? 'image/svg+xml' : 'image/png');
+      const fileBuffer = fs.readFileSync(localFilePath);
+      const base64Data = fileBuffer.toString('base64');
+      
+      const { dbRun } = require('../db');
+      await dbRun(
+        `INSERT INTO persistent_uploads (file_path, mime_type, file_data, file_size)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT (file_path) DO UPDATE SET file_data = EXCLUDED.file_data, file_size = EXCLUDED.file_size`,
+        [publicUrl, mime, base64Data, stats.size]
+      ).catch(() => {
+        // Fallback for SQLite INSERT OR REPLACE
+        return dbRun(
+          `INSERT OR REPLACE INTO persistent_uploads (file_path, mime_type, file_data, file_size)
+           VALUES (?, ?, ?, ?)`,
+          [publicUrl, mime, base64Data, stats.size]
+        );
+      }).catch(e => console.warn('Persistent DB backup notice:', e.message));
+    } catch(err) {
+      console.warn('Backup upload to DB notice:', err.message);
+    }
+  }
+
+  return publicUrl;
 }
 
 module.exports = {

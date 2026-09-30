@@ -231,6 +231,40 @@ app.use(express.static(__dirname, { dotfiles: 'ignore' }));
 app.use('/admin', express.static(path.join(__dirname, 'admin'), { dotfiles: 'ignore' }));
 app.use('/uploads', express.static(uploadsDir, { dotfiles: 'ignore' }));
 
+// Persistent Uploads Fallback Restorer:
+// If an uploaded image is missing on ephemeral cloud disk (e.g. Render / Railway container redeployment), restore it from Neon PostgreSQL!
+app.get('/uploads/*', async (req, res, next) => {
+  try {
+    const rawPath = req.path;
+    const fullUrl = rawPath.startsWith('/uploads') ? rawPath : `/uploads${rawPath}`;
+    const filename = path.basename(rawPath);
+
+    const row = await dbGet(
+      'SELECT file_path, mime_type, file_data FROM persistent_uploads WHERE file_path = ? OR file_path LIKE ?',
+      [fullUrl, `%/${filename}`]
+    );
+
+    if (row && row.file_data) {
+      const buffer = Buffer.from(row.file_data, 'base64');
+      const targetDiskPath = path.join(__dirname, fullUrl);
+      const targetDir = path.dirname(targetDiskPath);
+
+      // Auto-cache back to disk so future requests are instantaneous
+      try {
+        if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+        fs.writeFileSync(targetDiskPath, buffer);
+      } catch (e) {}
+
+      res.setHeader('Content-Type', row.mime_type || 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      return res.send(buffer);
+    }
+  } catch (err) {
+    console.warn('Persistent upload restore notice:', err.message);
+  }
+  next();
+});
+
 // Configure Image Filter for Article & Reporter Image Uploads
 const imageFilter = (req, file, cb) => {
   const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];

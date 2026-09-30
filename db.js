@@ -298,6 +298,17 @@ async function initDatabase() {
     )
   `);
 
+  // 9. Persistent Uploads Table (Protects all uploaded images from ephemeral container wipes on GitHub deployments)
+  await dbRun(`
+    CREATE TABLE IF NOT EXISTS persistent_uploads (
+      file_path TEXT PRIMARY KEY,
+      mime_type TEXT,
+      file_data TEXT,
+      file_size INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Parallel Column & Index Migrations
   const alterQueries = [
     "ALTER TABLE editions ADD COLUMN title TEXT",
