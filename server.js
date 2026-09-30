@@ -1538,7 +1538,7 @@ app.get('/api/admin/media', authenticateToken, async (req, res) => {
     const addedUrls = new Set();
 
     // 1. Group by Article: Scan articles table so every article with photos is a SINGLE slot containing all photos
-    const dbArticles = await dbAll('SELECT id, title_te, title_en, image_url, images_json, created_at, published_at FROM articles WHERE (image_url IS NOT NULL AND image_url != "") OR images_json IS NOT NULL ORDER BY created_at DESC');
+    const dbArticles = await dbAll("SELECT id, title_te, title_en, image_url, images_json, created_at, published_at FROM articles WHERE (image_url IS NOT NULL AND image_url != '') OR images_json IS NOT NULL ORDER BY created_at DESC");
     if (Array.isArray(dbArticles)) {
       for (const art of dbArticles) {
         const articleHeadline = (art.title_te || art.title_en || 'వార్త').trim();

@@ -56,7 +56,7 @@ if (isPostgres) {
 function translateSqlForPostgres(sql) {
   let paramIndex = 1;
   // Convert double-quoted string literals in WHERE clauses to single quotes for Postgres
-  let sanitizedSql = sql.replace(/=\s*"([^"]+)"/g, "= '$1'").replace(/!=\s*"([^"]+)"/g, "!= '$1'");
+  let sanitizedSql = sql.replace(/=\s*"([^"]*)"/g, "= '$1'").replace(/!=\s*"([^"]*)"/g, "!= '$1'");
   // Safely translate SQLite INSERT OR IGNORE INTO for PostgreSQL
   if (/INSERT\s+OR\s+IGNORE\s+INTO/i.test(sanitizedSql)) {
     sanitizedSql = sanitizedSql.replace(/INSERT\s+OR\s+IGNORE\s+INTO/i, 'INSERT INTO');
