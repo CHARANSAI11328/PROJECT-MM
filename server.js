@@ -1645,8 +1645,9 @@ app.post('/api/admin/articles/:id/publish', authenticateToken, async (req, res) 
     if (!headline || headline.trim().length < 3) {
       return res.status(400).json({ success: false, error: 'Title / Headline is required to publish an article.' });
     }
-    if (!content || content.trim().length < 20) {
-      return res.status(400).json({ success: false, error: 'Full article body content is required to publish an article.' });
+    const hasPhoto = Boolean(article.image_url || req.body.image_url || (article.images_json && article.images_json !== '[]'));
+    if (!hasPhoto && (!content || content.trim().length < 10)) {
+      return res.status(400).json({ success: false, error: 'Full article body content or an attached photo is required to publish.' });
     }
     if (!category) {
       return res.status(400).json({ success: false, error: 'Article category is required to publish.' });

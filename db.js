@@ -342,7 +342,12 @@ async function initDatabase() {
     "ALTER TABLE reporters ADD COLUMN press_id TEXT",
     "ALTER TABLE reporters ADD COLUMN jurisdiction TEXT",
     "CREATE INDEX IF NOT EXISTS idx_reporters_status ON reporters(status)",
-    "CREATE INDEX IF NOT EXISTS idx_reporters_district ON reporters(district)"
+    "CREATE INDEX IF NOT EXISTS idx_reporters_district ON reporters(district)",
+    "CREATE INDEX IF NOT EXISTS idx_articles_status_pub ON articles(status, published_at)",
+    "CREATE INDEX IF NOT EXISTS idx_articles_cat_status ON articles(category, status)",
+    "CREATE INDEX IF NOT EXISTS idx_articles_dist_status ON articles(district, status)",
+    "CREATE INDEX IF NOT EXISTS idx_articles_edition ON articles(edition_id)",
+    "CREATE INDEX IF NOT EXISTS idx_articles_slug ON articles(slug)"
   ];
 
   await Promise.allSettled(alterQueries.map(q => dbRun(q)));

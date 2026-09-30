@@ -421,6 +421,7 @@
                                             </button>
                                         </div>
                                     </div>
+                                    <div id="create-img-status" style="display: none; padding: 6px 10px; border-radius: 6px; font-size: 0.825rem; font-weight: 600; margin-top: 8px;"></div>
                                     <div id="create-multi-images-grid" style="display: none; margin-top: 12px; gap: 10px; flex-wrap: wrap; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;"></div>
                                     <div class="image-preview-box" id="create-img-preview-box" style="display: none; position: relative;">
                                         <img id="create-img-preview" src="" alt="Selected Image Preview">
@@ -776,30 +777,33 @@
                                 </div>
 
                                 <!-- Image Control Buttons Bar -->
-                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
-                                    <button type="button" id="art-btn-trigger-img-upload" class="btn btn-outline-sm" style="padding: 8px 14px; font-weight: 600; background: #f8fafc; border-color: #cbd5e1;">
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                                    <button type="button" id="art-btn-trigger-img-upload" class="btn btn-outline-sm" style="padding: 8px 14px; font-weight: 600; background: #f8fafc; border-color: #cbd5e1; cursor: pointer;">
                                         📤 ఫొటో(లు) అప్‌లోడ్
                                     </button>
-                                    <button type="button" id="art-btn-paste-img" class="btn btn-outline-sm" style="padding: 8px 14px; background: #eff6ff; color: #2563eb; border-color: #93c5fd; font-weight: 600;">
+                                    <button type="button" id="art-btn-paste-img" class="btn btn-outline-sm" style="padding: 8px 14px; background: #eff6ff; color: #2563eb; border-color: #93c5fd; font-weight: 600; cursor: pointer;">
                                         📋 ఫొటో పేస్ట్ చేయండి (Ctrl+V)
                                     </button>
-                                    <button type="button" id="art-btn-pick-edition-media" class="btn btn-outline-sm" style="padding: 8px 14px; font-weight: 600;">
+                                    <button type="button" id="art-btn-pick-edition-media" class="btn btn-outline-sm" style="padding: 8px 14px; font-weight: 600; cursor: pointer;">
                                         🖼️ సంచిక ఫొటోలు
                                     </button>
-                                    <button type="button" id="art-btn-remove-img" class="btn btn-danger-sm" style="padding: 8px 14px; font-weight: 600;">
+                                    <button type="button" id="art-btn-remove-img" class="btn btn-danger-sm" style="padding: 8px 14px; font-weight: 600; cursor: pointer;">
                                         🗑️ అన్ని ఫొటోలు తొలగించు
                                     </button>
                                     <input type="file" id="art-edit-image-file" accept="image/*" multiple style="display:none;">
                                 </div>
 
-                                <!-- Main Cover Photo Preview Container -->
-                                <div style="display: flex; gap: 20px; align-items: flex-start; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1.5px dashed #cbd5e1; margin-bottom: 16px;">
-                                    <div style="width: 220px; height: 140px; border-radius: 8px; overflow: hidden; background: #e2e8f0; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0;">
+                                <!-- Inline Live Status for Image Uploads / Pastes -->
+                                <div id="art-edit-img-status" style="display: none; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; margin-bottom: 12px;"></div>
+
+                                <!-- Main Cover Photo Preview Container & Drop Zone -->
+                                <div id="art-edit-image-drop-area" tabindex="0" style="display: flex; gap: 20px; align-items: flex-start; background: #f8fafc; padding: 16px; border-radius: 8px; border: 2px dashed #cbd5e1; margin-bottom: 16px; transition: all 0.2s ease;">
+                                    <div id="art-edit-preview-box" style="width: 220px; height: 140px; border-radius: 8px; overflow: hidden; background: #e2e8f0; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0; cursor: pointer;" title="ఫొటో ఎంచుకోవడానికి ఇక్కడ నొక్కండి (Click to browse photo)">
                                         <img id="art-edit-img-preview" src="" alt="Cover Photo" style="width: 100%; height: 100%; object-fit: cover; display: none;">
                                         <div id="art-edit-img-placeholder" style="text-align: center; color: #64748b; padding: 10px;">
                                             <div style="font-size: 2rem; margin-bottom: 4px;">🖼️</div>
                                             <span style="font-size: 0.85rem; font-weight: 600; display: block;">ఫొటో లేదు</span>
-                                            <span style="font-size: 0.75rem; color: #94a3b8;">(No photo selected)</span>
+                                            <span style="font-size: 0.75rem; color: #94a3b8;">(Click to browse or drop photo)</span>
                                         </div>
                                     </div>
                                     <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
@@ -812,6 +816,9 @@
                                         <p style="font-size: 0.8rem; color: #64748b; margin: 0; line-height: 1.4;">
                                             💡 <strong>చిట్కా:</strong> కంప్యూటర్‌ నుండి ఫొటోలను నేరుగా పేస్ట్ (Ctrl+V) చేయవచ్చు లేదా Drag &amp; Drop చేయవచ్చు.
                                         </p>
+                                        <div>
+                                            <input type="text" id="art-edit-image-url" class="form-control" placeholder="లేదా ఫొటో URL నమోదు చేయండి (/uploads/...)" style="font-size: 0.825rem; padding: 6px 10px;">
+                                        </div>
                                     </div>
                                 </div>
 

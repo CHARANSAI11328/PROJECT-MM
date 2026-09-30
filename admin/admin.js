@@ -1450,6 +1450,9 @@ function initAdminApp() {
         const removeImgBtn = document.getElementById('art-btn-remove-img');
         const pickMediaBtn = document.getElementById('art-btn-pick-edition-media');
         const editPasteBtn = document.getElementById('art-btn-paste-img');
+        const dropArea = document.getElementById('art-edit-image-drop-area');
+        const previewBox = document.getElementById('art-edit-preview-box');
+        const urlInput = document.getElementById('art-edit-image-url');
 
         if (triggerImgBtn && imgFileInput) {
             triggerImgBtn.onclick = (e) => {
@@ -1457,6 +1460,17 @@ function initAdminApp() {
                 e.stopPropagation();
                 imgFileInput.click();
             };
+        }
+
+        if (previewBox && imgFileInput) {
+            previewBox.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                imgFileInput.click();
+            };
+        }
+
+        if (imgFileInput) {
             imgFileInput.onchange = () => {
                 if (imgFileInput.files && imgFileInput.files.length > 0) {
                     if (typeof window.uploadImageFiles === 'function') {
@@ -1484,7 +1498,62 @@ function initAdminApp() {
                 window.editImagesArray = [];
                 if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
                 if (imgFileInput) imgFileInput.value = '';
+                if (urlInput) urlInput.value = '';
+                if (typeof currentArticleData !== 'undefined' && currentArticleData) {
+                    currentArticleData.image_url = '';
+                    currentArticleData.images_json = '[]';
+                    if (typeof evaluateExtractionWarnings === 'function') {
+                        evaluateExtractionWarnings(currentArticleData);
+                    }
+                }
+                const inlineStatus = document.getElementById('art-edit-img-status');
+                if (inlineStatus) {
+                    inlineStatus.textContent = '🗑️ అన్ని ఫొటోలు తొలగించబడ్డాయి.';
+                    inlineStatus.style.display = 'block';
+                    inlineStatus.style.color = '#ef4444';
+                    setTimeout(() => { if (inlineStatus) inlineStatus.style.display = 'none'; }, 3000);
+                }
             };
+        }
+
+        if (urlInput) {
+            urlInput.onchange = () => {
+                const val = urlInput.value.trim();
+                if (val) {
+                    if (typeof window.uploadImageFiles === 'function') {
+                        window.uploadImageFiles(val, 'edit');
+                    }
+                    urlInput.value = '';
+                }
+            };
+            urlInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    urlInput.dispatchEvent(new Event('change'));
+                }
+            };
+        }
+
+        if (dropArea) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+            });
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, () => dropArea.style.borderColor = '#2563eb', false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, () => dropArea.style.borderColor = '#cbd5e1', false);
+            });
+            dropArea.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt ? dt.files : null;
+                if (files && files.length > 0) {
+                    const validFiles = Array.from(files).filter(f => (f.type && f.type.startsWith('image/')) || (f.name && f.name.match(/\.(jpeg|jpg|gif|png|webp|svg|bmp)$/i)));
+                    if (validFiles.length > 0 && typeof window.uploadImageFiles === 'function') {
+                        window.uploadImageFiles(validFiles, 'edit');
+                    }
+                }
+            });
         }
 
         const mediaModal = document.getElementById('media-picker-modal');
@@ -1631,8 +1700,8 @@ function initAdminApp() {
     function collectFormPayload() {
         const imgPreview = document.getElementById('art-edit-img-preview');
         const fallbackUrl = (imgPreview && imgPreview.style.display !== 'none' && imgPreview.src) ? imgPreview.getAttribute('src') || imgPreview.src : null;
-        const imagesArr = (Array.isArray(window.editImagesArray) && window.editImagesArray.length > 0) ? window.editImagesArray : (fallbackUrl ? [fallbackUrl] : []);
-        const imageUrl = imagesArr[0] || fallbackUrl;
+        const imagesArr = Array.isArray(window.editImagesArray) ? window.editImagesArray : (fallbackUrl ? [fallbackUrl] : []);
+        const imageUrl = imagesArr.length > 0 ? imagesArr[0] : (fallbackUrl || null);
         const subElem = document.getElementById('art-edit-subheadline-te');
         const sumElem = document.getElementById('art-edit-summary-te');
 
@@ -1653,21 +1722,22 @@ function initAdminApp() {
             featured: document.getElementById('art-edit-featured').checked ? 1 : 0,
             is_breaking: document.getElementById('art-edit-breaking').checked ? 1 : 0,
             summary_te: sumElem ? sumElem.value.trim() : '',
-            content_te: document.getElementById('art-edit-content-te').value.trim()
+            content_te: document.getElementById('art-edit-content-te').value.trim() || (imagesArr.length > 0 ? (document.getElementById('art-edit-img-caption').value.trim() || document.getElementById('art-edit-title-te').value.trim()) : '')
         };
     }
 
     function validateArticleForPublish(payload) {
-        if (!payload.title_te || payload.title_te.length < 3) {
+        if (!payload.title_te || payload.title_te.trim().length < 3) {
             return 'శీర్షిక ఖాళీగా ఉంది. దయచేసి శీర్షికను నమోదు చేయండి. (Headline is required)';
-        }
-        if (!payload.content_te || payload.content_te.length < 20) {
-            return 'పూర్తి వార్తా వివరాలు ఖాళీగా ఉన్నాయి. (Content body is required)';
         }
         if (!payload.category) {
             return 'దయచేసి వార్తా విభాగాన్ని (Category) ఎంచుకోండి.';
         }
-        if (payload.content_te.includes('\uFFFD')) {
+        const hasPhoto = Boolean(payload.image_url || (Array.isArray(payload.image_urls) && payload.image_urls.length > 0));
+        if (!hasPhoto && (!payload.content_te || payload.content_te.trim().length < 10)) {
+            return 'దయచేసి పూర్తి వార్తా వివరాలు లేదా వార్తా ఫొటో నమోదు చేయండి. (Content body or photo is required)';
+        }
+        if (payload.content_te && payload.content_te.includes('\uFFFD')) {
             return 'వార్తా పాఠంలో దెబ్బతిన్న అక్షరాలు (Corrupted Unicode \\uFFFD) ఉన్నాయి. దయచేసి సరిదిద్దండి.';
         }
         return null;
@@ -1890,6 +1960,11 @@ function initAdminApp() {
             const item = window.editImagesArray.splice(idx, 1)[0];
             window.editImagesArray.unshift(item);
             window.renderEditImagesGrid();
+            if (typeof currentArticleData !== 'undefined' && currentArticleData) {
+                currentArticleData.image_url = window.editImagesArray[0] || '';
+                currentArticleData.images_json = JSON.stringify(window.editImagesArray);
+                if (typeof evaluateExtractionWarnings === 'function') evaluateExtractionWarnings(currentArticleData);
+            }
         }
     };
 
@@ -1897,7 +1972,205 @@ function initAdminApp() {
         if (idx >= 0 && idx < window.editImagesArray.length) {
             window.editImagesArray.splice(idx, 1);
             window.renderEditImagesGrid();
+            if (typeof currentArticleData !== 'undefined' && currentArticleData) {
+                currentArticleData.image_url = window.editImagesArray[0] || '';
+                currentArticleData.images_json = JSON.stringify(window.editImagesArray);
+                if (typeof evaluateExtractionWarnings === 'function') evaluateExtractionWarnings(currentArticleData);
+            }
         }
+    };
+
+    // Helper for live inline & banner photo notifications
+    function showPhotoStatus(msg, type = 'info', targetMode = 'create') {
+        const activeAlert = targetMode === 'create' ? document.getElementById('create-news-alert') : document.getElementById('art-edit-alert');
+        const inlineStatus = document.getElementById(targetMode === 'create' ? 'create-img-status' : 'art-edit-img-status');
+        if (inlineStatus) {
+            inlineStatus.textContent = msg;
+            inlineStatus.style.display = 'block';
+            inlineStatus.style.color = type === 'error' ? '#b91c1c' : (type === 'success' ? '#15803d' : '#1d4ed8');
+            inlineStatus.style.background = type === 'error' ? '#fef2f2' : (type === 'success' ? '#f0fdf4' : '#eff6ff');
+            inlineStatus.style.border = `1px solid ${type === 'error' ? '#fecaca' : (type === 'success' ? '#bbf7d0' : '#bfdbfe')}`;
+            if (type === 'success') {
+                setTimeout(() => { if (inlineStatus) inlineStatus.style.display = 'none'; }, 4000);
+            }
+        }
+        if (activeAlert) {
+            showAlert(activeAlert, msg, type);
+        }
+    }
+
+    // Global Image Upload Handler (Supports Multi-File Upload, Base64 & Local Resilient Fallback)
+    window.uploadImageFiles = async function(filesOrUrl, targetMode = 'create') {
+        const notify = (msg, type) => showPhotoStatus(msg, type, targetMode);
+
+        if (typeof filesOrUrl === 'string') {
+            const urlStr = filesOrUrl.trim();
+            if (!urlStr) return;
+            if (urlStr.startsWith('data:image/')) {
+                try {
+                    notify('⏳ ఫొటో సర్వర్‌కు అప్‌లోడ్ అవుతోంది...', 'info');
+                    const res = await apiFetch('/api/admin/upload-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image_base64: urlStr })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        const newUrl = data.image_url || data.url || (data.image_urls && data.image_urls[0]) || urlStr;
+                        if (targetMode === 'create') {
+                            window.createImagesArray = (window.createImagesArray || []).concat([newUrl]);
+                            if (typeof window.renderCreateImagesGrid === 'function') window.renderCreateImagesGrid();
+                        } else {
+                            window.editImagesArray = (window.editImagesArray || []).concat([newUrl]);
+                            if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
+                            if (typeof currentArticleData !== 'undefined' && currentArticleData) {
+                                currentArticleData.image_url = window.editImagesArray[0] || '';
+                                currentArticleData.images_json = JSON.stringify(window.editImagesArray);
+                                if (typeof evaluateExtractionWarnings === 'function') evaluateExtractionWarnings(currentArticleData);
+                            }
+                        }
+                        notify('✓ ఫొటో విజయవంతంగా జత చేయబడింది!', 'success');
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('Base64 upload endpoint notice, using direct data URI fallback:', e);
+                }
+            }
+
+            // Fallback for direct URL or if base64 upload failed
+            if (targetMode === 'create') {
+                window.createImagesArray = (window.createImagesArray || []).concat([urlStr]);
+                if (typeof window.renderCreateImagesGrid === 'function') window.renderCreateImagesGrid();
+            } else {
+                window.editImagesArray = (window.editImagesArray || []).concat([urlStr]);
+                if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
+                if (typeof currentArticleData !== 'undefined' && currentArticleData) {
+                    currentArticleData.image_url = window.editImagesArray[0] || '';
+                    currentArticleData.images_json = JSON.stringify(window.editImagesArray);
+                    if (typeof evaluateExtractionWarnings === 'function') evaluateExtractionWarnings(currentArticleData);
+                }
+            }
+            notify('✓ ఫొటో విజయవంతంగా జత చేయబడింది!', 'success');
+            return;
+        }
+
+        if (!filesOrUrl) return;
+        const files = Array.isArray(filesOrUrl) ? filesOrUrl : Array.from(filesOrUrl);
+        if (files.length === 0) return;
+
+        notify(`⏳ ${files.length} ఫొటో(లు) అప్‌లోడ్ అవుతున్నాయి... (Uploading images...)`, 'info');
+
+        const formData = new FormData();
+        files.forEach(f => formData.append('images', f));
+
+        let uploadedSuccess = false;
+        try {
+            const res = await apiFetch('/api/admin/upload-image', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                const newUrls = data.image_urls || (data.image_url ? [data.image_url] : []);
+                if (newUrls.length > 0) {
+                    if (targetMode === 'create') {
+                        window.createImagesArray = (window.createImagesArray || []).concat(newUrls);
+                        if (typeof window.renderCreateImagesGrid === 'function') window.renderCreateImagesGrid();
+                    } else {
+                        window.editImagesArray = (window.editImagesArray || []).concat(newUrls);
+                        if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
+                        if (typeof currentArticleData !== 'undefined' && currentArticleData) {
+                            currentArticleData.image_url = window.editImagesArray[0] || '';
+                            currentArticleData.images_json = JSON.stringify(window.editImagesArray);
+                            if (typeof evaluateExtractionWarnings === 'function') evaluateExtractionWarnings(currentArticleData);
+                        }
+                    }
+                    notify(`✓ ${newUrls.length} ఫొటో(లు) విజయవంతంగా జత చేయబడ్డాయి!`, 'success');
+                    uploadedSuccess = true;
+                    return;
+                }
+            } else {
+                console.warn('Server upload error response:', data);
+            }
+        } catch (err) {
+            console.warn('Server upload error, switching to resilient local reader fallback:', err.message || err);
+        }
+
+        // Resilient Fallback: If network or server fails, read files as base64 DataURLs so user NEVER loses their photos!
+        if (!uploadedSuccess) {
+            try {
+                const localDataUrls = await Promise.all(files.map(f => new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => resolve(ev.target.result);
+                    reader.onerror = () => resolve(null);
+                    reader.readAsDataURL(f);
+                })));
+                const validUrls = localDataUrls.filter(Boolean);
+                if (validUrls.length > 0) {
+                    if (targetMode === 'create') {
+                        window.createImagesArray = (window.createImagesArray || []).concat(validUrls);
+                        if (typeof window.renderCreateImagesGrid === 'function') window.renderCreateImagesGrid();
+                    } else {
+                        window.editImagesArray = (window.editImagesArray || []).concat(validUrls);
+                        if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
+                        if (typeof currentArticleData !== 'undefined' && currentArticleData) {
+                            currentArticleData.image_url = window.editImagesArray[0] || '';
+                            currentArticleData.images_json = JSON.stringify(window.editImagesArray);
+                            if (typeof evaluateExtractionWarnings === 'function') evaluateExtractionWarnings(currentArticleData);
+                        }
+                    }
+                    notify(`✓ ${validUrls.length} ఫొటో(లు) విజయవంతంగా జత చేయబడ్డాయి!`, 'success');
+                } else {
+                    notify('చిత్రం అప్‌లోడ్ విఫలమైంది. దయచేసి సరైన చిత్ర ఫైలును ఎంచుకోండి.', 'error');
+                }
+            } catch (fallbackErr) {
+                notify('చిత్రం లోడింగ్ లోపం. దయచేసి మళ్లీ ప్రయత్నించండి.', 'error');
+            }
+        }
+    };
+
+    // Global Paste Image Button Click Handler
+    window.handlePasteImageButtonClick = async function(targetMode = 'create') {
+        const notify = (msg, type) => showPhotoStatus(msg, type, targetMode);
+
+        // 1. Try reading binary image files from Clipboard API
+        try {
+            if (navigator.clipboard && typeof navigator.clipboard.read === 'function') {
+                const items = await navigator.clipboard.read();
+                let pastedFiles = [];
+                for (const item of items) {
+                    for (const type of item.types) {
+                        if (type.startsWith('image/')) {
+                            const blob = await item.getType(type);
+                            const ext = type.split('/')[1] ? type.split('/')[1].replace('+xml', '') : 'png';
+                            const file = new File([blob], `pasted_image_${Date.now()}.${ext}`, { type: blob.type || type });
+                            pastedFiles.push(file);
+                        }
+                    }
+                }
+                if (pastedFiles.length > 0) {
+                    await window.uploadImageFiles(pastedFiles, targetMode);
+                    return;
+                }
+            }
+        } catch (err) {
+            console.log('Binary clipboard read notice:', err.message || err);
+        }
+
+        // 2. Fallback: Try reading text/URL/Base64 from Clipboard API
+        try {
+            if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+                const text = (await navigator.clipboard.readText() || '').trim();
+                if (text && (text.startsWith('data:image/') || text.match(/\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i) || text.startsWith('http://') || text.startsWith('https://') || text.startsWith('/uploads/'))) {
+                    await window.uploadImageFiles(text, targetMode);
+                    return;
+                }
+            }
+        } catch (err) {
+            console.log('Text clipboard read notice:', err.message || err);
+        }
+
+        notify('📋 క్లిప్‌బోర్డ్‌లోని ఫొటోను జతచేయడానికి కీబోర్డ్‌పై Ctrl + V నొక్కండి! (Press Ctrl+V on keyboard)', 'info');
     };
 
     // Universal Clipboard Paste Event Listener for Work-Reducing Direct Image Pasting (Ctrl+V)
@@ -1909,6 +2182,7 @@ function initAdminApp() {
         const isEditViewActive = editViewSection && (getComputedStyle(editViewSection).display !== 'none');
 
         if (!isCreateViewActive && !isEditViewActive) return;
+        const targetMode = isEditViewActive ? 'edit' : 'create';
 
         const clipboardData = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
         if (!clipboardData) return;
@@ -1918,7 +2192,7 @@ function initAdminApp() {
         if (clipboardData.files && clipboardData.files.length > 0) {
             for (let i = 0; i < clipboardData.files.length; i++) {
                 const file = clipboardData.files[i];
-                if (file && file.type && file.type.startsWith('image/')) {
+                if ((file && file.type && file.type.startsWith('image/')) || (file && file.name && file.name.match(/\.(jpeg|jpg|gif|png|webp|svg|bmp|tif|tiff)$/i))) {
                     pastedFiles.push(file);
                 }
             }
@@ -1927,7 +2201,7 @@ function initAdminApp() {
         if (pastedFiles.length === 0 && clipboardData.items && clipboardData.items.length > 0) {
             for (let i = 0; i < clipboardData.items.length; i++) {
                 const item = clipboardData.items[i];
-                if (item && item.kind === 'file' && item.type && item.type.startsWith('image/')) {
+                if (item && item.kind === 'file' && ((item.type && item.type.startsWith('image/')) || (!item.type))) {
                     const file = item.getAsFile();
                     if (file) pastedFiles.push(file);
                 }
@@ -1937,37 +2211,17 @@ function initAdminApp() {
         if (pastedFiles.length > 0) {
             e.preventDefault();
             e.stopPropagation();
-
-            if (isCreateViewActive) {
-                window.uploadImageFiles(pastedFiles, 'create');
-            } else if (isEditViewActive) {
-                window.uploadImageFiles(pastedFiles, 'edit');
-            }
+            window.uploadImageFiles(pastedFiles, targetMode);
             return;
         }
 
         const pastedText = (clipboardData.getData('text/plain') || '').trim();
         const activeElem = document.activeElement;
-        const isTextOrTitleFocused = activeElem && (
-            activeElem.id === 'create-title-te' ||
-            activeElem.id === 'create-content-te' ||
-            activeElem.id === 'art-edit-title-te' ||
-            activeElem.id === 'art-edit-content-te'
-        );
+        const isTextInputOrTextarea = activeElem && (activeElem.tagName === 'INPUT' || activeElem.tagName === 'TEXTAREA');
 
-        if (!isTextOrTitleFocused && pastedText && (pastedText.match(/\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i) || pastedText.startsWith('data:image/'))) {
+        if (!isTextInputOrTextarea && pastedText && (pastedText.match(/\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i) || pastedText.startsWith('data:image/') || pastedText.startsWith('http://') || pastedText.startsWith('https://') || pastedText.startsWith('/uploads/'))) {
             e.preventDefault();
-            if (isCreateViewActive) {
-                window.createImagesArray = window.createImagesArray || [];
-                if (!window.createImagesArray.includes(pastedText)) window.createImagesArray.push(pastedText);
-                window.renderCreateImagesGrid();
-                const alertBox = document.getElementById('create-news-alert');
-                if (alertBox) showAlert(alertBox, '✓ ఫొటో URL విజయవంతంగా జత చేయబడింది!', 'success');
-            } else if (isEditViewActive) {
-                window.editImagesArray = window.editImagesArray || [];
-                if (!window.editImagesArray.includes(pastedText)) window.editImagesArray.push(pastedText);
-                window.renderEditImagesGrid();
-            }
+            window.uploadImageFiles(pastedText, targetMode);
         }
     });
 
@@ -1986,6 +2240,7 @@ function initAdminApp() {
         const dropArea = document.getElementById('create-image-drop-area');
         const alertBox = document.getElementById('create-news-alert');
         const saveDraftBtn = document.getElementById('create-btn-save-draft');
+        const createPasteBtn = document.getElementById('create-btn-paste-img');
 
         if (createNewsInitialized) return;
         createNewsInitialized = true;
@@ -1997,7 +2252,14 @@ function initAdminApp() {
             };
         }
 
-        const createPasteBtn = document.getElementById('create-btn-paste-img');
+        if (triggerUploadBtn && fileInput) {
+            triggerUploadBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                fileInput.click();
+            };
+        }
+
         if (createPasteBtn) {
             createPasteBtn.onclick = (e) => {
                 e.preventDefault();
@@ -2005,53 +2267,6 @@ function initAdminApp() {
                 window.handlePasteImageButtonClick('create');
             };
         }
-
-        window.handlePasteImageButtonClick = async function(targetMode = 'create') {
-            const createAlert = document.getElementById('create-news-alert');
-            const editAlert = document.getElementById('art-edit-alert');
-            const activeAlert = targetMode === 'create' ? createAlert : editAlert;
-
-            // 1. Try reading binary image files from Clipboard API
-            try {
-                if (navigator.clipboard && typeof navigator.clipboard.read === 'function') {
-                    const items = await navigator.clipboard.read();
-                    let pastedFiles = [];
-                    for (const item of items) {
-                        for (const type of item.types) {
-                            if (type.startsWith('image/')) {
-                                const blob = await item.getType(type);
-                                const ext = type.split('/')[1] || 'png';
-                                const file = new File([blob], `pasted_image_${Date.now()}.${ext}`, { type: blob.type || type });
-                                pastedFiles.push(file);
-                            }
-                        }
-                    }
-                    if (pastedFiles.length > 0) {
-                        await window.uploadImageFiles(pastedFiles, targetMode);
-                        return;
-                    }
-                }
-            } catch (err) {
-                console.log('Binary clipboard read notice:', err.message || err);
-            }
-
-            // 2. Fallback: Try reading text/URL/Base64 from Clipboard API
-            try {
-                if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
-                    const text = (await navigator.clipboard.readText() || '').trim();
-                    if (text && (text.startsWith('data:image/') || text.match(/\.(jpeg|jpg|gif|png|webp|svg)(\?.*)?$/i) || text.startsWith('http://') || text.startsWith('https://') || text.startsWith('/uploads/'))) {
-                        await window.uploadImageFiles(text, targetMode);
-                        return;
-                    }
-                }
-            } catch (err) {
-                console.log('Text clipboard read notice:', err.message || err);
-            }
-
-            if (activeAlert) {
-                showAlert(activeAlert, '📋 క్లిప్‌బోర్డ్‌లోని బొమ్మను జతచేయడానికి కీబోర్డ్‌పై Ctrl + V నొక్కండి! (Press Ctrl+V on keyboard)', 'info');
-            }
-        };
 
         if (dropArea) {
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -2067,7 +2282,7 @@ function initAdminApp() {
                 const dt = e.dataTransfer;
                 const files = dt ? dt.files : null;
                 if (files && files.length > 0) {
-                    const validFiles = Array.from(files).filter(f => f.type && f.type.startsWith('image/'));
+                    const validFiles = Array.from(files).filter(f => (f.type && f.type.startsWith('image/')) || (f.name && f.name.match(/\.(jpeg|jpg|gif|png|webp|svg|bmp)$/i)));
                     if (validFiles.length > 0) window.uploadImageFiles(validFiles, 'create');
                 }
             });
@@ -2081,85 +2296,6 @@ function initAdminApp() {
                 }
             };
         }
-
-        window.uploadImageFiles = async function(filesOrUrl, targetMode = 'create') {
-            const createAlert = document.getElementById('create-news-alert');
-            const editAlert = document.getElementById('art-edit-alert');
-            const activeAlert = targetMode === 'create' ? createAlert : editAlert;
-
-            if (typeof filesOrUrl === 'string') {
-                const urlStr = filesOrUrl.trim();
-                if (!urlStr) return;
-                if (urlStr.startsWith('data:image/')) {
-                    try {
-                        if (activeAlert) showAlert(activeAlert, 'ఫొటో సర్వర్‌కు అప్‌లోడ్ అవుతోంది...', 'info');
-                        const res = await apiFetch('/api/admin/upload-image', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ image_base64: urlStr })
-                        });
-                        const data = await res.json();
-                        if (res.ok && data.success) {
-                            const newUrl = data.image_url || data.url || data.image_urls[0];
-                            if (targetMode === 'create') {
-                                window.createImagesArray = (window.createImagesArray || []).concat([newUrl]);
-                                if (typeof window.renderCreateImagesGrid === 'function') window.renderCreateImagesGrid();
-                            } else {
-                                window.editImagesArray = (window.editImagesArray || []).concat([newUrl]);
-                                if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
-                            }
-                            if (activeAlert) showAlert(activeAlert, '✓ ఫొటో విజయవంతంగా జత చేయబడింది!', 'success');
-                            return;
-                        }
-                    } catch (e) {
-                        console.error('Base64 upload failed, using data URL fallback:', e);
-                    }
-                }
-
-                if (targetMode === 'create') {
-                    window.createImagesArray = (window.createImagesArray || []).concat([urlStr]);
-                    if (typeof window.renderCreateImagesGrid === 'function') window.renderCreateImagesGrid();
-                } else {
-                    window.editImagesArray = (window.editImagesArray || []).concat([urlStr]);
-                    if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
-                }
-                if (activeAlert) showAlert(activeAlert, '✓ ఫొటో విజయవంతంగా జత చేయబడింది!', 'success');
-                return;
-            }
-
-            if (!filesOrUrl || !filesOrUrl.length) return;
-            const files = Array.from(filesOrUrl);
-            const formData = new FormData();
-            files.forEach(f => formData.append('images', f));
-
-            try {
-                if (activeAlert) {
-                    showAlert(activeAlert, 'చిత్రాలు అప్‌లోడ్ అవుతున్నాయి... (Uploading images...)', 'info');
-                }
-                const res = await apiFetch('/api/admin/upload-image', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    const newUrls = data.image_urls || (data.image_url ? [data.image_url] : []);
-                    if (targetMode === 'create') {
-                        window.createImagesArray = (window.createImagesArray || []).concat(newUrls);
-                        if (typeof window.renderCreateImagesGrid === 'function') window.renderCreateImagesGrid();
-                        if (activeAlert) showAlert(activeAlert, `✓ ${newUrls.length} ఫొటో(లు) విజయవంతంగా జత చేయబడ్డాయి!`, 'success');
-                    } else {
-                        window.editImagesArray = (window.editImagesArray || []).concat(newUrls);
-                        if (typeof window.renderEditImagesGrid === 'function') window.renderEditImagesGrid();
-                        if (activeAlert) showAlert(activeAlert, `✓ ${newUrls.length} ఫొటో(లు) విజయవంతంగా జత చేయబడ్డాయి!`, 'success');
-                    }
-                } else {
-                    if (activeAlert) showAlert(activeAlert, data.error || 'చిత్రం అప్‌లోడ్ విఫలమైంది.', 'error');
-                }
-            } catch (err) {
-                console.error('Image upload error:', err);
-                if (activeAlert) showAlert(activeAlert, 'చిత్రం అప్‌లోడ్ సర్వర్ లోపం.', 'error');
-            }
-        };
 
         if (imgUrlInput) {
             imgUrlInput.addEventListener('input', () => {
@@ -2181,6 +2317,19 @@ function initAdminApp() {
         }
 
         if (form) {
+            form.addEventListener('reset', () => {
+                window.createImagesArray = [];
+                if (typeof window.renderCreateImagesGrid === 'function') window.renderCreateImagesGrid();
+                if (fileInput) fileInput.value = '';
+                if (imgUrlInput) imgUrlInput.value = '';
+                if (imgPreview) { imgPreview.src = ''; imgPreview.style.display = 'none'; }
+                if (imgPreviewBox) imgPreviewBox.style.display = 'none';
+                const statusBox = document.getElementById('create-img-status');
+                if (statusBox) { statusBox.style.display = 'none'; statusBox.textContent = ''; }
+                const multiGrid = document.getElementById('create-multi-images-grid');
+                if (multiGrid) { multiGrid.style.display = 'none'; multiGrid.innerHTML = ''; }
+                if (alertBox) alertBox.style.display = 'none';
+            });
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 submitCreateNews('published');
@@ -2217,16 +2366,19 @@ function initAdminApp() {
                 if (titleInput) titleInput.focus();
                 return;
             }
-            if (!content_te) {
+            const createImages = window.createImagesArray || [];
+            const hasPhoto = Boolean(createImages.length > 0 || image_url);
+            if (!content_te && !hasPhoto) {
                 if (alertBox) {
                     alertBox.className = 'alert alert-error';
                     alertBox.style.display = 'block';
-                    alertBox.innerHTML = '<strong>⚠️ దయచేసి పూర్తి వార్తా వివరాలను (Content Body) నమోదు చేయండి.</strong>';
+                    alertBox.innerHTML = '<strong>⚠️ దయచేసి పూర్తి వార్తా వివరాలను (Content Body) లేదా వార్తా ఫొటోను నమోదు చేయండి.</strong>';
                     alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
                 if (contentInput) contentInput.focus();
                 return;
             }
+            const finalContent = content_te || image_caption_te || title_te;
 
             try {
                 if (publishBtn) {
@@ -2262,8 +2414,8 @@ function initAdminApp() {
                         is_breaking: is_breaking ? 1 : 0,
                         summary_te: '',
                         summary_en: '',
-                        content_te,
-                        content_en: content_te
+                        content_te: finalContent,
+                        content_en: finalContent
                     })
                 });
 

@@ -63,24 +63,9 @@ async function uploadFile({ localFilePath, destinationKey, contentType }) {
     }
   }
 
-  // Fallback for ephemeral cloud disk hosts (e.g. Render / Railway container rebuilds):
-  // Convert images up to 4MB to persistent Data URIs so they are stored inside the database and survive code re-deployments!
-  if (localFilePath && fs.existsSync(localFilePath)) {
-    try {
-      const stats = fs.statSync(localFilePath);
-      const ext = path.extname(localFilePath).toLowerCase();
-      const isImage = ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'].includes(ext);
-      if (isImage && stats.size <= 4 * 1024 * 1024) {
-        const fileBuffer = fs.readFileSync(localFilePath);
-        const mimeType = contentType || (ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : ext === '.webp' ? 'image/webp' : ext === '.svg' ? 'image/svg+xml' : 'image/png');
-        return `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
-      }
-    } catch (err) {
-      console.warn('Persistent image conversion notice:', err.message);
-    }
-  }
-
-  return `/uploads/${destinationKey}`;
+  // Return clean, fast static URL served by Express
+  const normalizedKey = (destinationKey || '').replace(/\\/g, '/').replace(/^\/+/, '');
+  return `/uploads/${normalizedKey}`;
 }
 
 module.exports = {
