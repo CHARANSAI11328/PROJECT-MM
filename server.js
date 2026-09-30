@@ -1547,7 +1547,7 @@ app.get('/api/admin/media', authenticateToken, async (req, res) => {
     }
 
     // 3. Scan media_assets table in DB
-    const dbAssets = await dbAll('SELECT * FROM media_assets ORDER BY created_at DESC LIMIT 100');
+    const dbAssets = await dbAll('SELECT * FROM media_assets ORDER BY created_at DESC LIMIT 200');
     if (Array.isArray(dbAssets)) {
       dbAssets.forEach(item => {
         if (item.file_path && !addedUrls.has(item.file_path)) {
@@ -1562,6 +1562,82 @@ app.get('/api/admin/media', authenticateToken, async (req, res) => {
         }
       });
     }
+
+    // 4. Scan articles table in DB (so all cover photos and article gallery photos appear)
+    const dbArticles = await dbAll('SELECT id, title_te, title_en, image_url, images_json, created_at, published_at FROM articles WHERE image_url IS NOT NULL OR images_json IS NOT NULL ORDER BY created_at DESC');
+    if (Array.isArray(dbArticles)) {
+      for (const art of dbArticles) {
+        const articleHeadline = (art.title_te || art.title_en || 'Article Photo').substring(0, 60);
+        if (art.image_url && typeof art.image_url === 'string' && art.image_url.trim()) {
+          const cleanUrl = art.image_url.trim();
+          if (!addedUrls.has(cleanUrl)) {
+            addedUrls.add(cleanUrl);
+            mediaList.push({
+              filename: path.basename(cleanUrl) || `art_${art.id}.png`,
+              url: cleanUrl,
+              folder: 'articles',
+              article_title: articleHeadline,
+              article_id: art.id,
+              size_bytes: 0,
+              created_at: art.published_at || art.created_at || new Date()
+            });
+          }
+        }
+        if (art.images_json) {
+          try {
+            const subImages = typeof art.images_json === 'string' ? JSON.parse(art.images_json) : art.images_json;
+            if (Array.isArray(subImages)) {
+              subImages.forEach((img, idx) => {
+                if (typeof img === 'string' && img.trim()) {
+                  const cleanImg = img.trim();
+                  if (!addedUrls.has(cleanImg)) {
+                    addedUrls.add(cleanImg);
+                    mediaList.push({
+                      filename: path.basename(cleanImg) || `art_${art.id}_img_${idx + 1}.png`,
+                      url: cleanImg,
+                      folder: 'articles',
+                      article_title: articleHeadline,
+                      article_id: art.id,
+                      size_bytes: 0,
+                      created_at: art.published_at || art.created_at || new Date()
+                    });
+                  }
+                }
+              });
+            }
+          } catch(e) {}
+        }
+      }
+    }
+
+    // 5. Scan article_images table if present
+    const dbArticleImages = await dbAll('SELECT * FROM article_images ORDER BY created_at DESC');
+    if (Array.isArray(dbArticleImages)) {
+      dbArticleImages.forEach(ai => {
+        if (ai.image_url && !addedUrls.has(ai.image_url)) {
+          addedUrls.add(ai.image_url);
+          mediaList.push({
+            filename: path.basename(ai.image_url) || `img_${ai.id}.png`,
+            url: ai.image_url,
+            folder: 'articles',
+            size_bytes: 0,
+            created_at: ai.created_at || new Date()
+          });
+        }
+      });
+    }
+
+    // Populate disk file sizes where possible
+    mediaList.forEach(item => {
+      if ((!item.size_bytes || item.size_bytes === 0) && item.url && item.url.startsWith('/uploads/')) {
+        const diskPath = path.join(__dirname, item.url);
+        try {
+          if (fs.existsSync(diskPath)) {
+            item.size_bytes = fs.statSync(diskPath).size;
+          }
+        } catch(e) {}
+      }
+    });
 
     mediaList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 

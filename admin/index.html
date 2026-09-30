@@ -1234,21 +1234,35 @@
 
                 <!-- SECTION: MEDIA LIBRARY VIEW -->
                 <section id="view-media" class="view-section" style="display: none;">
-                    <div class="page-title-bar flex-between">
+                    <div class="page-title-bar flex-between" style="flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                         <div>
                             <h2>🖼️ ఒరిజినల్ మీడియా లైబ్రరీ (Original Photos & Media Assets)</h2>
-                            <p class="page-subtitle">పత్రిక మరియు వెబ్‌సైట్ కోసం అప్‌లోడ్ చేసిన ఒరిజినల్ హై-క్వాలిటీ చిత్రాల నిర్వహణ.</p>
+                            <p class="page-subtitle">వెబ్‌సైట్ మరియు వార్తల కోసం అప్‌లోడ్ చేసిన అన్ని ఒరిజినల్ చిత్రాల సేకరణ, పరిశీలన & డౌన్‌లోడ్.</p>
                         </div>
-                        <div>
-                            <input type="file" id="media-standalone-upload-input" accept="image/*" style="display: none;">
-                            <button type="button" id="btn-upload-standalone-media" class="btn btn-primary">+ కొత్త ఫొటో అప్‌లోడ్ చేయండి</button>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="file" id="media-standalone-upload-input" accept="image/*" multiple style="display: none;">
+                            <button type="button" id="btn-upload-standalone-media" class="btn btn-primary" style="font-weight: 700;">+ కొత్త ఫొటో అప్‌లోడ్ చేయండి</button>
                         </div>
                     </div>
 
                     <div id="media-library-alert" class="alert" style="display: none;"></div>
 
-                    <div class="card">
-                        <div id="media-library-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+                    <!-- SEARCH & FILTER CONTROLS BAR -->
+                    <div class="card" style="padding: 14px 18px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #ffffff;">
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <button type="button" class="btn btn-outline-sm media-filter-btn active" data-filter="all" style="font-weight: 600; padding: 6px 14px;">అన్నీ (All)</button>
+                            <button type="button" class="btn btn-outline-sm media-filter-btn" data-filter="articles" style="font-weight: 600; padding: 6px 14px;">📰 వార్తా ఫొటోలు (Articles)</button>
+                            <button type="button" class="btn btn-outline-sm media-filter-btn" data-filter="images" style="font-weight: 600; padding: 6px 14px;">📁 అప్‌లోడ్‌లు (Uploads)</button>
+                            <button type="button" class="btn btn-outline-sm media-filter-btn" data-filter="edition_media" style="font-weight: 600; padding: 6px 14px;">📰 సంచిక చిత్రాలు (ePaper Clips)</button>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center; flex: 1; max-width: 360px;">
+                            <input type="text" id="media-search-input" class="form-control" placeholder="🔍 ఫొటో పేరు లేదా శీర్షిక వెతకండి..." style="padding: 7px 12px; font-size: 0.85rem; border-radius: 6px;">
+                            <span id="media-total-badge" style="background: #eff6ff; color: #2563eb; font-weight: 700; font-size: 0.8rem; padding: 4px 10px; border-radius: 12px; border: 1px solid #bfdbfe; white-space: nowrap;">0 ఫొటోలు</span>
+                        </div>
+                    </div>
+
+                    <div class="card" style="padding: 18px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
+                        <div id="media-library-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px;">
                             <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #64748b;">మీడియా ఫైళ్లు లోడ్ అవుతున్నాయి...</div>
                         </div>
                     </div>
@@ -1322,6 +1336,46 @@
             <div id="media-picker-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; max-height: 400px; overflow-y: auto;"></div>
         </div>
     </div>
+
+    <!-- MODAL 3: MEDIA VIEWER & DOWNLOAD LIGHTBOX MODAL -->
+    <div id="media-lightbox-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.92); z-index: 10001; overflow-y: auto; padding: 20px; backdrop-filter: blur(4px);">
+        <div class="modal-content" style="background: #ffffff; max-width: 900px; margin: 30px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border: 1px solid #334155;">
+            <div class="flex-between" style="background: #0f172a; color: #ffffff; padding: 14px 20px; border-bottom: 2px solid #2563eb;">
+                <div style="font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                    <span>🔍 చిత్రం వివరాలు &amp; పూర్తి పరిశీలన (Full Photo Viewer)</span>
+                </div>
+                <button type="button" id="close-media-lightbox-btn" style="background: none; border: none; color: #ffffff; font-size: 1.6rem; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+            
+            <div style="background: #090d16; padding: 20px; text-align: center; display: flex; align-items: center; justify-content: center; min-height: 380px; max-height: 70vh; overflow: hidden;">
+                <img id="media-lightbox-img" src="" alt="Full Preview" style="max-width: 100%; max-height: 65vh; object-fit: contain; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+            </div>
+
+            <div style="padding: 18px 24px; background: #ffffff;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 14px;">
+                    <div>
+                        <h4 id="media-lightbox-title" style="margin: 0 0 4px 0; font-size: 1.05rem; color: #0f172a; font-weight: 700; word-break: break-all;"></h4>
+                        <div id="media-lightbox-meta" style="font-size: 0.85rem; color: #64748b; display: flex; gap: 12px; flex-wrap: wrap;"></div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <button type="button" id="media-lightbox-download-btn" class="btn btn-primary" style="background: #16a34a; border-color: #15803d; font-weight: 700; padding: 10px 20px; display: inline-flex; align-items: center; gap: 6px;">
+                        ⬇️ కంప్యూటర్‌కు డౌన్‌లోడ్ చేయండి (Download Image)
+                    </button>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="media-lightbox-copy-btn" class="btn btn-outline-sm" style="padding: 8px 16px; font-weight: 600;">
+                            📋 లింక్ కాపీ చేయండి (Copy URL)
+                        </button>
+                        <button type="button" id="media-lightbox-delete-btn" class="btn btn-danger-sm" style="padding: 8px 16px; font-weight: 600;">
+                            🗑️ తొలగించు (Delete)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- MOBILE BOTTOM QUICK NAVIGATION BAR (VISIBLE ON MOBILE <= 768px) -->
     <nav class="admin-mobile-bottom-bar" id="admin-mobile-bottom-bar" aria-label="Mobile Navigation">

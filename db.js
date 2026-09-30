@@ -9,9 +9,10 @@ const editionsDir = path.join(uploadsDir, 'editions');
 const pagesDir = path.join(uploadsDir, 'pages');
 const mediaDir = path.join(uploadsDir, 'media');
 const reportersDir = path.join(uploadsDir, 'reporters');
+const imagesDir = path.join(uploadsDir, 'images');
 
 // Ensure required upload directories exist
-[uploadsDir, editionsDir, pagesDir, mediaDir, reportersDir].forEach(dir => {
+[uploadsDir, editionsDir, pagesDir, mediaDir, reportersDir, imagesDir].forEach(dir => {
   try {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
@@ -470,9 +471,11 @@ module.exports = {
   dbAll,
   dbGet,
   initDatabase,
+  uploadsDir,
   editionsDir,
   pagesDir,
   mediaDir,
+  imagesDir,
   reportersDir,
   isPostgres
 };
