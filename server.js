@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 
 const { db, dbRun, dbAll, dbGet, initDatabase, editionsDir, pagesDir } = require('./db');
 const { processEdition } = require('./ingestion');
-const { uploadFile } = require('./services/storage');
+const { uploadFile, deleteFile } = require('./services/storage');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -1391,6 +1391,35 @@ app.put(['/api/admin/articles/:id', '/api/admin/articles/:id/update'], authentic
       id
     ]);
 
+    // Automatically purge any images that were removed during article editing
+    try {
+      const oldImages = new Set();
+      if (existing.image_url) oldImages.add(existing.image_url.trim());
+      if (existing.images_json) {
+        try {
+          const sub = typeof existing.images_json === 'string' ? JSON.parse(existing.images_json) : existing.images_json;
+          if (Array.isArray(sub)) sub.forEach(u => { if (u && typeof u === 'string') oldImages.add(u.trim()); });
+        } catch(e) {}
+      }
+
+      const newImages = new Set();
+      if (mainImageUrl) newImages.add(mainImageUrl.trim());
+      if (finalImagesJson) {
+        try {
+          const sub = typeof finalImagesJson === 'string' ? JSON.parse(finalImagesJson) : finalImagesJson;
+          if (Array.isArray(sub)) sub.forEach(u => { if (u && typeof u === 'string') newImages.add(u.trim()); });
+        } catch(e) {}
+      }
+
+      for (const oldImg of oldImages) {
+        if (!newImages.has(oldImg)) {
+          await deleteFile(oldImg);
+        }
+      }
+    } catch (e) {
+      console.warn('Purge removed article images notice:', e.message);
+    }
+
     const updated = await dbGet('SELECT * FROM articles WHERE id = ?', [id]);
     res.json({ success: true, message: 'Article updated successfully.', article: updated });
   } catch (err) {
@@ -1519,10 +1548,40 @@ app.delete('/api/admin/articles/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ success: false, error: 'Article not found.' });
     }
 
+    // 1. Collect all image URLs belonging to this article
+    const toDeleteUrls = new Set();
+    if (existing.image_url && typeof existing.image_url === 'string' && existing.image_url.trim()) {
+      toDeleteUrls.add(existing.image_url.trim());
+    }
+    if (existing.images_json) {
+      try {
+        const sub = typeof existing.images_json === 'string' ? JSON.parse(existing.images_json) : existing.images_json;
+        if (Array.isArray(sub)) {
+          sub.forEach(u => { if (typeof u === 'string' && u.trim()) toDeleteUrls.add(u.trim()); });
+        }
+      } catch (e) {}
+    }
+    try {
+      const artImgs = await dbAll('SELECT image_url FROM article_images WHERE article_id = ?', [id]);
+      if (Array.isArray(artImgs)) {
+        artImgs.forEach(r => { if (r.image_url && typeof r.image_url === 'string' && r.image_url.trim()) toDeleteUrls.add(r.image_url.trim()); });
+      }
+    } catch (e) {}
+
+    // 2. Permanently delete all photos belonging to this article from database & storage
+    for (const imgUrl of toDeleteUrls) {
+      try {
+        await deleteFile(imgUrl);
+      } catch (err) {
+        console.warn('Failed to delete image file:', imgUrl, err.message);
+      }
+    }
+
+    // 3. Remove article and image relations from database
     await dbRun('DELETE FROM article_images WHERE article_id = ?', [id]);
     await dbRun('DELETE FROM articles WHERE id = ?', [id]);
 
-    res.json({ success: true, message: 'Article deleted successfully.' });
+    res.json({ success: true, message: 'వార్త మరియు దాని చిత్రాలు శాశ్వతంగా తొలగించబడ్డాయి (Article and media deleted successfully).' });
   } catch (err) {
     console.error('Admin delete article error:', err);
     res.status(500).json({ success: false, error: 'Failed to delete article.' });
@@ -1533,11 +1592,9 @@ app.delete('/api/admin/articles/:id', authenticateToken, async (req, res) => {
 // Admin List Uploaded Media Library API Endpoint
 app.get('/api/admin/media', authenticateToken, async (req, res) => {
   try {
-    const { mediaDir, imagesDir } = require('./db');
     const mediaList = [];
-    const addedUrls = new Set();
 
-    // 1. Group by Article: Scan articles table so every article with photos is a SINGLE slot containing all photos
+    // Strictly list active articles: Every article is a SINGLE slot containing all its uploaded photos
     const dbArticles = await dbAll("SELECT id, title_te, title_en, image_url, images_json, created_at, published_at FROM articles WHERE (image_url IS NOT NULL AND image_url != '') OR images_json IS NOT NULL ORDER BY created_at DESC");
     if (Array.isArray(dbArticles)) {
       for (const art of dbArticles) {
@@ -1563,8 +1620,6 @@ app.get('/api/admin/media', authenticateToken, async (req, res) => {
 
         if (articleImages.length > 0) {
           const coverUrl = articleImages[0];
-          articleImages.forEach(u => addedUrls.add(u));
-
           mediaList.push({
             id: art.id,
             article_id: art.id,
@@ -1579,59 +1634,6 @@ app.get('/api/admin/media', authenticateToken, async (req, res) => {
         }
       }
     }
-
-    // 2. Scan persistent_uploads in Neon DB for any standalone uploads
-    try {
-      const dbUploads = await dbAll("SELECT file_path, file_size, created_at FROM persistent_uploads WHERE file_path NOT LIKE '%/qr_codes/%' ORDER BY created_at DESC");
-      if (Array.isArray(dbUploads)) {
-        dbUploads.forEach(u => {
-          if (u.file_path && !addedUrls.has(u.file_path)) {
-            addedUrls.add(u.file_path);
-            const fn = path.basename(u.file_path);
-            mediaList.push({
-              id: 'upload_' + fn,
-              article_title: fn,
-              filename: fn,
-              url: u.file_path,
-              images: [u.file_path],
-              image_count: 1,
-              folder: 'uploads',
-              size_bytes: u.file_size || 0,
-              created_at: u.created_at || new Date()
-            });
-          }
-        });
-      }
-    } catch(e) {}
-
-    // 3. Scan imagesDir & mediaDir on disk for any extra standalone files
-    [imagesDir, mediaDir].forEach(dir => {
-      if (fs.existsSync(dir)) {
-        const folderName = path.basename(dir);
-        try {
-          const files = fs.readdirSync(dir);
-          files.filter(f => /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(f)).forEach(filename => {
-            const url = `/uploads/${folderName}/${filename}`;
-            if (!addedUrls.has(url)) {
-              addedUrls.add(url);
-              let sizeBytes = 0;
-              try { sizeBytes = fs.statSync(path.join(dir, filename)).size; } catch(e) {}
-              mediaList.push({
-                id: 'disk_' + filename,
-                filename,
-                url,
-                images: [url],
-                image_count: 1,
-                folder: folderName,
-                article_title: filename,
-                size_bytes: sizeBytes,
-                created_at: new Date()
-              });
-            }
-          });
-        } catch(e) {}
-      }
-    });
 
     mediaList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
@@ -1650,27 +1652,41 @@ app.delete('/api/admin/media/:filename', authenticateToken, async (req, res) => 
       return res.status(400).json({ success: false, error: 'Invalid filename parameter.' });
     }
 
-    const { mediaDir, imagesDir } = require('./db');
     const filename = path.basename(rawFilename);
-    const mediaPath = path.resolve(mediaDir, filename);
-    const imagesPath = path.resolve(imagesDir, filename);
 
-    let deleted = false;
-    if (mediaPath.startsWith(path.resolve(mediaDir)) && fs.existsSync(mediaPath)) {
-      try { fs.unlinkSync(mediaPath); deleted = true; } catch (e) {}
+    // 1. Permanently delete from Cloud Storage, Neon DB persistent_uploads, media_assets, and disk
+    await deleteFile(`/uploads/images/${filename}`);
+    await deleteFile(`/uploads/media/${filename}`);
+
+    // 2. Remove this image from any active articles referencing it
+    const articlesUsing = await dbAll("SELECT id, image_url, images_json FROM articles WHERE image_url LIKE ? OR images_json LIKE ?", [`%${filename}%`, `%${filename}%`]);
+    if (Array.isArray(articlesUsing)) {
+      for (const art of articlesUsing) {
+        let newImages = [];
+        if (art.images_json) {
+          try {
+            const parsed = typeof art.images_json === 'string' ? JSON.parse(art.images_json) : art.images_json;
+            if (Array.isArray(parsed)) {
+              newImages = parsed.filter(u => !u.includes(filename));
+            }
+          } catch (e) {}
+        }
+        let newCover = (art.image_url && art.image_url.includes(filename))
+          ? (newImages.length > 0 ? newImages[0] : null)
+          : art.image_url;
+
+        await dbRun('UPDATE articles SET image_url = ?, images_json = ? WHERE id = ?', [
+          newCover,
+          newImages.length > 0 ? JSON.stringify(newImages) : null,
+          art.id
+        ]);
+      }
     }
-    if (imagesPath.startsWith(path.resolve(imagesDir)) && fs.existsSync(imagesPath)) {
-      try { fs.unlinkSync(imagesPath); deleted = true; } catch (e) {}
-    }
 
-    // Also delete from DB media_assets if present
-    await dbRun('DELETE FROM media_assets WHERE file_name = ? OR file_path LIKE ?', [filename, `%/${filename}`]);
+    // 3. Remove from article_images
+    await dbRun("DELETE FROM article_images WHERE image_url LIKE ?", [`%${filename}%`]);
 
-    if (!deleted) {
-      return res.status(404).json({ success: false, error: 'Media file not found.' });
-    }
-
-    res.json({ success: true, message: 'Media asset deleted successfully.' });
+    res.json({ success: true, message: 'చిత్రం డాటాబేస్ మరియు సర్వర్ నుండి శాశ్వతంగా తొలగించబడింది (Image deleted permanently).' });
   } catch (err) {
     console.error('Delete media error:', err);
     res.status(500).json({ success: false, error: 'Failed to delete media asset.' });

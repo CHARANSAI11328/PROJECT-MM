@@ -98,7 +98,61 @@ async function uploadFile({ localFilePath, destinationKey, contentType }) {
   return publicUrl;
 }
 
+/**
+ * Deletes a file from Cloudflare R2 / S3, database persistent_uploads, and local disk.
+ * @param {string} publicOrRelativeUrl - e.g. '/uploads/images/img_123.png'
+ */
+async function deleteFile(publicOrRelativeUrl) {
+  if (!publicOrRelativeUrl || typeof publicOrRelativeUrl !== 'string') return;
+  const filename = path.basename(publicOrRelativeUrl);
+  const normalizedPath = publicOrRelativeUrl.replace(/\\/g, '/');
+
+  // 1. Delete from Cloudflare R2 / S3 if configured
+  if (s3Client && isCloudStorageConfigured) {
+    try {
+      const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
+      let key = normalizedPath;
+      if (key.startsWith('/uploads/')) key = key.replace(/^\/uploads\//, '');
+      else if (key.startsWith('uploads/')) key = key.replace(/^uploads\//, '');
+      await s3Client.send(new DeleteObjectCommand({
+        Bucket: R2_BUCKET,
+        Key: key
+      }));
+    } catch (err) {
+      console.warn('Cloud Storage delete notice:', err.message);
+    }
+  }
+
+  // 2. Delete from Neon DB persistent_uploads and media_assets
+  try {
+    const { dbRun } = require('../db');
+    await dbRun('DELETE FROM persistent_uploads WHERE file_path = ? OR file_path LIKE ?', [
+      normalizedPath,
+      `%/${filename}`
+    ]);
+    await dbRun('DELETE FROM media_assets WHERE file_name = ? OR file_path LIKE ?', [
+      filename,
+      `%/${filename}`
+    ]);
+  } catch (err) {
+    console.warn('Persistent DB delete notice:', err.message);
+  }
+
+  // 3. Delete from local disk
+  try {
+    const { imagesDir, mediaDir } = require('../db');
+    [imagesDir, mediaDir].forEach(dir => {
+      if (!dir) return;
+      const fp = path.resolve(dir, filename);
+      if (fp.startsWith(path.resolve(dir)) && fs.existsSync(fp)) {
+        try { fs.unlinkSync(fp); } catch(e) {}
+      }
+    });
+  } catch (err) {}
+}
+
 module.exports = {
   isCloudStorageConfigured,
-  uploadFile
+  uploadFile,
+  deleteFile
 };
