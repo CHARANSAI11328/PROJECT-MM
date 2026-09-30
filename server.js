@@ -235,9 +235,10 @@ app.use('/uploads', express.static(uploadsDir, { dotfiles: 'ignore' }));
 // If an uploaded image is missing on ephemeral cloud disk (e.g. Render / Railway container redeployment), restore it from Neon PostgreSQL!
 app.get('/uploads/*', async (req, res, next) => {
   try {
-    const rawPath = req.path;
-    const fullUrl = rawPath.startsWith('/uploads') ? rawPath : `/uploads${rawPath}`;
-    const filename = path.basename(rawPath);
+    const rawUrl = req.originalUrl ? req.originalUrl.split('?')[0] : req.path;
+    const cleanPath = decodeURIComponent(rawUrl);
+    const fullUrl = cleanPath.startsWith('/uploads') ? cleanPath : `/uploads${cleanPath}`;
+    const filename = path.basename(cleanPath);
 
     const row = await dbGet(
       'SELECT file_path, mime_type, file_data FROM persistent_uploads WHERE file_path = ? OR file_path LIKE ?',
@@ -1536,146 +1537,105 @@ app.get('/api/admin/media', authenticateToken, async (req, res) => {
     const mediaList = [];
     const addedUrls = new Set();
 
-    // 1. Scan imagesDir (where article uploaded photos are saved)
-    if (fs.existsSync(imagesDir)) {
-      const files = fs.readdirSync(imagesDir);
-      files.filter(f => /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(f)).forEach(filename => {
-        const filePath = path.join(imagesDir, filename);
-        try {
-          const stat = fs.statSync(filePath);
-          const url = `/uploads/images/${filename}`;
-          if (!addedUrls.has(url)) {
-            addedUrls.add(url);
-            mediaList.push({
-              filename,
-              url,
-              folder: 'images',
-              size_bytes: stat.size,
-              created_at: stat.birthtime || stat.mtime
-            });
-          }
-        } catch(e) {}
-      });
-    }
-
-    // 2. Scan mediaDir
-    if (fs.existsSync(mediaDir)) {
-      const files = fs.readdirSync(mediaDir);
-      files.filter(f => /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(f)).forEach(filename => {
-        const filePath = path.join(mediaDir, filename);
-        try {
-          const stat = fs.statSync(filePath);
-          const url = `/uploads/media/${filename}`;
-          if (!addedUrls.has(url)) {
-            addedUrls.add(url);
-            mediaList.push({
-              filename,
-              url,
-              folder: 'media',
-              size_bytes: stat.size,
-              created_at: stat.birthtime || stat.mtime
-            });
-          }
-        } catch(e) {}
-      });
-    }
-
-    // 3. Scan media_assets table in DB
-    const dbAssets = await dbAll('SELECT * FROM media_assets ORDER BY created_at DESC LIMIT 200');
-    if (Array.isArray(dbAssets)) {
-      dbAssets.forEach(item => {
-        if (item.file_path && !addedUrls.has(item.file_path)) {
-          addedUrls.add(item.file_path);
-          mediaList.push({
-            filename: item.file_name || path.basename(item.file_path),
-            url: item.file_path,
-            folder: 'edition_media',
-            size_bytes: item.file_size_bytes || 0,
-            created_at: item.created_at || new Date()
-          });
-        }
-      });
-    }
-
-    // 4. Scan articles table in DB (so all cover photos and article gallery photos appear)
-    const dbArticles = await dbAll('SELECT id, title_te, title_en, image_url, images_json, created_at, published_at FROM articles WHERE image_url IS NOT NULL OR images_json IS NOT NULL ORDER BY created_at DESC');
+    // 1. Group by Article: Scan articles table so every article with photos is a SINGLE slot containing all photos
+    const dbArticles = await dbAll('SELECT id, title_te, title_en, image_url, images_json, created_at, published_at FROM articles WHERE (image_url IS NOT NULL AND image_url != "") OR images_json IS NOT NULL ORDER BY created_at DESC');
     if (Array.isArray(dbArticles)) {
       for (const art of dbArticles) {
-        const articleHeadline = (art.title_te || art.title_en || 'Article Photo').substring(0, 60);
+        const articleHeadline = (art.title_te || art.title_en || 'వార్త').trim();
+        const articleImages = [];
+
         if (art.image_url && typeof art.image_url === 'string' && art.image_url.trim()) {
-          const cleanUrl = art.image_url.trim();
-          if (!addedUrls.has(cleanUrl)) {
-            addedUrls.add(cleanUrl);
-            mediaList.push({
-              filename: path.basename(cleanUrl) || `art_${art.id}.png`,
-              url: cleanUrl,
-              folder: 'articles',
-              article_title: articleHeadline,
-              article_id: art.id,
-              size_bytes: 0,
-              created_at: art.published_at || art.created_at || new Date()
-            });
-          }
+          articleImages.push(art.image_url.trim());
         }
+
         if (art.images_json) {
           try {
             const subImages = typeof art.images_json === 'string' ? JSON.parse(art.images_json) : art.images_json;
             if (Array.isArray(subImages)) {
-              subImages.forEach((img, idx) => {
-                if (typeof img === 'string' && img.trim()) {
-                  const cleanImg = img.trim();
-                  if (!addedUrls.has(cleanImg)) {
-                    addedUrls.add(cleanImg);
-                    mediaList.push({
-                      filename: path.basename(cleanImg) || `art_${art.id}_img_${idx + 1}.png`,
-                      url: cleanImg,
-                      folder: 'articles',
-                      article_title: articleHeadline,
-                      article_id: art.id,
-                      size_bytes: 0,
-                      created_at: art.published_at || art.created_at || new Date()
-                    });
-                  }
+              subImages.forEach(img => {
+                if (typeof img === 'string' && img.trim() && !articleImages.includes(img.trim())) {
+                  articleImages.push(img.trim());
                 }
               });
             }
           } catch(e) {}
         }
+
+        if (articleImages.length > 0) {
+          const coverUrl = articleImages[0];
+          articleImages.forEach(u => addedUrls.add(u));
+
+          mediaList.push({
+            id: art.id,
+            article_id: art.id,
+            article_title: articleHeadline,
+            filename: path.basename(coverUrl),
+            url: coverUrl,
+            images: articleImages,
+            image_count: articleImages.length,
+            folder: 'articles',
+            created_at: art.published_at || art.created_at || new Date()
+          });
+        }
       }
     }
 
-    // 5. Scan article_images table if present
-    const dbArticleImages = await dbAll('SELECT * FROM article_images ORDER BY created_at DESC');
-    if (Array.isArray(dbArticleImages)) {
-      dbArticleImages.forEach(ai => {
-        if (ai.image_url && !addedUrls.has(ai.image_url)) {
-          addedUrls.add(ai.image_url);
-          mediaList.push({
-            filename: path.basename(ai.image_url) || `img_${ai.id}.png`,
-            url: ai.image_url,
-            folder: 'articles',
-            size_bytes: 0,
-            created_at: ai.created_at || new Date()
-          });
-        }
-      });
-    }
-
-    // Populate disk file sizes where possible
-    mediaList.forEach(item => {
-      if ((!item.size_bytes || item.size_bytes === 0) && item.url && item.url.startsWith('/uploads/')) {
-        const diskPath = path.join(__dirname, item.url);
-        try {
-          if (fs.existsSync(diskPath)) {
-            item.size_bytes = fs.statSync(diskPath).size;
+    // 2. Scan persistent_uploads in Neon DB for any standalone uploads
+    try {
+      const dbUploads = await dbAll("SELECT file_path, file_size, created_at FROM persistent_uploads WHERE file_path NOT LIKE '%/qr_codes/%' ORDER BY created_at DESC");
+      if (Array.isArray(dbUploads)) {
+        dbUploads.forEach(u => {
+          if (u.file_path && !addedUrls.has(u.file_path)) {
+            addedUrls.add(u.file_path);
+            const fn = path.basename(u.file_path);
+            mediaList.push({
+              id: 'upload_' + fn,
+              article_title: fn,
+              filename: fn,
+              url: u.file_path,
+              images: [u.file_path],
+              image_count: 1,
+              folder: 'uploads',
+              size_bytes: u.file_size || 0,
+              created_at: u.created_at || new Date()
+            });
           }
+        });
+      }
+    } catch(e) {}
+
+    // 3. Scan imagesDir & mediaDir on disk for any extra standalone files
+    [imagesDir, mediaDir].forEach(dir => {
+      if (fs.existsSync(dir)) {
+        const folderName = path.basename(dir);
+        try {
+          const files = fs.readdirSync(dir);
+          files.filter(f => /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(f)).forEach(filename => {
+            const url = `/uploads/${folderName}/${filename}`;
+            if (!addedUrls.has(url)) {
+              addedUrls.add(url);
+              let sizeBytes = 0;
+              try { sizeBytes = fs.statSync(path.join(dir, filename)).size; } catch(e) {}
+              mediaList.push({
+                id: 'disk_' + filename,
+                filename,
+                url,
+                images: [url],
+                image_count: 1,
+                folder: folderName,
+                article_title: filename,
+                size_bytes: sizeBytes,
+                created_at: new Date()
+              });
+            }
+          });
         } catch(e) {}
       }
     });
 
     mediaList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-    res.json({ success: true, media: mediaList });
+    res.json({ success: true, count: mediaList.length, media: mediaList });
   } catch (err) {
     console.error('List media error:', err);
     res.status(500).json({ success: false, error: 'Failed to retrieve media list.' });

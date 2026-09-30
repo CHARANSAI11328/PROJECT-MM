@@ -2537,7 +2537,10 @@ function initAdminApp() {
         return clean.substring(clean.lastIndexOf('/') + 1);
     }
 
-    window.openMediaLightbox = function(item) {
+    let adminLightboxItem = null;
+    let adminLightboxIndex = 0;
+
+    function renderAdminLightboxState() {
         const modal = document.getElementById('media-lightbox-modal');
         const img = document.getElementById('media-lightbox-img');
         const title = document.getElementById('media-lightbox-title');
@@ -2545,41 +2548,124 @@ function initAdminApp() {
         const dlBtn = document.getElementById('media-lightbox-download-btn');
         const copyBtn = document.getElementById('media-lightbox-copy-btn');
         const delBtn = document.getElementById('media-lightbox-delete-btn');
-        if (!modal || !img) return;
+        const prevBtn = document.getElementById('media-lightbox-prev-btn');
+        const nextBtn = document.getElementById('media-lightbox-next-btn');
+        const counterBadge = document.getElementById('media-lightbox-counter-badge');
+        const thumbsContainer = document.getElementById('media-lightbox-thumbs-container');
 
-        const resolved = resolveAdminImageUrl(item.url);
+        if (!adminLightboxItem || !modal || !img) return;
+
+        const images = Array.isArray(adminLightboxItem.images) && adminLightboxItem.images.length > 0
+            ? adminLightboxItem.images
+            : [adminLightboxItem.url];
+
+        const total = images.length;
+        if (adminLightboxIndex < 0) adminLightboxIndex = total - 1;
+        if (adminLightboxIndex >= total) adminLightboxIndex = 0;
+
+        const currentUrl = images[adminLightboxIndex];
+        const resolved = resolveAdminImageUrl(currentUrl);
+
+        img.style.opacity = '0.3';
         img.src = resolved;
-        const displayName = item.article_title ? `${item.article_title}` : item.filename;
+        img.onload = () => { img.style.opacity = '1'; };
+
+        const displayName = adminLightboxItem.article_title || adminLightboxItem.filename;
         if (title) title.textContent = displayName;
 
-        const sizeKb = item.size_bytes ? (Math.round(item.size_bytes / 1024) + ' KB') : 'N/A';
-        const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('te-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-        const folderBadge = item.folder === 'articles' ? '📰 వార్తా ఫొటో (Article Photo)' : (item.folder === 'edition_media' ? '📰 సంచిక క్లిప్పింగ్ (ePaper Asset)' : '📁 ఒరిజినల్ అప్‌లోడ్ (Media Upload)');
-
+        const dateStr = adminLightboxItem.created_at ? new Date(adminLightboxItem.created_at).toLocaleDateString('te-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
         if (meta) {
             meta.innerHTML = `
-                <span>📁 వర్గం: <strong>${folderBadge}</strong></span>
-                <span>💾 సైజు: <strong>${sizeKb}</strong></span>
+                <span>📰 వార్త: <strong>${escapeHTML(displayName)}</strong></span>
+                <span>📸 మొత్తం ఫొటోలు: <strong>${total}</strong></span>
                 ${dateStr ? `<span>📅 తేదీ: <strong>${dateStr}</strong></span>` : ''}
-                <span style="word-break: break-all;">🔗 URL: <code>${escapeHTML(item.url)}</code></span>
             `;
         }
 
-        if (dlBtn) dlBtn.onclick = () => window.downloadMediaFile(item.url, item.filename);
-        if (copyBtn) copyBtn.onclick = () => {
-            navigator.clipboard.writeText(resolved);
-            alert('✓ ఫొటో లింక్ కాపీ చేయబడింది! (Image URL Copied)');
-        };
+        if (counterBadge) {
+            counterBadge.textContent = `📷 ${adminLightboxIndex + 1} / ${total}`;
+            counterBadge.style.display = total > 1 ? 'block' : 'none';
+        }
+
+        if (prevBtn) prevBtn.style.display = total > 1 ? 'flex' : 'none';
+        if (nextBtn) nextBtn.style.display = total > 1 ? 'flex' : 'none';
+
+        if (thumbsContainer) {
+            if (total > 1) {
+                thumbsContainer.style.display = 'flex';
+                thumbsContainer.innerHTML = images.map((u, i) => `
+                    <button type="button" class="admin-lb-thumb-btn" data-thumb-idx="${i}" style="width: 52px; height: 52px; border-radius: 6px; overflow: hidden; padding: 0; border: 2px solid ${i === adminLightboxIndex ? '#38bdf8' : 'rgba(255,255,255,0.25)'}; cursor: pointer; flex-shrink: 0; background: #000; opacity: ${i === adminLightboxIndex ? '1' : '0.6'}; transition: all 0.2s;" title="Photo ${i + 1}">
+                        <img src="${resolveAdminImageUrl(u)}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.style.display='none'">
+                    </button>
+                `).join('');
+
+                thumbsContainer.querySelectorAll('.admin-lb-thumb-btn').forEach(btn => {
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        adminLightboxIndex = parseInt(btn.dataset.thumbIdx, 10) || 0;
+                        renderAdminLightboxState();
+                    };
+                });
+            } else {
+                thumbsContainer.style.display = 'none';
+            }
+        }
+
+        if (dlBtn) {
+            dlBtn.onclick = () => {
+                const cleanName = (adminLightboxItem.article_title || 'article_photo')
+                    .replace(/[^\w\s-]/g, '')
+                    .trim()
+                    .replace(/\s+/g, '_')
+                    .substring(0, 30) || 'mameka_photo';
+                window.downloadMediaFile(currentUrl, `${cleanName}_${adminLightboxIndex + 1}.jpg`);
+            };
+        }
+
+        if (copyBtn) {
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(resolved);
+                alert('✓ ఫొటో లింక్ కాపీ చేయబడింది! (Image URL Copied)');
+            };
+        }
+
         if (delBtn) {
-            if (item.folder === 'articles') {
-                delBtn.style.display = 'none'; // Keep article cover photos protected from accidental wipe
+            if (adminLightboxItem.folder === 'articles') {
+                delBtn.style.display = 'none';
             } else {
                 delBtn.style.display = 'inline-block';
                 delBtn.onclick = () => {
                     modal.style.display = 'none';
-                    deleteMediaFile(item.filename);
+                    deleteMediaFile(adminLightboxItem.filename);
                 };
             }
+        }
+    }
+
+    window.openMediaLightbox = function(item, initialIndex = 0) {
+        adminLightboxItem = item;
+        adminLightboxIndex = initialIndex || 0;
+        const modal = document.getElementById('media-lightbox-modal');
+        if (!modal) return;
+
+        renderAdminLightboxState();
+
+        const prevBtn = document.getElementById('media-lightbox-prev-btn');
+        if (prevBtn) {
+            prevBtn.onclick = (e) => {
+                e.stopPropagation();
+                adminLightboxIndex--;
+                renderAdminLightboxState();
+            };
+        }
+
+        const nextBtn = document.getElementById('media-lightbox-next-btn');
+        if (nextBtn) {
+            nextBtn.onclick = (e) => {
+                e.stopPropagation();
+                adminLightboxIndex++;
+                renderAdminLightboxState();
+            };
         }
 
         modal.style.display = 'block';
@@ -2639,17 +2725,11 @@ function initAdminApp() {
             };
         }
 
-        let currentActiveFilter = 'all';
-
         function renderFilteredMedia() {
             const allItems = window.allMediaItems || [];
             const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
             let filtered = allItems;
-            if (currentActiveFilter !== 'all') {
-                filtered = filtered.filter(item => item.folder === currentActiveFilter);
-            }
-
             if (query) {
                 filtered = filtered.filter(item => {
                     const fn = (item.filename || '').toLowerCase();
@@ -2659,8 +2739,10 @@ function initAdminApp() {
                 });
             }
 
+            const totalPhotos = filtered.reduce((acc, item) => acc + (item.image_count || (Array.isArray(item.images) ? item.images.length : 1)), 0);
+
             if (totalBadge) {
-                totalBadge.textContent = `${filtered.length} ఫొటోలు`;
+                totalBadge.textContent = `${filtered.length} వార్తలు (${totalPhotos} ఫొటోలు)`;
             }
 
             if (filtered.length === 0) {
@@ -2676,65 +2758,43 @@ function initAdminApp() {
 
             grid.innerHTML = filtered.map((item, idx) => {
                 const resolved = resolveAdminImageUrl(item.url);
-                const sizeKb = item.size_bytes ? Math.round(item.size_bytes / 1024) + ' KB' : '';
-                const folderLabel = item.folder === 'articles' ? '📰 వార్త' : (item.folder === 'edition_media' ? '📰 సంచిక' : '📁 అప్‌లోడ్');
+                const count = item.image_count || (Array.isArray(item.images) ? item.images.length : 1);
                 const displayName = item.article_title || item.filename;
 
                 return `
-                    <div class="card media-card-item" style="padding: 12px; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
-                        <div style="width: 100%; height: 160px; background: #f1f5f9; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; cursor: zoom-in;" onclick="window.openMediaLightbox(window.allMediaItems[${idx}])" title="🔍 క్లిక్ చేసి పెద్దదిగా చూడు (Click to Maximize)">
-                            <img src="${resolved}" alt="${escapeHTML(item.filename)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.onerror=null; this.src=window.MM_DEFAULT_PLACEHOLDER||'';">
-                            <div style="position: absolute; top: 8px; left: 8px; background: rgba(15,23,42,0.8); color: #fff; font-size: 0.68rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;">
-                                ${folderLabel}
+                    <div class="card media-card-item" style="padding: 14px; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                        <div style="width: 100%; height: 180px; background: #0f172a; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; cursor: zoom-in;" onclick="window.openMediaLightbox(window.allMediaItems[${idx}])" title="🔍 క్లిక్ చేసి అన్ని ఫొటోలను పెద్దదిగా చూడు">
+                            <img src="${resolved}" alt="${escapeHTML(displayName)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.onerror=null; this.src=window.MM_DEFAULT_PLACEHOLDER||'';">
+                            <div style="position: absolute; top: 10px; left: 10px; background: rgba(15,23,42,0.85); color: #fff; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 700; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2);">
+                                📷 ${count} ${count > 1 ? 'ఫొటోలు' : 'ఫొటో'}
                             </div>
-                            <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(37,99,235,0.9); color: #fff; font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; font-weight: 700; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                                🔍 పెద్దదిగా చూడు
+                            <div style="position: absolute; bottom: 10px; right: 10px; background: rgba(37,99,235,0.92); color: #fff; font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; font-weight: 700; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+                                🔍 ఫొటోలు చూడు
                             </div>
                         </div>
 
-                        <div style="margin-top: 10px;">
-                            <div style="font-weight: 700; font-size: 0.85rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; color: #0f172a;" title="${escapeHTML(displayName)}">
+                        <div style="margin-top: 12px;">
+                            <div style="font-weight: 700; font-size: 0.92rem; line-height: 1.4; color: #0f172a; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="${escapeHTML(displayName)}">
                                 ${escapeHTML(displayName)}
                             </div>
-                            <div style="font-size: 0.75rem; color: #64748b; margin-top: 3px; display: flex; justify-content: space-between;">
-                                <span>${item.filename}</span>
-                                ${sizeKb ? `<span style="font-weight: 600;">${sizeKb}</span>` : ''}
+                            <div style="font-size: 0.78rem; color: #64748b; margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+                                <span>ఈ వార్తలోని మొత్తం ఫొటోలు:</span>
+                                <span style="font-weight: 700; color: #2563eb; background: #eff6ff; padding: 2px 8px; border-radius: 10px;">${count}</span>
                             </div>
                         </div>
 
-                        <div style="margin-top: 12px; display: flex; gap: 6px;">
-                            <button type="button" class="btn btn-primary" onclick="event.stopPropagation(); window.downloadMediaFile('${item.url}', '${item.filename}')" style="font-size: 0.75rem; padding: 6px 10px; flex: 1; text-align: center; justify-content: center; font-weight: 700; background: #16a34a; border-color: #15803d;" title="కంప్యూటర్‌కు డౌన్‌లోడ్ చేయండి">
-                                ⬇️ డౌన్‌లోడ్
+                        <div style="margin-top: 14px; display: flex; gap: 8px;">
+                            <button type="button" class="btn btn-primary" onclick="event.stopPropagation(); window.openMediaLightbox(window.allMediaItems[${idx}])" style="font-size: 0.8rem; padding: 8px 12px; flex: 1; text-align: center; justify-content: center; font-weight: 700; background: #2563eb; border-color: #1d4ed8;" title="అన్ని చిత్రాలు వీక్షించండి">
+                                🔍 ఫొటోలు చూడండి (${count})
                             </button>
-                            <button type="button" class="btn btn-outline-sm" onclick="event.stopPropagation(); navigator.clipboard.writeText('${resolved}'); alert('✓ ఫొటో లింక్ కాపీ చేయబడింది! (Image URL Copied)');" style="font-size: 0.75rem; padding: 6px 8px;" title="లింక్ కాపీ చేయండి">
-                                📋
+                            <button type="button" class="btn btn-outline-sm" onclick="event.stopPropagation(); window.downloadMediaFile('${item.url}', '${displayName.replace(/[^\w\s-]/g, '').trim().substring(0, 25) || 'photo'}.jpg')" style="font-size: 0.8rem; padding: 8px 12px; font-weight: 700; background: #16a34a; color: #fff; border-color: #15803d;" title="కంప్యూటర్‌కు డౌన్‌లోడ్ చేయండి">
+                                ⬇️
                             </button>
-                            ${item.folder !== 'articles' ? `
-                            <button type="button" class="btn btn-danger-sm" onclick="event.stopPropagation(); deleteMediaFile('${item.filename}')" style="font-size: 0.75rem; padding: 6px 8px;" title="తొలగించు">
-                                🗑️
-                            </button>
-                            ` : ''}
                         </div>
                     </div>
                 `;
             }).join('');
         }
-
-        // Attach category filter buttons
-        document.querySelectorAll('.media-filter-btn').forEach(btn => {
-            btn.onclick = () => {
-                document.querySelectorAll('.media-filter-btn').forEach(b => {
-                    b.classList.remove('active');
-                    b.style.background = '#ffffff';
-                    b.style.color = '#334155';
-                });
-                btn.classList.add('active');
-                btn.style.background = '#2563eb';
-                btn.style.color = '#ffffff';
-                currentActiveFilter = btn.getAttribute('data-filter') || 'all';
-                renderFilteredMedia();
-            };
-        });
 
         if (searchInput) {
             searchInput.oninput = () => renderFilteredMedia();

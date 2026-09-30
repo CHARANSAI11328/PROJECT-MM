@@ -1247,17 +1247,15 @@
 
                     <div id="media-library-alert" class="alert" style="display: none;"></div>
 
-                    <!-- SEARCH & FILTER CONTROLS BAR -->
-                    <div class="card" style="padding: 14px 18px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #ffffff;">
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                            <button type="button" class="btn btn-outline-sm media-filter-btn active" data-filter="all" style="font-weight: 600; padding: 6px 14px;">అన్నీ (All)</button>
-                            <button type="button" class="btn btn-outline-sm media-filter-btn" data-filter="articles" style="font-weight: 600; padding: 6px 14px;">📰 వార్తా ఫొటోలు (Articles)</button>
-                            <button type="button" class="btn btn-outline-sm media-filter-btn" data-filter="images" style="font-weight: 600; padding: 6px 14px;">📁 అప్‌లోడ్‌లు (Uploads)</button>
-                            <button type="button" class="btn btn-outline-sm media-filter-btn" data-filter="edition_media" style="font-weight: 600; padding: 6px 14px;">📰 సంచిక చిత్రాలు (ePaper Clips)</button>
+                    <!-- SEARCH & STATS BAR (Single Slot Per Article, No Category Tabs) -->
+                    <div class="card" style="padding: 14px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; background: #ffffff;">
+                        <div style="font-weight: 700; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                            <span>📸 వార్తా ఫొటోల గ్యాలరీ</span>
+                            <span style="font-size: 0.8rem; font-weight: 500; color: #64748b;">(ప్రతి వార్తలోని అన్ని ఫొటోలు ఒకే స్లాట్‌లో ఉంటాయి)</span>
                         </div>
-                        <div style="display: flex; gap: 12px; align-items: center; flex: 1; max-width: 360px;">
-                            <input type="text" id="media-search-input" class="form-control" placeholder="🔍 ఫొటో పేరు లేదా శీర్షిక వెతకండి..." style="padding: 7px 12px; font-size: 0.85rem; border-radius: 6px;">
-                            <span id="media-total-badge" style="background: #eff6ff; color: #2563eb; font-weight: 700; font-size: 0.8rem; padding: 4px 10px; border-radius: 12px; border: 1px solid #bfdbfe; white-space: nowrap;">0 ఫొటోలు</span>
+                        <div style="display: flex; gap: 12px; align-items: center; flex: 1; max-width: 450px;">
+                            <input type="text" id="media-search-input" class="form-control" placeholder="🔍 వార్త పేరు లేదా ఫొటో వెతకండి..." style="padding: 8px 14px; font-size: 0.88rem; border-radius: 6px;">
+                            <span id="media-total-badge" style="background: #eff6ff; color: #2563eb; font-weight: 700; font-size: 0.85rem; padding: 6px 14px; border-radius: 14px; border: 1px solid #bfdbfe; white-space: nowrap;">0 గ్యాలరీలు</span>
                         </div>
                     </div>
 
@@ -1347,9 +1345,15 @@
                 <button type="button" id="close-media-lightbox-btn" style="background: none; border: none; color: #ffffff; font-size: 1.6rem; cursor: pointer; line-height: 1;">&times;</button>
             </div>
             
-            <div style="background: #090d16; padding: 20px; text-align: center; display: flex; align-items: center; justify-content: center; min-height: 380px; max-height: 70vh; overflow: hidden;">
-                <img id="media-lightbox-img" src="" alt="Full Preview" style="max-width: 100%; max-height: 65vh; object-fit: contain; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+            <div style="position: relative; background: #090d16; padding: 20px; text-align: center; display: flex; align-items: center; justify-content: center; min-height: 380px; max-height: 70vh; overflow: hidden;">
+                <button type="button" id="media-lightbox-prev-btn" aria-label="Previous Image" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.3); color: #ffffff; font-size: 1.8rem; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.5); user-select: none;">❮</button>
+                <img id="media-lightbox-img" src="" alt="Full Preview" style="max-width: 100%; max-height: 65vh; object-fit: contain; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); transition: opacity 0.15s ease;">
+                <button type="button" id="media-lightbox-next-btn" aria-label="Next Image" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.3); color: #ffffff; font-size: 1.8rem; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.5); user-select: none;">❯</button>
+                <div id="media-lightbox-counter-badge" style="position: absolute; top: 12px; left: 16px; background: rgba(0,0,0,0.75); color: #fff; padding: 4px 12px; border-radius: 14px; font-size: 0.8rem; font-weight: 700; border: 1px solid rgba(255,255,255,0.2);">📷 1 / 1</div>
             </div>
+
+            <!-- Thumbnails strip for multi-image articles -->
+            <div id="media-lightbox-thumbs-container" style="display: flex; gap: 8px; justify-content: center; overflow-x: auto; padding: 10px 16px; background: #0b0f19; border-top: 1px solid #1e293b; max-height: 70px;"></div>
 
             <div style="padding: 18px 24px; background: #ffffff;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 14px;">
