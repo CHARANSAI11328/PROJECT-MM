@@ -6,7 +6,7 @@ Welcome to **MAMEKA MAHODAYAM**, an advanced, accessible, high-performance indep
 
 ## 📌 Project Overview
 
-**MAMEKA MAHODAYAM** provides a complete end-to-end digital publishing ecosystem. It features a bilingual public newspaper website (Telugu default / English optional), an automated PDF E-Paper ingestion pipeline, interactive E-Paper viewer, reporter press ID card generator with high-resolution 300 DPI QR codes, and a full Single Page Application (SPA) administrative CMS portal.
+**MAMEKA MAHODAYAM** provides a complete end-to-end digital publishing ecosystem. Hosted on **GitHub** and deployed on **Render**, it features a bilingual public newspaper website (Telugu default / English optional), an automated PDF E-Paper ingestion pipeline, interactive E-Paper viewer, reporter press ID card generator with high-resolution 300 DPI QR codes, and a full Single Page Application (SPA) administrative CMS portal.
 
 > [!IMPORTANT]
 > **Strict Content Integrity Standard**: This platform is designed for zero fabricated news content, fake statistics, or invented contact details. All pre-configured news blocks use clean, professional placeholders awaiting live CMS or REST API publishing.
@@ -44,8 +44,8 @@ Welcome to **MAMEKA MAHODAYAM**, an advanced, accessible, high-performance indep
 ### 💾 Smart Persistence & Database Engine (`db.js`)
 - **Dual-Database Compatibility**:
   - **Local Development**: Embedded file-based `sqlite3` database (`database.sqlite`).
-  - **Production Deployment**: Cloud PostgreSQL (`pg`) with automatic support for Neon Serverless DB, SSL connections, and schema auto-migrations.
-- **Persistent Asset Restore**: Uploaded files stored in cloud/database to prevent data loss on ephemeral hosting platforms (such as Render, Vercel, or Railway container redeployments).
+  - **Production Deployment (Render)**: Cloud PostgreSQL (`pg`) with automatic support for Neon Serverless DB, SSL connections, and schema auto-migrations.
+- **Persistent Asset Restore**: Uploaded files stored in database/cloud storage to prevent data loss on ephemeral container redeployments (Render).
 
 ---
 
@@ -62,7 +62,7 @@ Welcome to **MAMEKA MAHODAYAM**, an advanced, accessible, high-performance indep
 | **Media & QR** | `qrcode`, `pdf-to-img`, `pdf-parse` | QR Code generation and PDF utilities |
 | **Frontend UI** | HTML5, CSS3, Vanilla JS (ES6) | Responsive, framework-less, accessible UI |
 | **Styling** | Design System CSS Custom Tokens | Print-inspired color system and typography |
-| **Cloud Configs** | Render, Netlify, Railway, Vercel | `render.yaml`, `netlify.toml`, `railway.json`, `vercel.json`, `Procfile` |
+| **Hosting & Cloud Deployment** | **GitHub** & **Render** | Source control hosted on GitHub; live production backend/frontend deployed on Render (`render.yaml`, `Procfile`) |
 
 ---
 
@@ -121,11 +121,9 @@ PROJECT-MM/
 │
 ├── .env.example                   -> Template environment variables file
 ├── package.json                   -> Node.js dependencies & scripts
-├── Procfile                       -> Process file for deployment (Heroku / Render)
-├── railway.json                   -> Railway deployment configuration
+├── Procfile                       -> Process file for Render deployment
 ├── render.yaml                    -> Render cloud service blueprint
-├── netlify.toml                   -> Netlify static site redirect & build settings
-└── vercel.json                    -> Vercel serverless deployment routing
+└── netlify.toml                   -> Netlify static site redirect settings
 ```
 
 ---
@@ -146,17 +144,18 @@ The visual identity is based on the traditional **MAMEKA MAHODAYAM** print newsp
 
 ---
 
-## ⚡ Local Setup Instructions
+## ⚡ Local Setup & Deployment Guide
 
-Follow these steps to set up and run **MAMEKA MAHODAYAM** locally on your machine.
+Follow these steps to set up and run **MAMEKA MAHODAYAM** locally or deploy it to Render from GitHub.
 
 ### Prerequisites
 - **Node.js**: Version 18.0.0 or higher.
 - **npm**: Node Package Manager (comes bundled with Node.js).
+- **Git**: For pushing source code to GitHub.
 
 ### Step 1: Clone the Repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/<your-username>/project-mm.git
 cd project-mm
 ```
 
@@ -178,11 +177,11 @@ NODE_ENV=development
 JWT_SECRET=mameka_mahodayam_newspaper_secret_key_2026
 
 # DATABASE_URL: Leave empty for local SQLite database (database.sqlite)
-# For production Cloud PostgreSQL (Neon), set your connection string below:
+# For production Cloud PostgreSQL (Neon / Render Postgres), set connection string below:
 # DATABASE_URL=postgresql://user:password@ep-host.neon.tech/dbname?sslmode=require
 ```
 
-### Step 4: Start the Server
+### Step 4: Start the Server Locally
 Start the Express server with local SQLite database initialization:
 ```bash
 npm start
@@ -203,6 +202,13 @@ When starting with a fresh database, an initial Super Admin user is automaticall
 - **Password**: `admin`
 
 *(Note: Password can be changed anytime from the Admin Portal Password Settings panel).*
+
+### 🚀 Deploying to Render from GitHub
+1. Push your repository code to **GitHub**.
+2. Connect your GitHub repository to **Render** (as a Web Service).
+3. Set the build command: `npm install`
+4. Set the start command: `node server.js`
+5. Configure environment variables (`JWT_SECRET`, `DATABASE_URL`, `NODE_ENV=production`) in the Render Dashboard.
 
 ---
 
