@@ -18,7 +18,7 @@ const imagesDir = path.join(uploadsDir, 'images');
       fs.mkdirSync(dir, { recursive: true });
     }
   } catch (e) {
-    // Safe fallback for read-only serverless filesystems (e.g., Vercel Lambda)
+    // Safe fallback for read-only serverless filesystems
   }
 });
 

@@ -67,7 +67,7 @@ async function uploadFile({ localFilePath, destinationKey, contentType }) {
   const normalizedKey = (destinationKey || '').replace(/\\/g, '/').replace(/^\/+/, '');
   const publicUrl = `/uploads/${normalizedKey}`;
 
-  // Persist into database so ephemeral containers (Render/Railway/Vercel) never lose images on redeployment
+  // Persist into database so ephemeral containers (Render/Railway) never lose images on redeployment
   if (localFilePath && fs.existsSync(localFilePath)) {
     try {
       const stats = fs.statSync(localFilePath);
