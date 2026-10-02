@@ -10,17 +10,23 @@ const jwt = require('jsonwebtoken');
 const { db, dbRun, dbAll, dbGet, initDatabase, editionsDir, pagesDir } = require('./db');
 const { processEdition } = require('./ingestion');
 const { uploadFile, deleteFile } = require('./services/storage');
+const { getOptimizedImage } = require('./services/image-optimizer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Production JWT Secret Fallback Check
+const crypto = require('crypto');
 const isProduction = process.env.NODE_ENV === 'production';
-if (isProduction && !process.env.JWT_SECRET) {
-  console.warn('⚠️ WARNING: JWT_SECRET environment variable is not explicitly set. Using secure fallback key.');
+let JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  if (isProduction) {
+    JWT_SECRET = crypto.randomBytes(32).toString('hex');
+    console.warn('⚠️ WARNING: JWT_SECRET not set in environment. Dynamically generated secure random key for this session.');
+  } else {
+    JWT_SECRET = 'mameka_mahodayam_newspaper_secret_key_2026';
+  }
 }
-
-const JWT_SECRET = process.env.JWT_SECRET || 'mameka_mahodayam_newspaper_secret_key_2026';
 
 // Middleware Setup (50MB body-parser limit for high-resolution images & rich news publishing)
 app.use(cors());
@@ -77,25 +83,28 @@ function getBaseServerUrl(reqOrBaseUrl) {
 async function cleanupOrphanQRCodes() {
   try {
     if (!fs.existsSync(qrUploadDir)) return;
-    const files = fs.readdirSync(qrUploadDir);
-    const validReporters = new Set((await dbAll('SELECT id FROM reporters')).map(r => String(r.id)));
+    const reportersList = await dbAll('SELECT id, press_id, name FROM reporters');
+    const validReporters = new Set();
+    reportersList.forEach(r => {
+      if (r.id) validReporters.add(String(r.id));
+      if (r.press_id) validReporters.add(String(r.press_id).trim());
+      if (r.name) validReporters.add(String(r.name).replace(/[\\/:*?"<>|]/g, '_').trim());
+    });
     const validEditions = new Set((await dbAll('SELECT id FROM editions')).map(e => String(e.id)));
     const validArticles = new Set((await dbAll('SELECT id FROM articles')).map(a => String(a.id)));
 
     for (const f of files) {
       if (!f.endsWith('.png')) continue;
       let shouldKeep = false;
-      const repMatch = f.match(/^Reporter_(.+)_QR\.png$/i);
+      const repMatch = f.match(/^(?:Reporter_)?(.+)_QR\.png$/i);
       const edMatch = f.match(/^Edition_(.+)_QR\.png$/i);
       const artMatch = f.match(/^Article_(.+)_QR\.png$/i);
 
       if (repMatch) {
         if (validReporters.has(repMatch[1])) shouldKeep = true;
-      } else if (edMatch) {
-        if (validEditions.has(edMatch[1])) shouldKeep = true;
-      } else if (artMatch) {
-        if (validArticles.has(artMatch[1])) shouldKeep = true;
       }
+      if (edMatch && validEditions.has(edMatch[1])) shouldKeep = true;
+      if (artMatch && validArticles.has(artMatch[1])) shouldKeep = true;
 
       if (!shouldKeep) {
         try {
@@ -216,9 +225,8 @@ app.use((req, res, next) => {
   const blockedPatterns = [
     /^\/\.env/i,
     /\.(sqlite|sqlite3|db)$/i,
-    /^\/(server|db|ingestion|neon)\.(js|ts)$/i,
-    /^\/package(-lock)?\.json$/i,
-    /^\/(scratch|node_modules|\.git)/i,
+    /^\/[^\/]+\.(js|ts|json|md|yml|yaml|config|sh|bat)$/i,
+    /^\/(scratch|docs|node_modules|\.git)/i,
     /\.log$/i
   ];
   if (blockedPatterns.some(pattern => pattern.test(reqPath))) {
@@ -685,7 +693,7 @@ app.patch(['/api/editions/:id/status', '/api/admin/editions/:id/status'], authen
     if (!edition) return res.status(404).json({ success: false, error: 'Edition not found.' });
 
     await dbRun(
-      'UPDATE editions SET status = ?, updated_at = CURRENT_TIMESTAMP, published_at = CASE WHEN ? = "published" THEN CURRENT_TIMESTAMP ELSE published_at END WHERE id = ?',
+      "UPDATE editions SET status = ?, updated_at = CURRENT_TIMESTAMP, published_at = CASE WHEN ? = 'published' THEN CURRENT_TIMESTAMP ELSE published_at END WHERE id = ?",
       [status, status, id]
     );
 
@@ -906,9 +914,6 @@ app.get(['/api/public/articles', '/api/articles'], async (req, res) => {
       WHERE ${filters.join(' AND ')}
       ORDER BY a.is_breaking DESC, a.featured DESC, COALESCE(a.published_at, a.created_at) DESC
       LIMIT ${safeLimit} OFFSET ${safeOffset}
-    `, params);
-
-    const { getOptimizedImage } = require('./services/image-optimizer');
     const articles = await Promise.all(rows.map(async r => {
       let thumbnailUrl = r.image_url;
       if (r.image_url && r.image_url.startsWith('/uploads/media/')) {
@@ -1142,7 +1147,7 @@ function generateArticleSlug(titleEn, titleTe, id) {
     base = titleEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   }
   if (!base && titleTe && titleTe.trim()) {
-    base = titleTe.trim().toLowerCase().replace(/[\s\t\n]+/g, '-').replace(/[^a-z0-9\u0C00-\u0C7F-]+/g, '').slice(0, 40);
+    base = titleTe.trim().toLowerCase().replace(/[\s\t\n]+/g, '-').replace(/[^a-z0-9\u0C00-\u0C7F-]+/g, '').replace(/-+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
   }
   if (!base) {
     base = 'news-article';

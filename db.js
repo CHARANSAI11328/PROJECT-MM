@@ -64,7 +64,25 @@ function translateSqlForPostgres(sql) {
       sanitizedSql = sanitizedSql.trim() + ' ON CONFLICT DO NOTHING';
     }
   }
-  return sanitizedSql.replace(/\?/g, () => `$${paramIndex++}`);
+  let inSingleQuote = false;
+  let result = '';
+  for (let i = 0; i < sanitizedSql.length; i++) {
+    const char = sanitizedSql[i];
+    if (char === "'") {
+      if (i + 1 < sanitizedSql.length && sanitizedSql[i + 1] === "'") {
+        result += "''";
+        i++;
+        continue;
+      }
+      inSingleQuote = !inSingleQuote;
+      result += "'";
+    } else if (char === '?' && !inSingleQuote) {
+      result += `$${paramIndex++}`;
+    } else {
+      result += char;
+    }
+  }
+  return result;
 }
 
 // Normalize SQL statement DDL types for PostgreSQL compatibility
@@ -373,7 +391,7 @@ async function initDatabase() {
     
     await dbRun(
       `INSERT INTO users (id, username, email, password_hash, role) VALUES (?, ?, ?, ?, ?)`,
-      [adminId, 'admin', 'editor@mamekamahodayam.com', passwordHash, 'superadmin']
+      [adminId, 'admin', 'mahodayamnews@gmail.com', passwordHash, 'superadmin']
     );
     console.log('✓ Initial Admin Account Seeded: username="admin", password="admin"');
   } else {
@@ -381,7 +399,7 @@ async function initDatabase() {
     const adminById = await dbGet('SELECT id FROM users WHERE id = ?', ['usr_admin']);
     if (!adminById) {
       await dbRun(
-        `INSERT INTO users (id, username, email, password_hash, role) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
+        `INSERT INTO users (id, username, email, password_hash, role) VALUES (?, ?, ?, ?, ?)`,
         ['usr_admin', 'admin_sys', 'admin@mamekamahodayam.com', existingUser.password_hash || '$2a$10$dummy', 'superadmin']
       ).catch(() => {});
     }
@@ -400,7 +418,7 @@ async function initDatabase() {
         bio: 'సత్యమే ఆధారం... ప్రజాహితమే మా ధ్యేయం! మమేక మహోదయం దినపత్రిక స్థాపక ప్రధాన సంపాదకులు. ప్రజా సమస్యలపై స్వతంత్ర, నిర్భయ మరియు నిజాయితీగల జర్నలిజానికి నిరంతరం కట్టుబడి ఉన్నారు.',
         photo_url: '/uploads/reporters/vaka_srinivasa_rao.png',
         phone: '+91 7075652808',
-        email: 'editor@mamekamahodayam.com',
+        email: 'mahodayamnews@gmail.com',
         social_links: JSON.stringify({ twitter: 'https://twitter.com', facebook: 'https://facebook.com' }),
         status: 'active',
         display_order: 1

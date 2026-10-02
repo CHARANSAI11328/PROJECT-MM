@@ -77,7 +77,14 @@ async function processEdition({ edition, jobId, dbRun, dbGet, pagesDir }) {
     console.log(`✓ E-Paper edition ${edition.id} published cleanly with ${totalPages} pages.`);
   } catch (error) {
     console.error('E-Paper publishing error:', error);
-    await dbRun("UPDATE editions SET status = 'published', updated_at = CURRENT_TIMESTAMP WHERE id = ?", [edition.id]);
+    await dbRun("UPDATE editions SET status = 'failed', updated_at = CURRENT_TIMESTAMP WHERE id = ?", [edition.id]);
+    if (jobId) {
+      await dbRun(`
+        UPDATE processing_jobs
+        SET stage = 'failed', error_details = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [error.message || 'PDF processing error', jobId]).catch(() => {});
+    }
   }
 }
 

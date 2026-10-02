@@ -20,13 +20,19 @@ const thumbnailsDir = path.join(mediaDir, 'thumbnails');
  */
 async function getOptimizedImage(imageUrl, mode = 'card') {
   if (!imageUrl || typeof imageUrl !== 'string') return imageUrl;
-  if (!imageUrl.startsWith('/uploads/media/')) return imageUrl;
+  const cleanUrl = imageUrl.split('?')[0].trim();
+  if (!cleanUrl.includes('/uploads/media/')) return imageUrl;
 
-  const filename = path.basename(imageUrl);
-  if (filename.startsWith('thumb_') || filename.startsWith('opt_')) return imageUrl;
+  let filename = path.basename(cleanUrl);
+  const origFilename = filename.replace(/^(thumb|opt)_\d+_/, '');
 
-  const originalPath = path.join(mediaDir, filename);
-  if (!fs.existsSync(originalPath)) return imageUrl;
+  let originalPath = path.join(mediaDir, origFilename);
+  if (!fs.existsSync(originalPath)) {
+    originalPath = path.join(mediaDir, filename);
+    if (!fs.existsSync(originalPath)) return imageUrl;
+  } else {
+    filename = origFilename;
+  }
 
   // Mode settings
   const targetWidth = mode === 'hero' ? 1200 : mode === 'card' ? 600 : 300;

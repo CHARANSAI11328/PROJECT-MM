@@ -36,7 +36,9 @@
     if (!cat) return window.MM_i18n ? window.MM_i18n.getText('nav_home') : 'వార్తలు';
     const lang = (window.MM_i18n ? window.MM_i18n.getLanguage() : 'te');
     const key = String(cat).toLowerCase().trim();
-    return (CATEGORY_LABELS[lang] && CATEGORY_LABELS[lang][key]) || (CATEGORY_LABELS.te[key]) || cat;
+    const found = (CATEGORY_LABELS[lang] && CATEGORY_LABELS[lang][key]) || (CATEGORY_LABELS.te[key]);
+    if (found) return found;
+    return String(cat).replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
   function escapeText(val) {

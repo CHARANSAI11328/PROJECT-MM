@@ -140,7 +140,7 @@
         <div class="photo-frame-wrap">
           <div class="photo-frame">
             ${photoUrl
-              ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(r.name)}" onerror="this.onerror=null; this.parentNode.innerHTML='<span class=\\'photo-placeholder\\'>${initial}</span>';">`
+              ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(r.name || 'రిపోర్టర్ ఫొటో (Reporter Photo)')}" onerror="this.onerror=null; this.parentNode.innerHTML='<span class=\\'photo-placeholder\\'>${initial}</span>';">`
               : `<span class="photo-placeholder">${initial}</span>`
             }
           </div>
