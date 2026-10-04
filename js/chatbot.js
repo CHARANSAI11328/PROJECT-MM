@@ -7,22 +7,22 @@
   if (window.MamekaChatbotInitialized) return;
   window.MamekaChatbotInitialized = true;
 
-  // Injected Scoped CSS Styles with Strict Floating Position Overrides
+  // Injected Scoped CSS Styles with Strict Viewport Floating Position Overrides
   const styleContent = `
     #mameka-chat-launcher {
       position: fixed !important;
-      bottom: 25px !important;
-      right: 25px !important;
+      bottom: 30px !important;
+      right: 30px !important;
       top: auto !important;
       left: auto !important;
       z-index: 2147483647 !important;
-      width: 58px !important;
-      height: 58px !important;
+      width: 60px !important;
+      height: 60px !important;
       border-radius: 50% !important;
-      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
       color: #ffffff !important;
-      border: 2.5px solid #ffffff !important;
-      box-shadow: 0 8px 25px rgba(220, 38, 38, 0.5) !important;
+      border: 3px solid #ffffff !important;
+      box-shadow: 0 10px 28px rgba(220, 38, 38, 0.55) !important;
       cursor: pointer !important;
       display: flex !important;
       align-items: center !important;
@@ -37,8 +37,8 @@
     }
 
     #mameka-chat-launcher:hover {
-      transform: scale(1.1) translateY(-2px) !important;
-      box-shadow: 0 12px 30px rgba(220, 38, 38, 0.65) !important;
+      transform: scale(1.1) translateY(-3px) !important;
+      box-shadow: 0 14px 34px rgba(220, 38, 38, 0.68) !important;
     }
 
     #mameka-chat-launcher:active {
@@ -46,7 +46,7 @@
     }
 
     #mameka-chat-launcher .launcher-emblem {
-      font-size: 26px !important;
+      font-size: 28px !important;
       line-height: 1 !important;
       display: flex !important;
       align-items: center !important;
@@ -73,18 +73,18 @@
 
     #mameka-chat-modal {
       position: fixed !important;
-      bottom: 95px !important;
-      right: 25px !important;
+      bottom: 102px !important;
+      right: 30px !important;
       top: auto !important;
       left: auto !important;
       z-index: 2147483647 !important;
-      width: 380px !important;
-      max-width: calc(100vw - 32px) !important;
-      height: 530px !important;
-      max-height: calc(100vh - 120px) !important;
+      width: 390px !important;
+      max-width: calc(100vw - 40px) !important;
+      height: 540px !important;
+      max-height: calc(100vh - 130px) !important;
       background-color: #ffffff !important;
       border-radius: 18px !important;
-      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25) !important;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28) !important;
       border: 1px solid #e2e8f0 !important;
       display: flex !important;
       flex-direction: column !important;
@@ -305,18 +305,19 @@
 
     @media (max-width: 600px) {
       #mameka-chat-launcher {
-        bottom: 20px !important;
+        bottom: 24px !important;
         right: 20px !important;
-        width: 52px !important;
-        height: 52px !important;
+        width: 54px !important;
+        height: 54px !important;
       }
       #mameka-chat-modal {
-        bottom: 82px !important;
+        bottom: 88px !important;
         right: 15px !important;
         left: 15px !important;
         width: auto !important;
         max-width: none !important;
         height: calc(100vh - 110px) !important;
+        max-height: 560px !important;
       }
     }
   `;
@@ -332,7 +333,6 @@
   function buildUI() {
     if (document.getElementById('mameka-chat-launcher')) return;
 
-    // Create Launcher Button
     const launcher = document.createElement('button');
     launcher.id = 'mameka-chat-launcher';
     launcher.setAttribute('aria-label', 'మమేక మహోదయం డిజిటల్ సహాయకుడు');
@@ -342,7 +342,6 @@
       <div class="launcher-emblem">📰</div>
     `;
 
-    // Create Modal Box
     const modal = document.createElement('div');
     modal.id = 'mameka-chat-modal';
     modal.innerHTML = `
@@ -360,12 +359,12 @@
       <div class="mm-chat-body" id="mm-chat-body">
         <div class="mm-msg bot">
           నమస్తే! 📰 <strong>మమేక మహోదయం</strong> డిజిటల్ సహాయకుడికి స్వాగతం.<br/><br/>
-          మా వెబ్‌సైట్‌లోని <strong>తాజా వార్తలు</strong>, <strong>విలేఖరుల వివరాలు</strong>, లేదా ఇతర సమాచారం గురించి నన్ను ఏమైనా అడగండి.
+          మా వెబ్‌సైట్‌లోని <strong>వార్తలు</strong>, <strong>విలేఖరుల వివరాలు</strong>, లేదా ఇతర సమాచారం గురించి నన్ను ఏమైనా అడగండి.
           <div class="mm-chat-chips">
-            <button class="mm-chip-btn" data-query="తాజా వార్తలు ఏమిటి?">📰 తాజా వార్తలు</button>
-            <button class="mm-chip-btn" data-query="విలేఖరులు మరియు సంపాదకీయ బృందం వివరాలు">👥 విలేఖరుల వివరాలు</button>
+            <button class="mm-chip-btn" data-query="మా వెబ్‌సైట్‌లో ఎన్ని వార్తలు ఉన్నాయి?">📰 మొత్తం వార్తలు</button>
+            <button class="mm-chip-btn" data-query="వాకా శ్రీనివాసరావు గారి హోదా ఏమిటి?">👤 సంపాదకుల వివరాలు</button>
+            <button class="mm-chip-btn" data-query="విలేఖరుల మరియు సంపాదకీయ బృందం వివరాలు">👥 విలేఖరుల బృందం</button>
             <button class="mm-chip-btn" data-query="ఈ-పేపర్ ఎలా చూడాలి?">📖 ఈ-పేపర్</button>
-            <button class="mm-chip-btn" data-query="కార్యాలయ సంప్రదింపు వివరాలు">📞 సంప్రదించండి</button>
           </div>
         </div>
       </div>
@@ -376,7 +375,6 @@
       </div>
     `;
 
-    // Always append directly to body as a top-level child to escape any wrapper or transform containers
     document.body.appendChild(launcher);
     document.body.appendChild(modal);
 

@@ -2415,51 +2415,70 @@ app.post('/api/chatbot', async (req, res) => {
       console.warn('Chatbot latest articles warning:', e.message);
     }
 
-    // Combine & deduplicate articles
+    // 1. Fetch live database overall statistics & counts
+    let totalArticles = 0;
+    let totalReporters = 0;
+    let totalEditions = 0;
+    let categoryStatsSummary = '';
+    let districtStatsSummary = '';
+
+    try {
+      const artCountRow = await dbGet("SELECT COUNT(*) as count FROM articles WHERE status = 'published'");
+      totalArticles = artCountRow ? parseInt(artCountRow.count || artCountRow['COUNT(*)'] || 0) : 0;
+
+      const repCountRow = await dbGet("SELECT COUNT(*) as count FROM reporters WHERE status = 'active'");
+      totalReporters = repCountRow ? parseInt(repCountRow.count || repCountRow['COUNT(*)'] || 0) : 0;
+
+      const edCountRow = await dbGet("SELECT COUNT(*) as count FROM editions");
+      totalEditions = edCountRow ? parseInt(edCountRow.count || edCountRow['COUNT(*)'] || 0) : 0;
+
+      const catRows = await dbAll("SELECT category, COUNT(*) as count FROM articles WHERE status = 'published' GROUP BY category");
+      if (catRows && catRows.length > 0) {
+        categoryStatsSummary = catRows.map(r => `${r.category || 'General'}: ${r.count || r['COUNT(*)']}`).join(', ');
+      }
+
+      const distRows = await dbAll("SELECT district, COUNT(*) as count FROM articles WHERE status = 'published' AND district IS NOT NULL GROUP BY district");
+      if (distRows && distRows.length > 0) {
+        districtStatsSummary = distRows.map(r => `${r.district}: ${r.count || r['COUNT(*)']}`).join(', ');
+      }
+    } catch (e) {
+      console.warn('Chatbot stats aggregation warning:', e.message);
+    }
+
+    // 2. Fetch COMPLETE list of active reporters & editorial team members
+    let allActiveReporters = [];
+    try {
+      allActiveReporters = await dbAll(
+        `SELECT id, name, designation, district, mandal, bio, phone, email, jurisdiction, press_id, status 
+         FROM reporters 
+         WHERE status = 'active' 
+         ORDER BY designation ASC, name ASC`
+      );
+    } catch (e) {
+      console.warn('Chatbot reporter directory warning:', e.message);
+    }
+
+    // Combine matching articles & latest published articles
     const articleMap = new Map();
     [...matchingArticles, ...latestArticles].forEach(a => {
       if (a && a.id) articleMap.set(a.id, a);
     });
     const finalArticles = Array.from(articleMap.values());
 
-    // Fetch matching reporters
-    let matchingReporters = [];
-    try {
-      matchingReporters = await dbAll(
-        `SELECT id, name, designation, district, mandal, bio, phone, email, jurisdiction, status 
-         FROM reporters 
-         WHERE (
-           name LIKE ? OR designation LIKE ? OR district LIKE ? OR mandal LIKE ? OR jurisdiction LIKE ?
-         ) LIMIT 5`,
-        [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern]
-      );
-    } catch (e) {
-      console.warn('Chatbot reporter search warning:', e.message);
-    }
-
-    // Always include active reporters list if user asks about reporters, team, or contact
-    let allReporters = [];
-    if (/reporter|విలేఖరి|రిపోర్టర్|సంపాదకీయ|టీమ్|team|editor|contact|ఫోన్|phone|email/i.test(userQuery) || matchingReporters.length === 0) {
-      try {
-        allReporters = await dbAll(
-          `SELECT name, designation, district, mandal, bio, phone, email, jurisdiction FROM reporters WHERE status = 'active' LIMIT 8`
-        );
-      } catch (e) {
-        console.warn('Chatbot all reporters warning:', e.message);
-      }
-    }
-    const reporterMap = new Map();
-    [...matchingReporters, ...allReporters].forEach(r => {
-      if (r && r.name) reporterMap.set(r.name, r);
-    });
-    const finalReporters = Array.from(reporterMap.values());
-
-    // Build structured context text for Gemini
+    // Build structured real-time context text for Gemini
     let websiteContext = `
+[LIVE WEBSITE DATABASE STATISTICS & COUNTS]:
+- Total Published News Articles on Website: ${totalArticles}
+- Total Active Reporters & Editors in Directory: ${totalReporters}
+- Total E-Paper Digital Editions Uploaded: ${totalEditions}
+- Articles by Category: ${categoryStatsSummary || 'Various categories available'}
+- Articles by District: ${districtStatsSummary || 'Various districts available'}
+
 [WEBSITE OVERVIEW & GENERAL DETAILS]:
 - Website Name: మమేక మహోదయం (MAMEKA MAHODAYAM) - Official Telugu Daily Newspaper
-- Slogan / Tagline: అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం
+- Tagline: అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం
 - Official Contact Email: mahodayamnews@gmail.com
+- Contact Phone: +91 7075652808
 - Main Pages & Links:
   • Home: /
   • Latest News (తాజా వార్తలు): /category.html?c=latest
@@ -2471,17 +2490,17 @@ app.post('/api/chatbot', async (req, res) => {
   • Privacy Policy: /privacy.html
   • Terms & Conditions: /terms.html
 
-[REPORTERS & EDITORIAL TEAM ON WEBSITE]:
+[COMPLETE REPORTERS & EDITORIAL TEAM DIRECTORY]:
 `;
-    if (finalReporters.length > 0) {
-      finalReporters.forEach((r, idx) => {
-        websiteContext += `${idx + 1}. Name: ${r.name} | Designation: ${r.designation || 'Reporter'} | District: ${r.district || 'N/A'} | Mandal: ${r.mandal || 'N/A'} | Jurisdiction: ${r.jurisdiction || 'N/A'} | Contact Phone: ${r.phone || 'N/A'} | Email: ${r.email || 'N/A'} | Bio: ${r.bio || 'N/A'}\n`;
+    if (allActiveReporters.length > 0) {
+      allActiveReporters.forEach((r, idx) => {
+        websiteContext += `${idx + 1}. Name: "${r.name}" | Designation: "${r.designation || 'Reporter'}" | District: "${r.district || 'N/A'}" | Mandal: "${r.mandal || 'N/A'}" | Jurisdiction: "${r.jurisdiction || 'N/A'}" | Phone: "${r.phone || 'N/A'}" | Email: "${r.email || 'N/A'}" | Bio: "${r.bio || 'N/A'}"\n`;
       });
     } else {
-      websiteContext += `No specific reporter record matched.\n`;
+      websiteContext += `No reporter records currently active.\n`;
     }
 
-    websiteContext += `\n[AVAILABLE NEWS ARTICLES ON WEBSITE]:\n`;
+    websiteContext += `\n[LATEST & RELEVANT PUBLISHED NEWS ARTICLES ON WEBSITE]:\n`;
     if (finalArticles.length > 0) {
       finalArticles.forEach((a, idx) => {
         const link = a.slug ? `/news/${a.slug}` : `/article.html?id=${a.id}`;
@@ -2493,8 +2512,8 @@ app.post('/api/chatbot', async (req, res) => {
     }
 
     // Call Gemini API using GEMINI_API_KEY from environment or .env
-    let apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || !apiKey.trim()) {
+    let apiKey = (process.env.GEMINI_API_KEY || '').trim();
+    if (!apiKey) {
       try {
         const envPath = path.join(__dirname, '.env');
         if (fs.existsSync(envPath)) {
@@ -2504,18 +2523,23 @@ app.post('/api/chatbot', async (req, res) => {
         }
       } catch (e) {}
     }
-    if (!apiKey || !apiKey.trim()) {
-      apiKey = 'AIzaSyC9GH-I6KjoqVTQokdqM5atP2Ec6fEqhnE';
-    }
-    const systemInstructionText = `You are "మమేక మహోదయం AI అసిస్టెంట్" (Mameka Mahodayam AI Assistant), the official virtual assistant for the MAMEKA MAHODAYAM (మమేక మహోదయం) Telugu newspaper website.
 
-STRICT MANDATORY RULES & CONSTRAINTS:
-1. You MUST ONLY answer questions regarding the Mameka Mahodayam website, its published news articles, reporters/editorial team, contact details, e-paper, and website features.
-2. You MUST NOT answer general knowledge, external news, weather, sports outside this site, non-website topics, math, coding, or any outside content.
-3. If the user asks about anything outside the website content OR if no relevant information is present in the provided website context data, you MUST politely refuse using this exact tone (in Telugu or English matching the query):
-   "క్షమించండి, ఈ ప్రశ్నకు సంబంధించిన సమాచారం మమేక మహోదయం వెబ్‌సైట్‌లో లభ్యం కాలేదు. నా వద్ద కేవలం మా వెబ్‌సైట్ వార్తలు, విలేఖరుల వివరాలు మరియు వెబ్‌సైట్ సమాచారం మాత్రమే ఉంది."
-   (English: "Sorry, I can only answer questions related to news, reporters, and information available on the Mameka Mahodayam website.")
-4. Format your responses cleanly with emojis, bullet points, and markdown article/page links when applicable. Be polite, clear, and encouraging. Respond primarily in Telugu if asked in Telugu, or English if asked in English.`;
+    if (!apiKey) {
+      console.warn('⚠️ GEMINI_API_KEY not found in environment or .env file.');
+      return res.json({
+        success: true,
+        reply: "క్షమించండి, ఏఐ సేవ కాన్ఫిగర్ చేయబడలేదు. దయచేసి GEMINI_API_KEY ను కాన్ఫిగర్ చేయండి."
+      });
+    }
+    const systemInstructionText = `You are "మమేక మహోదయం AI అసిస్టెంట్" (Mameka Mahodayam AI Assistant), the official virtual guide for the MAMEKA MAHODAYAM (మమేక మహోదయం) Telugu daily newspaper website.
+
+DATABASE & WEBSITE KNOWLEDGE CAPABILITIES:
+1. You have DIRECT access to live database statistics, complete reporter directory, and published news articles from the website.
+2. If asked about article counts or website statistics (e.g., "how many news articles are available in the website", "వార్తలు ఎన్ని ఉన్నాయి"), state the exact total count from the live database statistics provided in context, along with category counts.
+3. If asked about any reporter, editor, or staff member (e.g., "what is the position of Vaka Srinivasarao", "వాకా శ్రీనివాసరావు వివరాలు", or any team member), check the complete reporter directory in context and provide their exact name, designation (e.g. Editor-in-Chief / ప్రధాన సంపాదకులు), district, mandal, and contact phone number.
+4. If articles or reporters were modified, always use the latest live database context provided below.
+5. STRICT RULE: Answer questions about news, reporters, e-paper, and site info. Strictly refuse non-website general knowledge or outside topics (weather, external trivia, coding, etc.).
+6. Format your responses cleanly with emojis, bullet points, and markdown article/page links. Respond primarily in Telugu if asked in Telugu, or English if asked in English.`;
 
     const contentsPayload = [];
 
@@ -2541,7 +2565,7 @@ ${websiteContext}`;
       parts: [{ text: currentPromptWithContext }]
     });
 
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.5-flash', 'gemini-flash-latest'];
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
     let replyText = '';
 
     for (const modelName of modelsToTry) {
