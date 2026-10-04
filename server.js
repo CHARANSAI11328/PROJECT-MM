@@ -2526,7 +2526,7 @@ app.get(['/api/public/reporters/:id/qr.png', '/api/public/reporters/:id/qr'], as
 });
 
 // Built-in Smart Local Knowledge Engine for Website Chatbot
-function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, totalEditions, allActiveReporters, finalArticles, categoryStatsSummary, districtStatsSummary }) {
+function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, totalEditions, allActiveReporters, matchingArticles, latestArticles, categoryStatsSummary, districtStatsSummary }) {
   const queryLower = (userQuery || '').toLowerCase().trim();
 
   // 1. Greetings ("hello", "hi", "నమస్కారం", "హలో", "హాయ్", "hey")
@@ -2602,17 +2602,29 @@ function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, t
     return `🗞️ **మమేక మహోదయం ఈ-పేపర్ (E-Paper):**\n\nమా దినపత్రిక డిజిటల్ PDF సంచికలను మీ మొబైల్ లేదా కంప్యూటర్‌లో ఉచితంగా చదవవచ్చు మరియు డౌన్‌లోడ్ చేసుకోవచ్చు.\n\n👉 [ఈ-పేపర్ చదవడానికి మరియు డౌన్‌లోడ్ చేయడానికి ఇక్కడ క్లిక్ చేయండి](/epaper.html)`;
   }
 
-  // 5. Relevant Articles Search Match
-  if (finalArticles && finalArticles.length > 0) {
+  // 5. Explicit Latest News Queries ("latest news", "తాజా వార్తలు")
+  if (/(latest|recent|తాజా|కొత్త)/i.test(queryLower) && /(news|వార్తలు|వార్తా)/i.test(queryLower)) {
+    if (latestArticles && latestArticles.length > 0) {
+      let artText = `📰 **మా వెబ్‌సైట్‌లోని తాజా వార్తలు:**\n\n`;
+      latestArticles.slice(0, 4).forEach((a, idx) => {
+        const link = a.slug ? `/news/${a.slug}` : `/article.html?id=${a.id}`;
+        artText += `${idx + 1}. **[${a.title_te}](${link})**\n   _${a.category || 'వార్తలు'} • ${a.district || 'ఆంధ్రప్రదేశ్'}_\n\n`;
+      });
+      return artText;
+    }
+  }
+
+  // 6. Relevant Articles Search Match (ONLY if user query matched specific news items)
+  if (matchingArticles && matchingArticles.length > 0) {
     let artText = `📰 **మా వెబ్‌సైట్‌లోని సంబంధిత వార్తలు:**\n\n`;
-    finalArticles.slice(0, 4).forEach((a, idx) => {
+    matchingArticles.slice(0, 4).forEach((a, idx) => {
       const link = a.slug ? `/news/${a.slug}` : `/article.html?id=${a.id}`;
       artText += `${idx + 1}. **[${a.title_te}](${link})**\n   _${a.category || 'వార్తలు'} • ${a.district || 'ఆంధ్రప్రదేశ్'}_\n\n`;
     });
     return artText;
   }
 
-  // 6. Contact / Advertising
+  // 7. Contact / Advertising
   if (/(contact|phone|email|advertise|అడ్వర్టైజ్|ప్రకటనలు|మమ్మల్ని సంప్రదించండి|సంప్రదించండి)/i.test(queryLower)) {
     return `📞 **సంప్రదించే వివరాలు:**\n\n• **ఈమెయిల్:** mahodayamnews@gmail.com\n• **ఫోన్:** +91 7075652808\n• **ప్రకటనలు:** [ప్రకటనల పేజీ](/advertise.html)\n• **చిరునామా:** బాపట్ల, ఆంధ్రప్రదేశ్.`;
   }
@@ -2850,7 +2862,8 @@ ${websiteContext}`;
         totalReporters,
         totalEditions,
         allActiveReporters,
-        finalArticles,
+        matchingArticles,
+        latestArticles,
         categoryStatsSummary,
         districtStatsSummary
       });
