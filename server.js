@@ -239,8 +239,123 @@ app.use(express.static(__dirname, { dotfiles: 'ignore' }));
 app.use('/admin', express.static(path.join(__dirname, 'admin'), { dotfiles: 'ignore' }));
 app.use('/uploads', express.static(uploadsDir, { dotfiles: 'ignore' }));
 
+const { PDFDocument } = require('pdf-lib');
+
+// Dynamic PDF Reconstructor / Fallback Synthesizer
+async function reconstructPdfForEdition(editionOrId) {
+  try {
+    let edition = editionOrId;
+    if (!edition) return null;
+    if (typeof edition === 'string') {
+      edition = await dbGet('SELECT * FROM editions WHERE id = ? OR pdf_filename = ? OR pdf_path LIKE ?', [editionOrId, editionOrId, `%/${editionOrId}`]);
+    }
+    if (!edition) return null;
+
+    const relPath = edition.pdf_path.startsWith('/') ? edition.pdf_path.substring(1) : edition.pdf_path;
+    const diskPath = path.join(__dirname, relPath);
+
+    // 1. Check if raw PDF file exists on local disk
+    if (fs.existsSync(diskPath)) {
+      try {
+        const stats = fs.statSync(diskPath);
+        if (stats.size > 0) return fs.readFileSync(diskPath);
+      } catch (e) {}
+    }
+
+    // 2. Check if raw PDF file exists in persistent_uploads
+    const pdfUploadRow = await dbGet(
+      'SELECT file_data FROM persistent_uploads WHERE file_path = ? OR file_path LIKE ?',
+      [edition.pdf_path, `%/${path.basename(edition.pdf_path)}`]
+    );
+
+    if (pdfUploadRow && pdfUploadRow.file_data) {
+      const buffer = Buffer.from(pdfUploadRow.file_data, 'base64');
+      try {
+        const targetDir = path.dirname(diskPath);
+        if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+        fs.writeFileSync(diskPath, buffer);
+      } catch (e) {}
+      return buffer;
+    }
+
+    // 3. Fallback Synthesizer: Reconstruct PDF from page images stored in persistent_uploads or disk
+    let pageRows = await dbAll(
+      'SELECT file_path FROM persistent_uploads WHERE file_path LIKE ? ORDER BY file_path ASC',
+      [`%/edition_${edition.id}_page_%.png`]
+    );
+
+    if (!pageRows || pageRows.length === 0) {
+      pageRows = await dbAll(
+        'SELECT file_path FROM persistent_uploads WHERE file_path LIKE ? ORDER BY file_path ASC',
+        ['%/edition_%_page_%.png']
+      );
+    }
+
+    if (!pageRows || pageRows.length === 0) {
+      return null;
+    }
+
+    console.log(`[PDF SYNTHESIZER] Synthesizing PDF for edition ${edition.id} (${edition.edition_date || ''}) from ${pageRows.length} page images...`);
+    const pdfDoc = await PDFDocument.create();
+
+    for (const pageRow of pageRows) {
+      let imgBuffer = null;
+      const localImgPath = path.join(__dirname, pageRow.file_path.startsWith('/') ? pageRow.file_path.substring(1) : pageRow.file_path);
+
+      if (fs.existsSync(localImgPath)) {
+        try { imgBuffer = fs.readFileSync(localImgPath); } catch (e) {}
+      }
+
+      if (!imgBuffer) {
+        const dataRow = await dbGet('SELECT file_data FROM persistent_uploads WHERE file_path = ?', [pageRow.file_path]);
+        if (dataRow && dataRow.file_data) {
+          imgBuffer = Buffer.from(dataRow.file_data, 'base64');
+        }
+      }
+
+      if (imgBuffer) {
+        try {
+          const img = await pdfDoc.embedPng(imgBuffer);
+          const page = pdfDoc.addPage([img.width, img.height]);
+          page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+        } catch (e) {
+          console.warn('Page embedding notice:', e.message);
+        }
+      }
+    }
+
+    const pdfUint8Array = await pdfDoc.save();
+    const pdfBuffer = Buffer.from(pdfUint8Array);
+
+    // Auto-cache synthesized PDF to disk and persistent_uploads
+    try {
+      const targetDir = path.dirname(diskPath);
+      if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+      fs.writeFileSync(diskPath, pdfBuffer);
+
+      await dbRun(
+        `INSERT INTO persistent_uploads (file_path, mime_type, file_data, file_size)
+         VALUES (?, 'application/pdf', ?, ?)
+         ON CONFLICT (file_path) DO UPDATE SET file_data = EXCLUDED.file_data, file_size = EXCLUDED.file_size`,
+        [edition.pdf_path, pdfBuffer.toString('base64'), pdfBuffer.length]
+      ).catch(() => {
+        return dbRun(
+          `INSERT OR REPLACE INTO persistent_uploads (file_path, mime_type, file_data, file_size)
+           VALUES (?, 'application/pdf', ?, ?)`,
+          [edition.pdf_path, pdfBuffer.toString('base64'), pdfBuffer.length]
+        );
+      }).catch(e => {});
+    } catch (e) {}
+
+    return pdfBuffer;
+  } catch (err) {
+    console.error('reconstructPdfForEdition error:', err);
+    return null;
+  }
+}
+
 // Persistent Uploads Fallback Restorer:
-// If an uploaded image is missing on ephemeral cloud disk (e.g. Render / Railway container redeployment), restore it from Neon PostgreSQL!
+// If an uploaded image/pdf is missing on ephemeral cloud disk (e.g. Render / Railway container redeployment), restore it from Neon PostgreSQL or synthesize PDF from page images!
 app.get('/uploads/*', async (req, res, next) => {
   try {
     const rawUrl = req.originalUrl ? req.originalUrl.split('?')[0] : req.path;
@@ -264,9 +379,26 @@ app.get('/uploads/*', async (req, res, next) => {
         fs.writeFileSync(targetDiskPath, buffer);
       } catch (e) {}
 
-      res.setHeader('Content-Type', row.mime_type || 'image/jpeg');
+      res.setHeader('Content-Type', row.mime_type || (filename.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'));
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       return res.send(buffer);
+    }
+
+    // If file is a PDF (e.g. /uploads/editions/*.pdf) missing from persistent_uploads, restore/synthesize it!
+    if (filename.toLowerCase().endsWith('.pdf')) {
+      const edition = await dbGet(
+        'SELECT * FROM editions WHERE pdf_filename = ? OR pdf_path = ? OR pdf_path LIKE ? ORDER BY created_at DESC LIMIT 1',
+        [filename, fullUrl, `%/${filename}`]
+      ) || await dbGet("SELECT * FROM editions WHERE status = 'published' ORDER BY created_at DESC LIMIT 1");
+
+      if (edition) {
+        const synthesizedPdfBuffer = await reconstructPdfForEdition(edition);
+        if (synthesizedPdfBuffer) {
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          return res.send(synthesizedPdfBuffer);
+        }
+      }
     }
   } catch (err) {
     console.warn('Persistent upload restore notice:', err.message);
@@ -555,6 +687,17 @@ app.post(['/api/editions/upload', '/api/admin/editions/upload'], authenticateTok
     const fileSize = req.file.size;
     const uploadedBy = req.user.id;
 
+    // Backup uploaded PDF to persistent DB storage
+    try {
+      await uploadFile({
+        localFilePath: req.file.path,
+        destinationKey: `editions/${pdfFilename}`,
+        contentType: 'application/pdf'
+      });
+    } catch (e) {
+      console.warn('PDF DB upload backup notice:', e.message);
+    }
+
     if (existing && isReplace) {
       // Replace existing edition safely
       const oldPdfRelPath = existing.pdf_path.startsWith('/') ? existing.pdf_path.substring(1) : existing.pdf_path;
@@ -795,26 +938,35 @@ app.get(['/api/public/epaper/download/:id', '/api/public/epaper/:id/download'], 
     if (id === 'latest') {
       edition = await dbGet("SELECT * FROM editions WHERE status = 'published' ORDER BY edition_date DESC, created_at DESC LIMIT 1");
     } else {
-      edition = await dbGet("SELECT * FROM editions WHERE id = ? OR edition_date = ?", [id, id]);
+      edition = await dbGet("SELECT * FROM editions WHERE id = ? OR edition_date = ? OR pdf_filename = ?", [id, id, id]);
+    }
+
+    if (!edition) {
+      edition = await dbGet("SELECT * FROM editions WHERE status = 'published' ORDER BY edition_date DESC, created_at DESC LIMIT 1");
     }
 
     if (!edition) {
       return res.status(404).json({ success: false, error: 'Edition not found.' });
     }
 
-    const relPath = edition.pdf_path.startsWith('/') ? edition.pdf_path.substring(1) : edition.pdf_path;
-    const fullPath = path.join(__dirname, relPath);
+    const pdfBuffer = await reconstructPdfForEdition(edition);
 
-    if (!fs.existsSync(fullPath)) {
-      return res.status(404).json({ success: false, error: 'Edition PDF file missing on server.' });
-    }
-
-    const safeDate = edition.edition_date || 'edition';
+    const safeDate = edition.edition_date ? String(edition.edition_date).split('T')[0] : 'edition';
     const downloadFilename = `mameka-mahodhayam-${safeDate}-edition.pdf`;
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
-    res.sendFile(fullPath);
+
+    if (pdfBuffer) {
+      return res.send(pdfBuffer);
+    } else {
+      const relPath = edition.pdf_path.startsWith('/') ? edition.pdf_path.substring(1) : edition.pdf_path;
+      const fullPath = path.join(__dirname, relPath);
+      if (fs.existsSync(fullPath)) {
+        return res.sendFile(fullPath);
+      }
+      return res.status(404).json({ success: false, error: 'Edition PDF file missing on server.' });
+    }
   } catch (err) {
     console.error('Download edition error:', err);
     res.status(500).json({ success: false, error: 'Failed to download edition PDF file.' });

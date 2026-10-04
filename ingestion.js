@@ -45,6 +45,17 @@ async function processEdition({ edition, jobId, dbRun, dbGet, pagesDir }) {
         const pageFilePath = path.join(pagesDir, pageFilename);
         fs.writeFileSync(pageFilePath, buffer);
 
+        try {
+          const { uploadFile } = require('./services/storage');
+          await uploadFile({
+            localFilePath: pageFilePath,
+            destinationKey: `pages/${pageFilename}`,
+            contentType: 'image/png'
+          });
+        } catch (storageErr) {
+          console.warn('Page image DB backup notice:', storageErr.message);
+        }
+
         const pageImgRelPath = `/uploads/pages/${pageFilename}`;
         const pageId = `page_${edition.id}_${pageNo}`;
 

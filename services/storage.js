@@ -72,7 +72,7 @@ async function uploadFile({ localFilePath, destinationKey, contentType }) {
     try {
       const stats = fs.statSync(localFilePath);
       const ext = path.extname(localFilePath).toLowerCase();
-      const mime = contentType || (ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : ext === '.webp' ? 'image/webp' : ext === '.gif' ? 'image/gif' : ext === '.svg' ? 'image/svg+xml' : 'image/png');
+      const mime = contentType || (ext === '.pdf' ? 'application/pdf' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : ext === '.webp' ? 'image/webp' : ext === '.gif' ? 'image/gif' : ext === '.svg' ? 'image/svg+xml' : 'image/png');
       const fileBuffer = fs.readFileSync(localFilePath);
       const base64Data = fileBuffer.toString('base64');
       
