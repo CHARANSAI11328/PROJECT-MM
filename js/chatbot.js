@@ -1,60 +1,68 @@
 /**
  * MAMEKA MAHODAYAM - Official Digital AI Chatbot Widget (js/chatbot.js)
- * Floating Newspaper-Branded Chatbot for Website News & Reporter Enquiries.
+ * Fully Floating Newspaper-Branded Chatbot for Website News & Reporter Enquiries.
  */
 
 (function () {
   if (window.MamekaChatbotInitialized) return;
   window.MamekaChatbotInitialized = true;
 
-  // Injected Scoped CSS Styles
+  // Injected Scoped CSS Styles with Strict Floating Position Overrides
   const styleContent = `
     #mameka-chat-launcher {
-      position: fixed;
-      bottom: 25px;
-      right: 25px;
-      z-index: 999999;
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-      color: #ffffff;
-      border: 2px solid #ffffff;
-      box-shadow: 0 8px 24px rgba(220, 38, 38, 0.45);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      outline: none;
-      user-select: none;
+      position: fixed !important;
+      bottom: 25px !important;
+      right: 25px !important;
+      top: auto !important;
+      left: auto !important;
+      z-index: 2147483647 !important;
+      width: 58px !important;
+      height: 58px !important;
+      border-radius: 50% !important;
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+      color: #ffffff !important;
+      border: 2.5px solid #ffffff !important;
+      box-shadow: 0 8px 25px rgba(220, 38, 38, 0.5) !important;
+      cursor: pointer !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease !important;
+      outline: none !important;
+      user-select: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      float: none !important;
+      clear: both !important;
     }
+
     #mameka-chat-launcher:hover {
-      transform: scale(1.1) translateY(-2px);
-      box-shadow: 0 12px 30px rgba(220, 38, 38, 0.6);
+      transform: scale(1.1) translateY(-2px) !important;
+      box-shadow: 0 12px 30px rgba(220, 38, 38, 0.65) !important;
     }
+
     #mameka-chat-launcher:active {
-      transform: scale(0.95);
+      transform: scale(0.95) !important;
     }
 
     #mameka-chat-launcher .launcher-emblem {
-      font-size: 26px;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      font-size: 26px !important;
+      line-height: 1 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
     }
 
     #mameka-chat-launcher .pulse-ring {
-      position: absolute;
-      top: -4px;
-      left: -4px;
-      right: -4px;
-      bottom: -4px;
-      border-radius: 50%;
-      border: 2px solid #dc2626;
-      animation: mmPulse 2s infinite cubic-bezier(0.45, 0, 0.55, 1);
-      pointer-events: none;
+      position: absolute !important;
+      top: -4px !important;
+      left: -4px !important;
+      right: -4px !important;
+      bottom: -4px !important;
+      border-radius: 50% !important;
+      border: 2px solid #dc2626 !important;
+      animation: mmPulse 2s infinite cubic-bezier(0.45, 0, 0.55, 1) !important;
+      pointer-events: none !important;
     }
 
     @keyframes mmPulse {
@@ -64,229 +72,252 @@
     }
 
     #mameka-chat-modal {
-      position: fixed;
-      bottom: 95px;
-      right: 25px;
-      z-index: 999999;
-      width: 380px;
-      max-width: calc(100vw - 32px);
-      height: 530px;
-      max-height: calc(100vh - 120px);
-      background-color: #ffffff;
-      border-radius: 18px;
-      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
-      border: 1px solid #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      opacity: 0;
-      transform: translateY(20px) scale(0.95);
-      pointer-events: none;
+      position: fixed !important;
+      bottom: 95px !important;
+      right: 25px !important;
+      top: auto !important;
+      left: auto !important;
+      z-index: 2147483647 !important;
+      width: 380px !important;
+      max-width: calc(100vw - 32px) !important;
+      height: 530px !important;
+      max-height: calc(100vh - 120px) !important;
+      background-color: #ffffff !important;
+      border-radius: 18px !important;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25) !important;
+      border: 1px solid #e2e8f0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      opacity: 0 !important;
+      transform: translateY(20px) scale(0.95) !important;
+      pointer-events: none !important;
+      margin: 0 !important;
     }
 
     #mameka-chat-modal.open {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-      pointer-events: auto;
+      opacity: 1 !important;
+      transform: translateY(0) scale(1) !important;
+      pointer-events: auto !important;
     }
 
     .mm-chat-header {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      color: #ffffff;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 3px solid #dc2626;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+      color: #ffffff !important;
+      padding: 14px 18px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      border-bottom: 3px solid #dc2626 !important;
     }
 
     .mm-chat-header-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex !important;
+      align-items: center !important;
+      gap: 12px !important;
     }
+
     .mm-chat-brand-badge {
-      width: 40px;
-      height: 40px;
-      background: #dc2626;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 3px 10px rgba(220, 38, 38, 0.5);
+      width: 40px !important;
+      height: 40px !important;
+      background: #dc2626 !important;
+      border-radius: 10px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 22px !important;
+      box-shadow: 0 3px 10px rgba(220, 38, 38, 0.5) !important;
     }
+
     .mm-chat-title {
-      font-size: 15px;
-      font-weight: 800;
-      margin: 0;
-      line-height: 1.2;
-      color: #ffffff;
+      font-size: 15px !important;
+      font-weight: 800 !important;
+      margin: 0 !important;
+      line-height: 1.2 !important;
+      color: #ffffff !important;
     }
+
     .mm-chat-sub {
-      font-size: 11px;
-      color: #94a3b8;
-      margin-top: 2px;
-      font-weight: 500;
+      font-size: 11px !important;
+      color: #94a3b8 !important;
+      margin-top: 2px !important;
+      font-weight: 500 !important;
     }
 
     .mm-chat-close {
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      color: #cbd5e1;
-      font-size: 18px;
-      cursor: pointer;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.1) !important;
+      border: none !important;
+      color: #cbd5e1 !important;
+      font-size: 18px !important;
+      cursor: pointer !important;
+      width: 28px !important;
+      height: 28px !important;
+      border-radius: 50% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transition: all 0.2s ease !important;
     }
+
     .mm-chat-close:hover {
-      background: #dc2626;
-      color: #ffffff;
+      background: #dc2626 !important;
+      color: #ffffff !important;
     }
 
     .mm-chat-body {
-      flex: 1;
-      padding: 16px;
-      overflow-y: auto;
-      background-color: #f8fafc;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      flex: 1 !important;
+      padding: 16px !important;
+      overflow-y: auto !important;
+      background-color: #f8fafc !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
     }
 
     .mm-msg {
-      max-width: 88%;
-      padding: 12px 15px;
-      border-radius: 14px;
-      font-size: 13.5px;
-      line-height: 1.55;
-      word-wrap: break-word;
+      max-width: 88% !important;
+      padding: 12px 15px !important;
+      border-radius: 14px !important;
+      font-size: 13.5px !important;
+      line-height: 1.55 !important;
+      word-wrap: break-word !important;
     }
 
     .mm-msg.bot {
-      background-color: #ffffff;
-      color: #1e293b;
-      align-self: flex-start;
-      border-bottom-left-radius: 3px;
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+      background-color: #ffffff !important;
+      color: #1e293b !important;
+      align-self: flex-start !important;
+      border-bottom-left-radius: 3px !important;
+      border: 1px solid #e2e8f0 !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
     }
 
     .mm-msg.bot a {
-      color: #dc2626;
-      font-weight: 700;
-      text-decoration: underline;
+      color: #dc2626 !important;
+      font-weight: 700 !important;
+      text-decoration: underline !important;
     }
 
     .mm-msg.user {
-      background-color: #dc2626;
-      color: #ffffff;
-      align-self: flex-end;
-      border-bottom-right-radius: 3px;
-      box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+      background-color: #dc2626 !important;
+      color: #ffffff !important;
+      align-self: flex-end !important;
+      border-bottom-right-radius: 3px !important;
+      box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25) !important;
     }
 
     .mm-chat-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 10px;
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 6px !important;
+      margin-top: 10px !important;
     }
 
     .mm-chip-btn {
-      background-color: #ffffff;
-      color: #0f172a;
-      border: 1px solid #cbd5e1;
-      border-radius: 18px;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 18px !important;
+      padding: 6px 12px !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
     }
+
     .mm-chip-btn:hover {
-      background-color: #dc2626;
-      color: #ffffff;
-      border-color: #dc2626;
+      background-color: #dc2626 !important;
+      color: #ffffff !important;
+      border-color: #dc2626 !important;
     }
 
     .mm-chat-footer {
-      padding: 12px 16px;
-      background-color: #ffffff;
-      border-top: 1px solid #e2e8f0;
-      display: flex;
-      gap: 8px;
-      align-items: center;
+      padding: 12px 16px !important;
+      background-color: #ffffff !important;
+      border-top: 1px solid #e2e8f0 !important;
+      display: flex !important;
+      gap: 8px !important;
+      align-items: center !important;
     }
 
     .mm-chat-input {
-      flex: 1;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 24px;
-      padding: 10px 16px;
-      font-size: 13.5px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      flex: 1 !important;
+      border: 1.5px solid #cbd5e1 !important;
+      border-radius: 24px !important;
+      padding: 10px 16px !important;
+      font-size: 13.5px !important;
+      outline: none !important;
+      transition: border-color 0.2s, box-shadow 0.2s !important;
     }
+
     .mm-chat-input:focus {
-      border-color: #dc2626;
-      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+      border-color: #dc2626 !important;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
     }
 
     .mm-chat-send {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background-color: #dc2626;
-      color: #ffffff;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      transition: background-color 0.2s, transform 0.1s;
-      flex-shrink: 0;
+      width: 40px !important;
+      height: 40px !important;
+      border-radius: 50% !important;
+      background-color: #dc2626 !important;
+      color: #ffffff !important;
+      border: none !important;
+      cursor: pointer !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 15px !important;
+      transition: background-color 0.2s, transform 0.1s !important;
+      flex-shrink: 0 !important;
     }
+
     .mm-chat-send:hover {
-      background-color: #991b1b;
-      transform: scale(1.05);
+      background-color: #991b1b !important;
+      transform: scale(1.05) !important;
     }
 
     .mm-typing-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 10px 14px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      align-self: flex-start;
-      font-size: 12px;
-      color: #64748b;
-      font-weight: 500;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      padding: 10px 14px !important;
+      background: #ffffff !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 12px !important;
+      align-self: flex-start !important;
+      font-size: 12px !important;
+      color: #64748b !important;
+      font-weight: 500 !important;
     }
-    .mm-dot {
-      width: 6px;
-      height: 6px;
-      background: #dc2626;
-      border-radius: 50%;
-      animation: mmBounce 1.4s infinite ease-in-out both;
-    }
-    .mm-dot:nth-child(1) { animation-delay: -0.32s; }
-    .mm-dot:nth-child(2) { animation-delay: -0.16s; }
 
-    @keyframes mmBounce {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1.0); }
+    .mm-dot {
+      width: 6px !important;
+      height: 6px !important;
+      background: #dc2626 !important;
+      border-radius: 50% !important;
+      animation: mmBounce 1.4s infinite ease-in-out both !important;
+    }
+    .mm-dot:nth-child(1) { animation-delay: -0.32s !important; }
+    .mm-dot:nth-child(2) { animation-delay: -0.16s !important; }
+
+    @media (max-width: 600px) {
+      #mameka-chat-launcher {
+        bottom: 20px !important;
+        right: 20px !important;
+        width: 52px !important;
+        height: 52px !important;
+      }
+      #mameka-chat-modal {
+        bottom: 82px !important;
+        right: 15px !important;
+        left: 15px !important;
+        width: auto !important;
+        max-width: none !important;
+        height: calc(100vh - 110px) !important;
+      }
     }
   `;
 
@@ -301,7 +332,7 @@
   function buildUI() {
     if (document.getElementById('mameka-chat-launcher')) return;
 
-    // Floating Circular Button (No text label, clean emblem logo)
+    // Create Launcher Button
     const launcher = document.createElement('button');
     launcher.id = 'mameka-chat-launcher';
     launcher.setAttribute('aria-label', 'మమేక మహోదయం డిజిటల్ సహాయకుడు');
@@ -311,7 +342,7 @@
       <div class="launcher-emblem">📰</div>
     `;
 
-    // Modal Box
+    // Create Modal Box
     const modal = document.createElement('div');
     modal.id = 'mameka-chat-modal';
     modal.innerHTML = `
@@ -345,6 +376,7 @@
       </div>
     `;
 
+    // Always append directly to body as a top-level child to escape any wrapper or transform containers
     document.body.appendChild(launcher);
     document.body.appendChild(modal);
 
