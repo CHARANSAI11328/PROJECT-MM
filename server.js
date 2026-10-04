@@ -1,7 +1,7 @@
-try { require('dotenv').config(); } catch (e) {}
+const path = require('path');
+try { require('dotenv').config({ path: path.join(__dirname, '.env') }); } catch (e) {}
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
@@ -2492,17 +2492,26 @@ app.post('/api/chatbot', async (req, res) => {
       websiteContext += `No matching news articles found in the database.\n`;
     }
 
-    // Call Gemini API using GEMINI_API_KEY from environment
-    const apiKey = process.env.GEMINI_API_KEY;
+    // Call Gemini API using GEMINI_API_KEY from environment or .env
+    let apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      try {
+        const envPath = path.join(__dirname, '.env');
+        if (fs.existsSync(envPath)) {
+          const envContent = fs.readFileSync(envPath, 'utf8');
+          const match = envContent.match(/GEMINI_API_KEY\s*=\s*([^\r\n]+)/);
+          if (match && match[1]) apiKey = match[1].trim();
+        }
+      } catch (e) {}
+    }
+
     if (!apiKey) {
       console.warn('⚠️ GEMINI_API_KEY not configured in environment.');
       return res.json({
         success: true,
-        reply: "క్షమించండి, ఏఐ సేవ కాన్ఫిగర్ చేయబడలేదు."
+        reply: "క్షమించండి, ఏఐ సేవ కాన్ఫిగర్ చేయబడలేదు. దయచేసి .env ఫైల్ పరిశీలించండి."
       });
     }
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
     const systemInstructionText = `You are "మమేక మహోదయం AI అసిస్టెంట్" (Mameka Mahodayam AI Assistant), the official virtual assistant for the MAMEKA MAHODAYAM (మమేక మహోదయం) Telugu newspaper website.
 
 STRICT MANDATORY RULES & CONSTRAINTS:
@@ -2537,34 +2546,39 @@ ${websiteContext}`;
       parts: [{ text: currentPromptWithContext }]
     });
 
-    const geminiRes = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: contentsPayload,
-        systemInstruction: {
-          parts: [{ text: systemInstructionText }]
-        },
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 1000
-        }
-      })
-    });
-
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      console.error('Gemini API request failed:', geminiRes.status, errText);
-      return res.json({
-        success: true,
-        reply: "క్షమించండి, ఏఐ సేవ తాత్కాలికంగా లభ్యం కాలేదు. దయచేసి కాసేపటి తర్వాత మళ్లీ ప్రయత్నించండి."
-      });
-    }
-
-    const geminiData = await geminiRes.json();
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.5-flash', 'gemini-flash-latest'];
     let replyText = '';
-    if (geminiData && geminiData.candidates && geminiData.candidates[0] && geminiData.candidates[0].content && geminiData.candidates[0].content.parts) {
-      replyText = geminiData.candidates[0].content.parts.map(p => p.text).join('\n');
+
+    for (const modelName of modelsToTry) {
+      try {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+        const geminiRes = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: contentsPayload,
+            systemInstruction: {
+              parts: [{ text: systemInstructionText }]
+            },
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 1000
+            }
+          })
+        });
+
+        if (geminiRes.ok) {
+          const geminiData = await geminiRes.json();
+          if (geminiData && geminiData.candidates && geminiData.candidates[0] && geminiData.candidates[0].content && geminiData.candidates[0].content.parts) {
+            replyText = geminiData.candidates[0].content.parts.map(p => p.text).join('\n');
+            if (replyText) break;
+          }
+        } else {
+          console.warn(`Gemini model ${modelName} returned status ${geminiRes.status}, trying next fallback model...`);
+        }
+      } catch (e) {
+        console.warn(`Model ${modelName} fetch error:`, e.message);
+      }
     }
 
     if (!replyText) {
