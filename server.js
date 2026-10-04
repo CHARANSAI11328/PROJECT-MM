@@ -2525,6 +2525,101 @@ app.get(['/api/public/reporters/:id/qr.png', '/api/public/reporters/:id/qr'], as
   }
 });
 
+// Built-in Smart Local Knowledge Engine for Website Chatbot
+function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, totalEditions, allActiveReporters, finalArticles, categoryStatsSummary, districtStatsSummary }) {
+  const queryLower = (userQuery || '').toLowerCase().trim();
+
+  // 1. Greetings ("hello", "hi", "నమస్కారం", "హలో", "హాయ్", "hey")
+  if (/^(hello|hi|hey|నమస్కారం|హలో|హాయ్)$/i.test(queryLower) || queryLower === 'hello' || queryLower === 'hi') {
+    return `నమస్కారం! 🙏 నేను **మమేక మహోదయం AI సహాయకుడిని**.\n\nమా వెబ్‌సైట్‌లోని వార్తలు, విలేఖరుల వివరాలు, ఈ-పేపర్ లేదా వెబ్‌సైట్ సమాచారం గురించి నన్ను ఏమైనా అడగండి.`;
+  }
+
+  // 2. Article Counts / Website Statistics ("how many news articles", "వార్తలు ఎన్ని ఉన్నాయి", "count", "మొత్తం వార్తలు")
+  if (/(వార్తలు|వార్తా|articles|news|count|సంఖ్య|ఎన్ని|మొత్తం)/i.test(queryLower) && /(ఎన్ని|ఉన్నాయి|count|total|how many|available|మొత్తం|వివరాలు|సమాచారం)/i.test(queryLower)) {
+    let statsText = `📰 **మమేక మహోదయం వెబ్‌సైట్ ప్రత్యక్ష వివరాలు (Live Stats):**\n\n`;
+    statsText += `• **మొత్తం ప్రచురితమైన వార్తలు:** ${totalArticles} వార్తా కథనాలు\n`;
+    statsText += `• **విలేఖరులు & సంపాదకులు:** ${totalReporters} మంది\n`;
+    statsText += `• **ఈ-పేపర్ డిజిటల్ సంచికలు:** ${totalEditions} సంచికలు\n`;
+    if (categoryStatsSummary) {
+      statsText += `\n**వర్గాల వారీగా వార్తలు:** ${categoryStatsSummary}\n`;
+    }
+    statsText += `\n👉 [తాజా వార్తలు చదవడానికి ఇక్కడ క్లిక్ చేయండి](/category.html?c=latest)`;
+    return statsText;
+  }
+
+  // 3. Reporters / Editors / Position / Staff Details ("position of vaka srinivasarao", "వాకా శ్రీనివాసరావు", etc.)
+  if (/(reporter|reporters|editor|position|designation|విలేఖరి|విలేఖరుల|సంపాదకులు|హోదా|టీమ్|బృందం|వాకా|శ్రీనివాసరావు|వివరాలు|సమాచారం)/i.test(queryLower)) {
+    const nameMappings = [
+      { keys: ['vaka', 'srinivasarao', 'srinivasa rao', 'వాకా', 'శ్రీనివాసరావు', 'editor in chief', 'editor-in-chief', 'ప్రధాన సంపాదకులు'], matchName: 'వాకా శ్రీనివాసరావు' },
+      { keys: ['kamarajugadda', 'srinivasa vijay kumar', 'vijay kumar', 'కామరాజుగడ్డ', 'విజయ కుమార్', 'associate editor', 'అసోసియేట్ ఎడిటర్'], matchName: 'కామరాజుగడ్డ' },
+      { keys: ['nivedita', 'makkapati', 'మక్కపాటి', 'నివేదిత'], matchName: 'మక్కపాటి నివేదిత' },
+      { keys: ['immanuel', 'medapati', 'ఇమ్మనుయేల్', 'మేడపాటి'], matchName: 'ఇమ్మనుయేల్' },
+      { keys: ['prabhas', 'barapati', 'శివ ప్రభాస్', 'బరపాటి'], matchName: 'ప్రభాస్' },
+      { keys: ['bhagyam', 'భాగ్యం'], matchName: 'భాగ్యం' },
+      { keys: ['sudhakar', 'pulipati', 'సుధాకర్', 'పులిపాటి'], matchName: 'సుధాకర్' },
+      { keys: ['samir beg', 'sameer beg', 'సమీర్ బేగ్'], matchName: 'సమీర్' },
+      { keys: ['sai ram', 'devaki', 'దేవకి సాయి రామ్'], matchName: 'దేవకి' }
+    ];
+
+    let matchedReporter = null;
+    for (const m of nameMappings) {
+      if (m.keys.some(k => queryLower.includes(k))) {
+        matchedReporter = (allActiveReporters || []).find(r => r.name && r.name.includes(m.matchName));
+        if (matchedReporter) break;
+      }
+    }
+
+    if (!matchedReporter) {
+      matchedReporter = (allActiveReporters || []).find(r => {
+        const rName = (r.name || '').toLowerCase();
+        return queryLower.includes(rName) || rName.split(' ').some(part => part.length > 2 && queryLower.includes(part));
+      });
+    }
+
+    if (matchedReporter) {
+      return `👤 **విలేఖరి / సంపాదకుల వివరాలు:**\n\n` +
+        `• **పేరు:** ${matchedReporter.name}\n` +
+        `• **హోదా (Position):** ${matchedReporter.designation || 'విలేఖరి'}\n` +
+        `• **జిల్లా/మండలం:** ${matchedReporter.district || 'ఆంధ్రప్రదేశ్'}${matchedReporter.mandal ? ` (${matchedReporter.mandal})` : ''}\n` +
+        `• **సంప్రదించు నంబర్:** ${matchedReporter.phone || 'అందుబాటులో ఉంది'}\n` +
+        `• **ఈమెయిల్:** ${matchedReporter.email || 'mahodayamnews@gmail.com'}\n` +
+        `${matchedReporter.bio ? `• **వివరాలు:** ${matchedReporter.bio}\n` : ''}\n` +
+        `👉 [సంపాదకీయ బృందం పూర్తి వివరాలు](/editorial-team.html)`;
+    }
+
+    if (/(విలేఖరులు|టీమ్|బృందం|సంపాదకులు|reporters|team|editors)/i.test(queryLower)) {
+      let repText = `👥 **మమేక మహోదయం సంపాదకీయ బృందం & విలేఖరులు (${totalReporters} మంది):**\n\n`;
+      (allActiveReporters || []).slice(0, 8).forEach(r => {
+        repText += `• **${r.name}** - ${r.designation || 'విలేఖరి'} (${r.district || 'ఆంధ్రప్రదేశ్'})\n`;
+      });
+      repText += `\n👉 [సంపాదకీయ బృందం పేజీ చూడండి](/editorial-team.html)`;
+      return repText;
+    }
+  }
+
+  // 4. E-Paper & PDF Queries ("epaper", "ఈ-పేపర్", "pdf", "పత్రిక")
+  if (/(epaper|ఈ-పేపర్|ఈ పేపర్|pdf|పత్రిక|దినపత్రిక|download|డౌన్‌లోడ్)/i.test(queryLower)) {
+    return `🗞️ **మమేక మహోదయం ఈ-పేపర్ (E-Paper):**\n\nమా దినపత్రిక డిజిటల్ PDF సంచికలను మీ మొబైల్ లేదా కంప్యూటర్‌లో ఉచితంగా చదవవచ్చు మరియు డౌన్‌లోడ్ చేసుకోవచ్చు.\n\n👉 [ఈ-పేపర్ చదవడానికి మరియు డౌన్‌లోడ్ చేయడానికి ఇక్కడ క్లిక్ చేయండి](/epaper.html)`;
+  }
+
+  // 5. Relevant Articles Search Match
+  if (finalArticles && finalArticles.length > 0) {
+    let artText = `📰 **మా వెబ్‌సైట్‌లోని సంబంధిత వార్తలు:**\n\n`;
+    finalArticles.slice(0, 4).forEach((a, idx) => {
+      const link = a.slug ? `/news/${a.slug}` : `/article.html?id=${a.id}`;
+      artText += `${idx + 1}. **[${a.title_te}](${link})**\n   _${a.category || 'వార్తలు'} • ${a.district || 'ఆంధ్రప్రదేశ్'}_\n\n`;
+    });
+    return artText;
+  }
+
+  // 6. Contact / Advertising
+  if (/(contact|phone|email|advertise|అడ్వర్టైజ్|ప్రకటనలు|మమ్మల్ని సంప్రదించండి|సంప్రదించండి)/i.test(queryLower)) {
+    return `📞 **సంప్రదించే వివరాలు:**\n\n• **ఈమెయిల్:** mahodayamnews@gmail.com\n• **ఫోన్:** +91 7075652808\n• **ప్రకటనలు:** [ప్రకటనల పేజీ](/advertise.html)\n• **చిరునామా:** బాపట్ల, ఆంధ్రప్రదేశ్.`;
+  }
+
+  return `క్షమించండి, ఈ ప్రశ్నకు సంబంధించిన వివరాలు లభ్యం కాలేదు.\n\nమీరు మా వెబ్‌సైట్‌లోని **వార్తలు, ఈ-పేపర్, విలేఖరుల వివరాలు లేదా సంపాదకీయ బృందం** గురించి ప్రశ్నలు అడగవచ్చు.\n\n👉 [తాజా వార్తలు చూడండి](/category.html?c=latest)`;
+}
+
 // ==========================================================================
 // WEBSITE AI CHATBOT ROUTE (MAMEKA MAHODAYAM AI ASSISTANT)
 // ==========================================================================
@@ -2663,7 +2758,7 @@ app.post('/api/chatbot', async (req, res) => {
       websiteContext += `No matching news articles found in the database.\n`;
     }
 
-    // Call Gemini API using GEMINI_API_KEY from environment or .env
+    // Try calling Gemini API if key is present
     let apiKey = (process.env.GEMINI_API_KEY || '').trim();
     if (!apiKey) {
       try {
@@ -2676,14 +2771,10 @@ app.post('/api/chatbot', async (req, res) => {
       } catch (e) {}
     }
 
-    if (!apiKey) {
-      console.warn('⚠️ GEMINI_API_KEY not found in environment or .env file.');
-      return res.json({
-        success: true,
-        reply: "క్షమించండి, ఏఐ సేవ కాన్ఫిగర్ చేయబడలేదు. దయచేసి GEMINI_API_KEY ను కాన్ఫిగర్ చేయండి."
-      });
-    }
-    const systemInstructionText = `You are "మమేక మహోదయం AI అసిస్టెంట్" (Mameka Mahodayam AI Assistant), the official virtual guide for the MAMEKA MAHODAYAM (మమేక మహోదయం) Telugu daily newspaper website.
+    let replyText = '';
+
+    if (apiKey) {
+      const systemInstructionText = `You are "మమేక మహోదయం AI అసిస్టెంట్" (Mameka Mahodayam AI Assistant), the official virtual guide for the MAMEKA MAHODAYAM (మమేక మహోదయం) Telugu daily newspaper website.
 
 DATABASE & WEBSITE KNOWLEDGE CAPABILITIES:
 1. You have DIRECT access to live database statistics, complete reporter directory, and published news articles from the website.
@@ -2693,67 +2784,76 @@ DATABASE & WEBSITE KNOWLEDGE CAPABILITIES:
 5. STRICT RULE: Answer questions about news, reporters, e-paper, and site info. Strictly refuse non-website general knowledge or outside topics (weather, external trivia, coding, etc.).
 6. Format your responses cleanly with emojis, bullet points, and markdown article/page links. Respond primarily in Telugu if asked in Telugu, or English if asked in English.`;
 
-    const contentsPayload = [];
+      const contentsPayload = [];
 
-    // Include recent chat history
-    if (Array.isArray(history) && history.length > 0) {
-      history.slice(-6).forEach(item => {
-        if (item.role && item.text) {
-          contentsPayload.push({
-            role: item.role === 'user' ? 'user' : 'model',
-            parts: [{ text: item.text }]
-          });
-        }
-      });
-    }
+      if (Array.isArray(history) && history.length > 0) {
+        history.slice(-6).forEach(item => {
+          if (item.role && item.text) {
+            contentsPayload.push({
+              role: item.role === 'user' ? 'user' : 'model',
+              parts: [{ text: item.text }]
+            });
+          }
+        });
+      }
 
-    const currentPromptWithContext = `USER QUERY: "${userQuery}"
+      const currentPromptWithContext = `USER QUERY: "${userQuery}"
 
 WEBSITE DATABASE CONTEXT:
 ${websiteContext}`;
 
-    contentsPayload.push({
-      role: 'user',
-      parts: [{ text: currentPromptWithContext }]
-    });
+      contentsPayload.push({
+        role: 'user',
+        parts: [{ text: currentPromptWithContext }]
+      });
 
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
-    let replyText = '';
+      const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
 
-    for (const modelName of modelsToTry) {
-      try {
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-        const geminiRes = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: contentsPayload,
-            systemInstruction: {
-              parts: [{ text: systemInstructionText }]
-            },
-            generationConfig: {
-              temperature: 0.2,
-              maxOutputTokens: 1000
+      for (const modelName of modelsToTry) {
+        try {
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          const geminiRes = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: contentsPayload,
+              systemInstruction: {
+                parts: [{ text: systemInstructionText }]
+              },
+              generationConfig: {
+                temperature: 0.2,
+                maxOutputTokens: 1000
+              }
+            })
+          });
+
+          if (geminiRes.ok) {
+            const geminiData = await geminiRes.json();
+            if (geminiData && geminiData.candidates && geminiData.candidates[0] && geminiData.candidates[0].content && geminiData.candidates[0].content.parts) {
+              replyText = geminiData.candidates[0].content.parts.map(p => p.text).join('\n');
+              if (replyText) break;
             }
-          })
-        });
-
-        if (geminiRes.ok) {
-          const geminiData = await geminiRes.json();
-          if (geminiData && geminiData.candidates && geminiData.candidates[0] && geminiData.candidates[0].content && geminiData.candidates[0].content.parts) {
-            replyText = geminiData.candidates[0].content.parts.map(p => p.text).join('\n');
-            if (replyText) break;
+          } else {
+            console.warn(`Gemini model ${modelName} returned status ${geminiRes.status}, trying fallback model/local engine...`);
           }
-        } else {
-          console.warn(`Gemini model ${modelName} returned status ${geminiRes.status}, trying next fallback model...`);
+        } catch (e) {
+          console.warn(`Model ${modelName} fetch error:`, e.message);
         }
-      } catch (e) {
-        console.warn(`Model ${modelName} fetch error:`, e.message);
       }
     }
 
+    // Failsafe Smart Local Knowledge Engine (If Gemini API is missing, leaked/revoked, or fails)
     if (!replyText) {
-      replyText = "క్షమించండి, ఈ ప్రశ్నకు సంబంధించిన వివరాలు లభ్యం కాలేదు.";
+      replyText = generateLocalChatbotReply({
+        userQuery,
+        totalArticles,
+        totalReporters,
+        totalEditions,
+        allActiveReporters,
+        finalArticles,
+        categoryStatsSummary,
+        districtStatsSummary
+      });
     }
 
     res.json({
