@@ -196,12 +196,12 @@ Once the server starts, open your browser to access:
 - **Public Website**: `http://localhost:3000/`
 - **Admin Portal**: `http://localhost:3000/admin/`
 
-### 🔑 Default Admin Credentials
-When starting with a fresh database, an initial Super Admin user is automatically seeded:
+### 🔑 Admin Credentials & Security
+When starting with a fresh database, set `ADMIN_PASSWORD` in your `.env` file to set a secure initial Super Admin password:
 - **Username**: `admin`
-- **Password**: `admin`
+- **Password**: Configured via `ADMIN_PASSWORD` in `.env`
 
-*(Note: Password can be changed anytime from the Admin Portal Password Settings panel).*
+*(Note: Passwords can also be updated anytime from the Admin Portal Password Settings panel).*
 
 ### 🚀 Deploying to Render from GitHub
 1. Push your repository code to **GitHub**.

@@ -541,10 +541,6 @@ app.post('/api/auth/login', async (req, res) => {
       [cleanUsername, cleanUsername, username, username]
     );
 
-    if (!user && (cleanUsername === 'admin' || cleanUsername === 'admin_sys')) {
-      user = await dbGet("SELECT * FROM users WHERE username = 'admin' OR role = 'superadmin' LIMIT 1");
-    }
-
     if (!user) {
       return res.status(401).json({ success: false, error: 'లాగిన్ విఫలమైంది / Invalid credentials' });
     }
@@ -552,15 +548,6 @@ app.post('/api/auth/login', async (req, res) => {
     let validPassword = await bcrypt.compare(cleanPassword, user.password_hash);
     if (!validPassword) {
       validPassword = await bcrypt.compare(password, user.password_hash);
-    }
-
-    // Failsafe default password check for default admin account
-    if (!validPassword && (cleanUsername === 'admin' || user.username === 'admin')) {
-      if (cleanPassword === 'admin' || cleanPassword === 'admin123' || password === 'admin') {
-        validPassword = true;
-        const freshHash = await bcrypt.hash('admin', 10);
-        await dbRun('UPDATE users SET password_hash = ? WHERE id = ?', [freshHash, user.id]).catch(() => {});
-      }
     }
 
     if (!validPassword) {
@@ -2550,15 +2537,20 @@ app.get(['/api/public/reporters/:id/qr.png', '/api/public/reporters/:id/qr'], as
 });
 
 // Built-in Smart Local Knowledge Engine for Website Chatbot
-function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, totalEditions, allActiveReporters, matchingArticles, latestArticles, categoryStatsSummary, districtStatsSummary }) {
+function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, totalEditions, allActiveReporters, matchingArticles, latestArticles, categoryStatsSummary, districtStatsSummary, currentPageUrl, currentPageTitle }) {
   const queryLower = (userQuery || '').toLowerCase().trim();
 
-  // 1. Greetings ("hello", "hi", "నమస్కారం", "హలో", "హాయ్", "hey")
-  if (/^(hello|hi|hey|నమస్కారం|హలో|హాయ్)$/i.test(queryLower) || queryLower === 'hello' || queryLower === 'hi') {
-    return `నమస్కారం! 🙏 నేను **మమేక మహోదయం AI సహాయకుడిని**.\n\nమా వెబ్‌సైట్‌లోని వార్తలు, విలేఖరుల వివరాలు, ఈ-పేపర్ లేదా వెబ్‌సైట్ సమాచారం గురించి నన్ను ఏమైనా అడగండి.`;
+  // 1. Greetings
+  if (/^(hello|hi|hey|నమస్కారం|హలో|హాయ్)$/i.test(queryLower)) {
+    return `నమస్కారం! 🙏 నేను **మమేక మహోదయం AI సహాయకుడిని**.\n\nమా వెబ్‌సైట్‌లోని వార్తలు, విలేఖరుల వివరాలు, ఈ-పేపర్ లేదా ఏ వెబ్‌సైట్ పేజీల వివరాలైనా నన్ను అడగవచ్చు.`;
   }
 
-  // 2. Article Counts / Website Statistics ("how many news articles", "వార్తలు ఎన్ని ఉన్నాయి", "count", "మొత్తం వార్తలు")
+  // 2. Current Page Details
+  if (/(ఈ పేజీ|current page|ఈ ఆర్టికల్|ఈ వ్యాసం|ఇక్కడ ఏమిటి|this page)/i.test(queryLower)) {
+    return `📄 **ప్రస్తుత పేజీ సమాచారం:**\n\n• **పేజీ శీర్షిక:** ${currentPageTitle || 'మమేక మహోదయం'}\n• **URL:** ${currentPageUrl || '/'}\n\nఈ పేజీ లేదా వెబ్‌సైట్‌లోని వార్తలు & విలేఖరుల గురించి ఏ సందేహం ఉన్నా అడగండి!`;
+  }
+
+  // 3. Article Counts / Website Statistics
   if (/(వార్తలు|వార్తా|articles|news|count|సంఖ్య|ఎన్ని|మొత్తం)/i.test(queryLower) && /(ఎన్ని|ఉన్నాయి|count|total|how many|available|మొత్తం|వివరాలు|సమాచారం)/i.test(queryLower)) {
     let statsText = `📰 **మమేక మహోదయం వెబ్‌సైట్ ప్రత్యక్ష వివరాలు (Live Stats):**\n\n`;
     statsText += `• **మొత్తం ప్రచురితమైన వార్తలు:** ${totalArticles} వార్తా కథనాలు\n`;
@@ -2571,8 +2563,8 @@ function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, t
     return statsText;
   }
 
-  // 3. Reporters / Editors / Position / Staff Details ("position of vaka srinivasarao", "వాకా శ్రీనివాసరావు", etc.)
-  if (/(reporter|reporters|editor|position|designation|విలేఖరి|విలేఖరుల|సంపాదకులు|హోదా|టీమ్|బృందం|వాకా|శ్రీనివాసరావు|వివరాలు|సమాచారం)/i.test(queryLower)) {
+  // 4. Reporters / Editors / Position / Staff Details
+  if (/(reporter|reporters|editor|position|designation|విలేఖరి|విలేఖరుల|సంపాదకులు|హోదా|టీమ్|బృందం|వాకా|శ్రీనివాసరావు)/i.test(queryLower)) {
     const nameMappings = [
       { keys: ['vaka', 'srinivasarao', 'srinivasa rao', 'వాకా', 'శ్రీనివాసరావు', 'editor in chief', 'editor-in-chief', 'ప్రధాన సంపాదకులు'], matchName: 'వాకా శ్రీనివాసరావు' },
       { keys: ['kamarajugadda', 'srinivasa vijay kumar', 'vijay kumar', 'కామరాజుగడ్డ', 'విజయ కుమార్', 'associate editor', 'అసోసియేట్ ఎడిటర్'], matchName: 'కామరాజుగడ్డ' },
@@ -2621,12 +2613,12 @@ function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, t
     }
   }
 
-  // 4. E-Paper & PDF Queries ("epaper", "ఈ-పేపర్", "pdf", "పత్రిక")
-  if (/(epaper|ఈ-పేపర్|ఈ పేపర్|pdf|పత్రిక|దినపత్రిక|download|డౌన్‌లోడ్)/i.test(queryLower)) {
+  // 5. E-Paper & PDF Queries
+  if (/(epaper|ఈ[-–\s]*పేపర్|pdf|పత్రిక|దినపత్రిక|download|డౌన్‌లోడ్|సంచిక)/i.test(queryLower)) {
     return `🗞️ **మమేక మహోదయం ఈ-పేపర్ (E-Paper):**\n\nమా దినపత్రిక డిజిటల్ PDF సంచికలను మీ మొబైల్ లేదా కంప్యూటర్‌లో ఉచితంగా చదవవచ్చు మరియు డౌన్‌లోడ్ చేసుకోవచ్చు.\n\n👉 [ఈ-పేపర్ చదవడానికి మరియు డౌన్‌లోడ్ చేయడానికి ఇక్కడ క్లిక్ చేయండి](/epaper.html)`;
   }
 
-  // 5. Explicit Latest News Queries ("latest news", "తాజా వార్తలు")
+  // 6. Explicit Latest News Queries
   if (/(latest|recent|తాజా|కొత్త)/i.test(queryLower) && /(news|వార్తలు|వార్తా)/i.test(queryLower)) {
     if (latestArticles && latestArticles.length > 0) {
       let artText = `📰 **మా వెబ్‌సైట్‌లోని తాజా వార్తలు:**\n\n`;
@@ -2638,7 +2630,7 @@ function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, t
     }
   }
 
-  // 6. Relevant Articles Search Match (ONLY if user query matched specific news items)
+  // 7. Relevant Articles Search Match
   if (matchingArticles && matchingArticles.length > 0) {
     let artText = `📰 **మా వెబ్‌సైట్‌లోని సంబంధిత వార్తలు:**\n\n`;
     matchingArticles.slice(0, 4).forEach((a, idx) => {
@@ -2648,7 +2640,7 @@ function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, t
     return artText;
   }
 
-  // 7. Contact / Advertising
+  // 8. Contact / Advertising
   if (/(contact|phone|email|advertise|అడ్వర్టైజ్|ప్రకటనలు|మమ్మల్ని సంప్రదించండి|సంప్రదించండి)/i.test(queryLower)) {
     return `📞 **సంప్రదించే వివరాలు:**\n\n• **ఈమెయిల్:** mahodayamnews@gmail.com\n• **ఫోన్:** +91 7075652808\n• **ప్రకటనలు:** [ప్రకటనల పేజీ](/advertise.html)\n• **చిరునామా:** బాపట్ల, ఆంధ్రప్రదేశ్.`;
   }
@@ -2656,36 +2648,123 @@ function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, t
   return `క్షమించండి, ఈ ప్రశ్నకు సంబంధించిన వివరాలు లభ్యం కాలేదు.\n\nమీరు మా వెబ్‌సైట్‌లోని **వార్తలు, ఈ-పేపర్, విలేఖరుల వివరాలు లేదా సంపాదకీయ బృందం** గురించి ప్రశ్నలు అడగవచ్చు.\n\n👉 [తాజా వార్తలు చూడండి](/category.html?c=latest)`;
 }
 
+// Helper to detect website manipulation action intent
+function detectWebsiteAction(queryLower) {
+  const norm = (queryLower || '').replace(/[\u2010-\u2015\u2212]/g, '-');
+  if (/(epaper|ఈ[-–\s]*పేపర్|pdf|పత్రిక|దినపత్రిక|open epaper|show epaper|తెరవండి|డౌన్‌లోడ్)/i.test(norm)) {
+    return { type: 'NAVIGATE', url: '/epaper.html', label: '📖 ఈ-పేపర్ తెరవండి (Open E-Paper)' };
+  }
+  if (/(reporters|editorial[-–\s]*team|సంపాదకీయ[-–\s]*బృందం|విలేఖరుల[-–\s]*జాబితా|మొత్తం[-–\s]*విలేఖరులు|team[-–\s]*page|సంపాదకులు|విలేఖరులు)/i.test(norm)) {
+    return { type: 'NAVIGATE', url: '/editorial-team.html', label: '👥 సంపాదకీయ బృందం చూడండి (View Team)' };
+  }
+  if (/(advertise|ప్రకటనలు|ad rates)/i.test(norm)) {
+    return { type: 'NAVIGATE', url: '/advertise.html', label: '📢 ప్రకటనల వివరాలు (View Ad Rates)' };
+  }
+  if (/(contact|సంప్రదించండి|contact us|office|ఫోన్|ఈమెయిల్)/i.test(norm)) {
+    return { type: 'NAVIGATE', url: '/contact.html', label: '📞 సంప్రదించే పేజీ (Contact Us)' };
+  }
+  if (/(english|ఇంగ్లీష్|switch to english)/i.test(norm)) {
+    return { type: 'SWITCH_LANGUAGE', lang: 'en', label: '🌐 Switch to English' };
+  }
+  if (/(telugu|తెలుగు|switch to telugu)/i.test(norm)) {
+    return { type: 'SWITCH_LANGUAGE', lang: 'te', label: '🌐 Switch to Telugu' };
+  }
+
+  const districtMap = {
+    'bapatla': 'బాపట్ల', 'బాపట్ల': 'బాపట్ల',
+    'prakasam': 'ప్రకాశం', 'ప్రకాశం': 'ప్రకాశం',
+    'guntur': 'గుంటూరు', 'గుంటూరు': 'గుంటూరు',
+    'palnadu': 'పల్నాడు', 'పల్నాడు': 'పల్నాడు',
+    'markapuram': 'మార్కాపురం', 'మార్కాపురం': 'మార్కాపురం',
+    'krishna': 'కృష్ణా', 'కృష్ణా': 'కృష్ణా'
+  };
+  for (const [key, name] of Object.entries(districtMap)) {
+    if (norm.includes(key)) {
+      return { type: 'FILTER_DISTRICT', district: key, url: `/district.html?d=${key}`, label: `📍 ${name} వార్తలు (View ${name} News)` };
+    }
+  }
+
+  const catMap = {
+    'politics': 'రాజకీయాలు', 'రాజకీయాలు': 'రాజకీయాలు',
+    'state': 'రాష్ట్ర వార్తలు', 'రాష్ట్ర': 'రాష్ట్ర వార్తలు',
+    'cinema': 'సినిమా', 'సినిమా': 'సినిమా',
+    'sports': 'క్రీడలు', 'క్రీడలు': 'క్రీడలు',
+    'education': 'విద్య & ఉద్యోగాలు', 'విద్య': 'విద్య & ఉద్యోగాలు'
+  };
+  for (const [key, name] of Object.entries(catMap)) {
+    if (norm.includes(key)) {
+      return { type: 'FILTER_CATEGORY', category: key, url: `/category.html?c=${key}`, label: `📰 ${name} (View ${name})` };
+    }
+  }
+  return null;
+}
+
 // ==========================================================================
 // WEBSITE AI CHATBOT ROUTE (MAMEKA MAHODAYAM AI ASSISTANT)
 // ==========================================================================
 app.post('/api/chatbot', async (req, res) => {
   try {
-    const { message, history } = req.body;
+    const { message, history, currentPageUrl, currentPageTitle, pageExcerpt, lang } = req.body;
     if (!message || typeof message !== 'string' || !message.trim()) {
       return res.status(400).json({ success: false, error: 'Message is required.' });
     }
 
     const userQuery = message.trim();
-    const searchPattern = `%${userQuery.replace(/[%_]/g, '')}%`;
+    const queryLower = userQuery.toLowerCase();
 
-    // Fetch matching published news articles
+    // Tokenized Smart Keyword Extraction
+    const stopWords = new Set([
+      'ఏమిటి', 'ఏమిటీ', 'ఏంటి', 'ఎంత', 'ఎవరు', 'ఎక్కడ', 'ఎప్పుడు', 'ఎందుకు', 'ఎలా', 'ఉన్నాయి',
+      'ఉంది', 'గురించి', 'వివరాలు', 'సమాచారం', 'చేయు', 'చెప్పు', 'చూపించు', 'చెప్పండి', 'చూపించండి',
+      'మొత్తం', 'ఏమైనా', 'అడిగి', 'అడగండి', 'నాకు', 'మాకు', 'ఉందా', 'వార్తలు', 'గారి', 'గారు',
+      'what', 'is', 'are', 'who', 'where', 'when', 'why', 'how', 'the', 'a', 'an', 'show', 'tell', 'me', 'about', 'list', 'many', 'details', 'info'
+    ]);
+
+    const words = queryLower
+      .replace(/[^\w\s\u0C00-\u0C7F]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 1 && !stopWords.has(w));
+
     let matchingArticles = [];
     try {
-      matchingArticles = await dbAll(
-        `SELECT id, slug, title_te, title_en, summary_te, summary_en, content_te, category, district, published_at 
-         FROM articles 
-         WHERE status = 'published' AND (
-           title_te LIKE ? OR title_en LIKE ? OR summary_te LIKE ? OR content_te LIKE ? OR category LIKE ? OR district LIKE ?
-         ) 
-         ORDER BY published_at DESC LIMIT 5`,
-        [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern]
-      );
+      if (words.length > 0) {
+        const clauses = [];
+        const params = [];
+        words.slice(0, 5).forEach(w => {
+          const p = `%${w}%`;
+          clauses.push(`(title_te LIKE ? OR title_en LIKE ? OR summary_te LIKE ? OR content_te LIKE ? OR category LIKE ? OR district LIKE ?)`);
+          params.push(p, p, p, p, p, p);
+        });
+
+        matchingArticles = await dbAll(
+          `SELECT id, slug, title_te, title_en, summary_te, summary_en, content_te, category, district, published_at 
+           FROM articles 
+           WHERE status = 'published' AND (${clauses.join(' OR ')}) 
+           ORDER BY published_at DESC LIMIT 6`,
+          params
+        );
+      }
     } catch (e) {
       console.warn('Chatbot article search warning:', e.message);
     }
 
-    // Fetch latest top 5 published articles for context
+    // Fallback search if tokenized matching returned 0 articles
+    if (!matchingArticles || matchingArticles.length === 0) {
+      try {
+        const searchPattern = `%${userQuery.replace(/[%_]/g, '')}%`;
+        matchingArticles = await dbAll(
+          `SELECT id, slug, title_te, title_en, summary_te, summary_en, content_te, category, district, published_at 
+           FROM articles 
+           WHERE status = 'published' AND (
+             title_te LIKE ? OR title_en LIKE ? OR summary_te LIKE ? OR content_te LIKE ? OR category LIKE ? OR district LIKE ?
+           ) 
+           ORDER BY published_at DESC LIMIT 5`,
+          [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern]
+        );
+      } catch (e) {}
+    }
+
+    // Fetch latest published articles
     let latestArticles = [];
     try {
       latestArticles = await dbAll(
@@ -2698,7 +2777,7 @@ app.post('/api/chatbot', async (req, res) => {
       console.warn('Chatbot latest articles warning:', e.message);
     }
 
-    // 1. Fetch live database overall statistics & counts
+    // 1. Live statistics
     let totalArticles = 0;
     let totalReporters = 0;
     let totalEditions = 0;
@@ -2728,7 +2807,7 @@ app.post('/api/chatbot', async (req, res) => {
       console.warn('Chatbot stats aggregation warning:', e.message);
     }
 
-    // 2. Fetch COMPLETE list of active reporters & editorial team members
+    // 2. Reporters directory
     let allActiveReporters = [];
     try {
       allActiveReporters = await dbAll(
@@ -2741,7 +2820,7 @@ app.post('/api/chatbot', async (req, res) => {
       console.warn('Chatbot reporter directory warning:', e.message);
     }
 
-    // Combine matching articles & latest published articles
+    // Combine articles
     const articleMap = new Map();
     [...matchingArticles, ...latestArticles].forEach(a => {
       if (a && a.id) articleMap.set(a.id, a);
@@ -2750,6 +2829,12 @@ app.post('/api/chatbot', async (req, res) => {
 
     // Build structured real-time context text for Gemini
     let websiteContext = `
+[CURRENT USER VISITING PAGE CONTEXT]:
+- User Current URL: ${currentPageUrl || '/'}
+- Page Title: ${currentPageTitle || 'మమేక మహోదయం'}
+- Language Preference: ${lang || 'te'}
+- Page Content Excerpt: ${pageExcerpt ? pageExcerpt.slice(0, 400) : 'N/A'}
+
 [LIVE WEBSITE DATABASE STATISTICS & COUNTS]:
 - Total Published News Articles on Website: ${totalArticles}
 - Total Active Reporters & Editors in Directory: ${totalReporters}
@@ -2757,44 +2842,32 @@ app.post('/api/chatbot', async (req, res) => {
 - Articles by Category: ${categoryStatsSummary || 'Various categories available'}
 - Articles by District: ${districtStatsSummary || 'Various districts available'}
 
-[WEBSITE OVERVIEW & GENERAL DETAILS]:
-- Website Name: మమేక మహోదయం (MAMEKA MAHODAYAM) - Official Telugu Daily Newspaper
-- Tagline: అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం
-- Official Contact Email: mahodayamnews@gmail.com
-- Contact Phone: +91 7075652808
-- Main Pages & Links:
-  • Home: /
-  • Latest News (తాజా వార్తలు): /category.html?c=latest
-  • District News (జిల్లాల వార్తలు): /district.html
-  • E-Paper (ఈ-పేపర్): /epaper.html
-  • Editorial Team (సంపాదకీయ బృందం): /editorial-team.html
-  • Advertising (ప్రకటనలు): /advertise.html
-  • Contact Us (మమ్మల్ని సంప్రదించండి): /contact.html
-  • Privacy Policy: /privacy.html
-  • Terms & Conditions: /terms.html
+[WEBSITE NAVIGATION & TAXONOMY]:
+- Categories: State (రాష్ట్ర వార్తలు), Politics (రాజకీయాలు), National (జాతీయ అంతర్జాతీయ), Cinema (సినిమా), Sports (క్రీడలు), Education (విద్య & ఉద్యోగాలు), Editorial (సంపాదకీయం).
+- Districts: Bapatla (బాపట్ల), Prakasam (ప్రకాశం), Markapuram (మార్కాపురం), Guntur (గుంటూరు), Palnadu (పల్నాడు), Krishna (కృష్ణా).
+- E-Paper Reader & PDF Download: /epaper.html
+- Editorial & Reporters Directory: /editorial-team.html
+- Contact Page & Office Address: /contact.html (Bapatla, AP | Phone: +91 7075652808 | Email: mahodayamnews@gmail.com)
+- Advertising Rates Page: /advertise.html
 
 [COMPLETE REPORTERS & EDITORIAL TEAM DIRECTORY]:
 `;
     if (allActiveReporters.length > 0) {
       allActiveReporters.forEach((r, idx) => {
-        websiteContext += `${idx + 1}. Name: "${r.name}" | Designation: "${r.designation || 'Reporter'}" | District: "${r.district || 'N/A'}" | Mandal: "${r.mandal || 'N/A'}" | Jurisdiction: "${r.jurisdiction || 'N/A'}" | Phone: "${r.phone || 'N/A'}" | Email: "${r.email || 'N/A'}" | Bio: "${r.bio || 'N/A'}"\n`;
+        websiteContext += `${idx + 1}. Name: "${r.name}" | Designation: "${r.designation || 'Reporter'}" | District: "${r.district || 'N/A'}" | Mandal: "${r.mandal || 'N/A'}" | Phone: "${r.phone || 'N/A'}" | Email: "${r.email || 'N/A'}" | Bio: "${r.bio || 'N/A'}"\n`;
       });
-    } else {
-      websiteContext += `No reporter records currently active.\n`;
     }
 
-    websiteContext += `\n[LATEST & RELEVANT PUBLISHED NEWS ARTICLES ON WEBSITE]:\n`;
+    websiteContext += `\n[RELEVANT & LATEST PUBLISHED NEWS ARTICLES ON WEBSITE]:\n`;
     if (finalArticles.length > 0) {
       finalArticles.forEach((a, idx) => {
         const link = a.slug ? `/news/${a.slug}` : `/article.html?id=${a.id}`;
         const contentExcerpt = (a.content_te || a.summary_te || '').slice(0, 350);
-        websiteContext += `${idx + 1}. Title: "${a.title_te}" ${a.title_en ? `(${a.title_en})` : ''} | Category: ${a.category || 'General'} | District: ${a.district || 'N/A'} | Published Date: ${a.published_at || 'Recent'} | Link: [${a.title_te}](${link})\n   Summary/Content: ${contentExcerpt}\n\n`;
+        websiteContext += `${idx + 1}. Title: "${a.title_te}" ${a.title_en ? `(${a.title_en})` : ''} | Category: ${a.category || 'General'} | District: ${a.district || 'N/A'} | Link: [${a.title_te}](${link})\n   Summary: ${contentExcerpt}\n\n`;
       });
-    } else {
-      websiteContext += `No matching news articles found in the database.\n`;
     }
 
-    // Try calling Gemini API if key is present
+    // Try Gemini API if key is present
     let apiKey = (process.env.GEMINI_API_KEY || '').trim();
     if (!apiKey) {
       try {
@@ -2808,20 +2881,28 @@ app.post('/api/chatbot', async (req, res) => {
     }
 
     let replyText = '';
+    let action = null;
 
     if (apiKey) {
-      const systemInstructionText = `You are "మమేక మహోదయం AI అసిస్టెంట్" (Mameka Mahodayam AI Assistant), the official virtual guide for the MAMEKA MAHODAYAM (మమేక మహోదయం) Telugu daily newspaper website.
+      const systemInstructionText = `You are "మమేక మహోదయం AI అసిస్టెంట్" (Mameka Mahodayam AI Assistant), the official virtual guide and interactive website controller for the MAMEKA MAHODAYAM (మమేక మహోదయం) Telugu daily newspaper website.
 
-DATABASE & WEBSITE KNOWLEDGE CAPABILITIES:
-1. You have DIRECT access to live database statistics, complete reporter directory, and published news articles from the website.
-2. If asked about article counts or website statistics (e.g., "how many news articles are available in the website", "వార్తలు ఎన్ని ఉన్నాయి"), state the exact total count from the live database statistics provided in context, along with category counts.
-3. If asked about any reporter, editor, or staff member (e.g., "what is the position of Vaka Srinivasarao", "వాకా శ్రీనివాసరావు వివరాలు", or any team member), check the complete reporter directory in context and provide their exact name, designation (e.g. Editor-in-Chief / ప్రధాన సంపాదకులు), district, mandal, and contact phone number.
-4. If articles or reporters were modified, always use the latest live database context provided below.
-5. STRICT RULE: Answer questions about news, reporters, e-paper, and site info. Strictly refuse non-website general knowledge or outside topics (weather, external trivia, coding, etc.).
-6. Format your responses cleanly with emojis, bullet points, and markdown article/page links. Respond primarily in Telugu if asked in Telugu, or English if asked in English.`;
+YOUR RESPONSIBILITIES & CAPABILITIES:
+1. You have DIRECT access to live database statistics, complete reporter directory, published news articles, and the user's current webpage context.
+2. If asked about article counts or website statistics, quote the exact total count from the live database statistics provided in context.
+3. If asked about any reporter or editor, check the complete directory in context and provide exact details (name, position, district, phone, email).
+4. WEBSITE MANIPULATION / ACTIONS:
+   If the user asks to navigate, open a section, search, change language, or view a category/district, include an ACTION directive at the VERY END of your response in exact format:
+   ACTION_JSON:{"type":"NAVIGATE|FILTER_DISTRICT|FILTER_CATEGORY|SWITCH_LANGUAGE|SEARCH|SCROLL","url":"/path","label":"Action Button Text","payload":{}}
+   Example actions:
+   - For E-Paper: ACTION_JSON:{"type":"NAVIGATE","url":"/epaper.html","label":"📖 ఈ-పేపర్ తెరవండి"}
+   - For Bapatla News: ACTION_JSON:{"type":"FILTER_DISTRICT","district":"bapatla","url":"/district.html?d=bapatla","label":"📍 బాపట్ల వార్తలు"}
+   - For Politics: ACTION_JSON:{"type":"FILTER_CATEGORY","category":"politics","url":"/category.html?c=politics","label":"📰 రాజకీయాలు"}
+   - For Editorial Team: ACTION_JSON:{"type":"NAVIGATE","url":"/editorial-team.html","label":"👥 సంపాదకీయ బృందం"}
+   - For Language Switch to English: ACTION_JSON:{"type":"SWITCH_LANGUAGE","lang":"en","label":"🌐 Switch to English"}
+5. Answer questions about news, reporters, e-paper, and site info accurately. Refuse non-website general trivia or outside topics.
+6. Format your responses with emojis, clean markdown links, and bullet points. Respond in Telugu if asked in Telugu, or English if asked in English.`;
 
       const contentsPayload = [];
-
       if (Array.isArray(history) && history.length > 0) {
         history.slice(-6).forEach(item => {
           if (item.role && item.text) {
@@ -2833,18 +2914,13 @@ DATABASE & WEBSITE KNOWLEDGE CAPABILITIES:
         });
       }
 
-      const currentPromptWithContext = `USER QUERY: "${userQuery}"
-
-WEBSITE DATABASE CONTEXT:
-${websiteContext}`;
-
+      const currentPromptWithContext = `USER QUERY: "${userQuery}"\n\nWEBSITE DATABASE CONTEXT:\n${websiteContext}`;
       contentsPayload.push({
         role: 'user',
         parts: [{ text: currentPromptWithContext }]
       });
 
-      const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
-
+      const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
       for (const modelName of modelsToTry) {
         try {
           const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -2853,13 +2929,8 @@ ${websiteContext}`;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: contentsPayload,
-              systemInstruction: {
-                parts: [{ text: systemInstructionText }]
-              },
-              generationConfig: {
-                temperature: 0.2,
-                maxOutputTokens: 1000
-              }
+              systemInstruction: { parts: [{ text: systemInstructionText }] },
+              generationConfig: { temperature: 0.2, maxOutputTokens: 1000 }
             })
           });
 
@@ -2869,16 +2940,23 @@ ${websiteContext}`;
               replyText = geminiData.candidates[0].content.parts.map(p => p.text).join('\n');
               if (replyText) break;
             }
-          } else {
-            console.warn(`Gemini model ${modelName} returned status ${geminiRes.status}, trying fallback model/local engine...`);
           }
-        } catch (e) {
-          console.warn(`Model ${modelName} fetch error:`, e.message);
-        }
+        } catch (e) {}
       }
     }
 
-    // Failsafe Smart Local Knowledge Engine (If Gemini API is missing, leaked/revoked, or fails)
+    // Extract ACTION_JSON if emitted by Gemini
+    if (replyText) {
+      const actionMatch = replyText.match(/ACTION_JSON:\s*(\{.*\})/s);
+      if (actionMatch) {
+        try {
+          action = JSON.parse(actionMatch[1]);
+          replyText = replyText.replace(/ACTION_JSON:\s*(\{.*\})/s, '').trim();
+        } catch (e) {}
+      }
+    }
+
+    // Failsafe Smart Local Knowledge Engine
     if (!replyText) {
       replyText = generateLocalChatbotReply({
         userQuery,
@@ -2889,13 +2967,21 @@ ${websiteContext}`;
         matchingArticles,
         latestArticles,
         categoryStatsSummary,
-        districtStatsSummary
+        districtStatsSummary,
+        currentPageUrl,
+        currentPageTitle
       });
+    }
+
+    // Detect action intent if not set
+    if (!action) {
+      action = detectWebsiteAction(queryLower);
     }
 
     res.json({
       success: true,
-      reply: replyText
+      reply: replyText,
+      action: action || null
     });
 
   } catch (err) {

@@ -234,6 +234,31 @@
       border-color: #dc2626 !important;
     }
 
+    .mm-action-pill-btn {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+      color: #ffffff !important;
+      border: 1px solid #dc2626 !important;
+      border-radius: 20px !important;
+      padding: 8px 14px !important;
+      font-size: 12.5px !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+      margin-top: 10px !important;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35) !important;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      text-decoration: none !important;
+    }
+
+    .mm-action-pill-btn:hover {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+      color: #ffffff !important;
+      transform: translateY(-2px) scale(1.02) !important;
+      box-shadow: 0 6px 16px rgba(220, 38, 38, 0.5) !important;
+    }
+
     .mm-chat-footer {
       padding: 12px 16px !important;
       background-color: #ffffff !important;
@@ -418,6 +443,82 @@
       }
     });
 
+    function executeWebsiteAction(act) {
+      if (!act || !act.type) return;
+
+      switch (act.type) {
+        case 'NAVIGATE':
+          if (act.url) {
+            window.location.href = act.url;
+          }
+          break;
+        case 'SWITCH_LANGUAGE':
+          if (window.i18n && typeof window.i18n.setLanguage === 'function') {
+            window.i18n.setLanguage(act.lang || 'te');
+          } else {
+            const url = new URL(window.location.href);
+            url.searchParams.set('lang', act.lang || 'te');
+            window.location.href = url.toString();
+          }
+          break;
+        case 'SEARCH':
+          if (act.query) {
+            const searchInput = document.querySelector('input[type="search"], input[name="q"], #search-input');
+            if (searchInput) {
+              searchInput.value = act.query;
+              const form = searchInput.closest('form');
+              if (form) form.submit();
+              else window.location.href = '/search.html?q=' + encodeURIComponent(act.query);
+            } else {
+              window.location.href = '/search.html?q=' + encodeURIComponent(act.query);
+            }
+          } else if (act.url) {
+            window.location.href = act.url;
+          }
+          break;
+        case 'SCROLL':
+          if (act.target) {
+            const el = document.querySelector(act.target);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }
+          break;
+        case 'FILTER_DISTRICT':
+          if (act.district) {
+            if (window.location.pathname.includes('district.html')) {
+              const tabBtn = document.querySelector(`[data-district="${act.district}"], button[value="${act.district}"]`);
+              if (tabBtn) tabBtn.click();
+              else window.location.href = act.url || (`/district.html?d=${act.district}`);
+            } else {
+              window.location.href = act.url || (`/district.html?d=${act.district}`);
+            }
+          }
+          break;
+        case 'FILTER_CATEGORY':
+          if (act.category) {
+            window.location.href = act.url || (`/category.html?c=${act.category}`);
+          }
+          break;
+      }
+    }
+
+    bodyEl.addEventListener('click', (e) => {
+      if (e.target.classList.contains('mm-chip-btn')) {
+        const query = e.target.getAttribute('data-query');
+        if (query) {
+          handleSendMessage(query);
+        }
+      } else if (e.target.classList.contains('mm-action-pill-btn') || e.target.closest('.mm-action-pill-btn')) {
+        const btn = e.target.classList.contains('mm-action-pill-btn') ? e.target : e.target.closest('.mm-action-pill-btn');
+        const actData = btn.getAttribute('data-action');
+        if (actData) {
+          try {
+            const act = JSON.parse(actData);
+            executeWebsiteAction(act);
+          } catch (err) {}
+        }
+      }
+    });
+
     async function handleSendMessage(userText) {
       inputEl.value = '';
       appendMessage(userText, 'user');
@@ -430,12 +531,18 @@
       scrollToBottom();
 
       try {
+        const pageText = (document.querySelector('article, main, #main-content')?.innerText || '').slice(0, 500);
+
         const res = await fetch('/api/chatbot', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: userText,
-            history: conversationHistory
+            history: conversationHistory,
+            currentPageUrl: window.location.pathname + window.location.search,
+            currentPageTitle: document.title,
+            pageExcerpt: pageText,
+            lang: localStorage.getItem('mm_lang') || 'te'
           })
         });
 
@@ -445,7 +552,7 @@
         if (res.ok) {
           const data = await res.json();
           const botReply = data.reply || "క్షమించండి, సమాధానం పొందుపరచలేకపోయాము.";
-          appendMessage(botReply, 'bot');
+          appendMessage(botReply, 'bot', data.action);
           
           conversationHistory.push({ role: 'user', text: userText });
           conversationHistory.push({ role: 'model', text: botReply });
@@ -459,7 +566,7 @@
       }
     }
 
-    function appendMessage(text, sender) {
+    function appendMessage(text, sender, actionObj) {
       const msgDiv = document.createElement('div');
       msgDiv.className = `mm-msg ${sender}`;
       
@@ -467,6 +574,11 @@
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_self">$1</a>')
         .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')
         .replace(/\n/g, '<br/>');
+
+      if (actionObj && actionObj.label) {
+        const actJson = escapeHtml(JSON.stringify(actionObj));
+        formattedText += `<br/><button class="mm-action-pill-btn" data-action="${actJson}">${escapeHtml(actionObj.label)}</button>`;
+      }
 
       msgDiv.innerHTML = formattedText;
       bodyEl.appendChild(msgDiv);
@@ -478,7 +590,7 @@
     }
 
     function escapeHtml(unsafe) {
-      return unsafe
+      return (unsafe || '')
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")

@@ -386,14 +386,14 @@ async function initDatabase() {
   const existingUser = await dbGet('SELECT * FROM users LIMIT 1');
   if (!existingUser) {
     const adminId = 'usr_admin';
-    const defaultPassword = 'admin';
+    const defaultPassword = process.env.ADMIN_PASSWORD || 'MamekaAdmin2026!#';
     const passwordHash = await bcrypt.hash(defaultPassword, 10);
     
     await dbRun(
       `INSERT INTO users (id, username, email, password_hash, role) VALUES (?, ?, ?, ?, ?)`,
       [adminId, 'admin', 'mahodayamnews@gmail.com', passwordHash, 'superadmin']
     );
-    console.log('✓ Initial Admin Account Seeded: username="admin", password="admin"');
+    console.log('✓ Initial Admin Account Seeded (Set ADMIN_PASSWORD in .env for custom credentials)');
   } else {
     // Ensure 'usr_admin' exists so foreign keys referencing 'usr_admin' are always satisfied
     const adminById = await dbGet('SELECT id FROM users WHERE id = ?', ['usr_admin']);
