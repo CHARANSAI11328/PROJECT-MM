@@ -254,8 +254,8 @@ app.get('/sw.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'sw.js'));
 });
 
-// Force browsers and PWAs to always fetch fresh versions of chatbot and navigation scripts
-app.use(['/js/chatbot.js', '/js/navigation.js', '/js/pwa.js'], (req, res, next) => {
+// Force browsers and PWAs to always fetch fresh versions of core interactive scripts
+app.use(['/js/chatbot.js', '/js/navigation.js', '/js/pwa.js', '/js/content-api.js'], (req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
@@ -963,6 +963,67 @@ async function getPagesForEdition(edition) {
   }
 }
 
+function getFormattedDateSlug(dateVal) {
+  if (!dateVal) return 'edition';
+  if (dateVal instanceof Date) {
+    try { return dateVal.toISOString().split('T')[0]; } catch (e) {}
+  }
+  const str = String(dateVal).trim();
+  const match = str.match(/\d{4}-\d{2}-\d{2}/);
+  if (match) return match[0];
+  return 'edition';
+}
+
+// Helper to ensure edition PDF exists on disk, restoring from persistent_uploads or synthesizing if needed
+async function ensureEditionPdfOnDisk(edition) {
+  if (!edition || !edition.pdf_path) return null;
+  const relPath = edition.pdf_path.startsWith('/') ? edition.pdf_path.substring(1) : edition.pdf_path;
+  const diskPath = path.join(__dirname, relPath);
+
+  // 1. If present on disk and non-empty, return it immediately
+  if (fs.existsSync(diskPath)) {
+    try {
+      const stats = fs.statSync(diskPath);
+      if (stats.size > 0) return diskPath;
+    } catch (e) {}
+  }
+
+  // 2. Try to restore original PDF binary from persistent_uploads (Neon Cloud DB)
+  try {
+    const filename = path.basename(edition.pdf_path);
+    const pdfRow = await dbGet(
+      'SELECT file_data FROM persistent_uploads WHERE file_path = ? OR file_path LIKE ?',
+      [edition.pdf_path, `%/${filename}`]
+    );
+    if (pdfRow && pdfRow.file_data) {
+      const buf = Buffer.from(pdfRow.file_data, 'base64');
+      const targetDir = path.dirname(diskPath);
+      if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+      fs.writeFileSync(diskPath, buf);
+      console.log(`✓ [EPAPER] Restored PDF to disk from DB: ${diskPath} (${buf.length} bytes)`);
+      return diskPath;
+    }
+  } catch (err) {
+    console.warn('[EPAPER] Notice restoring PDF from DB:', err.message);
+  }
+
+  // 3. Fallback: Reconstruct / synthesize PDF from page images
+  try {
+    const synthesizedBuf = await reconstructPdfForEdition(edition);
+    if (synthesizedBuf && synthesizedBuf.length > 0) {
+      const targetDir = path.dirname(diskPath);
+      if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+      fs.writeFileSync(diskPath, synthesizedBuf);
+      console.log(`✓ [EPAPER] Synthesized PDF and cached to disk: ${diskPath} (${synthesizedBuf.length} bytes)`);
+      return diskPath;
+    }
+  } catch (err) {
+    console.warn('[EPAPER] Notice synthesizing fallback PDF:', err.message);
+  }
+
+  return null;
+}
+
 // Public E-Paper API (Returns latest or date-filtered published print edition PDF reference & pages)
 app.get('/api/public/epaper', async (req, res) => {
   try {
@@ -971,7 +1032,12 @@ app.get('/api/public/epaper', async (req, res) => {
     let exactMatch = false;
 
     if (dateQuery) {
-      edition = await dbGet("SELECT * FROM editions WHERE status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' AND edition_date = ? ORDER BY created_at DESC LIMIT 1", [dateQuery]);
+      const isDate = /^\d{4}-\d{2}-\d{2}$/.test(dateQuery);
+      if (isDate) {
+        edition = await dbGet("SELECT * FROM editions WHERE status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' AND edition_date = ? ORDER BY created_at DESC LIMIT 1", [dateQuery]);
+      } else {
+        edition = await dbGet("SELECT * FROM editions WHERE status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' AND (id = ? OR pdf_filename = ?) ORDER BY created_at DESC LIMIT 1", [dateQuery, dateQuery]);
+      }
       if (edition) {
         exactMatch = true;
       }
@@ -1034,13 +1100,18 @@ app.get('/api/public/epaper/archive', async (req, res) => {
 // Public E-Paper Inline Reader API (Serves PDF inline for in-browser / mobile viewing)
 app.get(['/api/public/epaper/read/:id', '/api/public/epaper/:id/read', '/api/public/epaper/read'], async (req, res) => {
   try {
-    const id = req.params.id || 'latest';
-    let edition;
+    const id = req.params.id ? decodeURIComponent(req.params.id).trim() : 'latest';
+    let edition = null;
 
     if (id === 'latest') {
       edition = await dbGet("SELECT * FROM editions WHERE status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' ORDER BY edition_date DESC, created_at DESC LIMIT 1");
     } else {
-      edition = await dbGet("SELECT * FROM editions WHERE id = ? OR edition_date = ? OR pdf_filename = ?", [id, id, id]);
+      const isDate = /^\d{4}-\d{2}-\d{2}$/.test(id);
+      if (isDate) {
+        edition = await dbGet("SELECT * FROM editions WHERE edition_date = ? AND status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' ORDER BY created_at DESC LIMIT 1", [id]);
+      } else {
+        edition = await dbGet("SELECT * FROM editions WHERE id = ? OR pdf_filename = ? OR pdf_path LIKE ?", [id, id, `%/${id}`]);
+      }
     }
 
     if (!edition) {
@@ -1051,24 +1122,18 @@ app.get(['/api/public/epaper/read/:id', '/api/public/epaper/:id/read', '/api/pub
       return res.status(404).json({ success: false, error: 'Edition not found.' });
     }
 
-    const pdfBuffer = await reconstructPdfForEdition(edition);
-    const safeDate = edition.edition_date ? String(edition.edition_date).split('T')[0] : 'edition';
-    const filename = `mameka-mahodayam-${safeDate}-edition.pdf`;
+    const diskPath = await ensureEditionPdfOnDisk(edition);
+    if (diskPath && fs.existsSync(diskPath)) {
+      const safeDate = getFormattedDateSlug(edition.edition_date);
+      const filename = `mameka-mahodayam-${safeDate}-edition.pdf`;
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-
-    if (pdfBuffer) {
-      return res.send(pdfBuffer);
-    } else {
-      const relPath = edition.pdf_path.startsWith('/') ? edition.pdf_path.substring(1) : edition.pdf_path;
-      const fullPath = path.join(__dirname, relPath);
-      if (fs.existsSync(fullPath)) {
-        return res.sendFile(fullPath);
-      }
-      return res.status(404).json({ success: false, error: 'Edition PDF file missing on server.' });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.sendFile(diskPath);
     }
+
+    return res.status(404).json({ success: false, error: 'Edition PDF file missing on server.' });
   } catch (err) {
     console.error('Read edition error:', err);
     res.status(500).json({ success: false, error: 'Failed to stream edition PDF.' });
@@ -1078,42 +1143,36 @@ app.get(['/api/public/epaper/read/:id', '/api/public/epaper/:id/read', '/api/pub
 // Public E-Paper PDF Download API (Serves PDF with custom filename)
 app.get(['/api/public/epaper/download/:id', '/api/public/epaper/:id/download'], async (req, res) => {
   try {
-    const { id } = req.params;
-    let edition;
+    const id = req.params.id ? decodeURIComponent(req.params.id).trim() : 'latest';
+    let edition = null;
 
     if (id === 'latest') {
-      edition = await dbGet("SELECT * FROM editions WHERE status = 'published' ORDER BY edition_date DESC, created_at DESC LIMIT 1");
+      edition = await dbGet("SELECT * FROM editions WHERE status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' ORDER BY edition_date DESC, created_at DESC LIMIT 1");
     } else {
-      edition = await dbGet("SELECT * FROM editions WHERE id = ? OR edition_date = ? OR pdf_filename = ?", [id, id, id]);
+      const isDate = /^\d{4}-\d{2}-\d{2}$/.test(id);
+      if (isDate) {
+        edition = await dbGet("SELECT * FROM editions WHERE edition_date = ? AND status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' ORDER BY created_at DESC LIMIT 1", [id]);
+      } else {
+        edition = await dbGet("SELECT * FROM editions WHERE id = ? OR pdf_filename = ? OR pdf_path LIKE ?", [id, id, `%/${id}`]);
+      }
     }
 
     if (!edition) {
-      edition = await dbGet("SELECT * FROM editions WHERE status = 'published' ORDER BY edition_date DESC, created_at DESC LIMIT 1");
+      edition = await dbGet("SELECT * FROM editions WHERE status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' ORDER BY edition_date DESC, created_at DESC LIMIT 1");
     }
 
     if (!edition) {
       return res.status(404).json({ success: false, error: 'Edition not found.' });
     }
 
-    const pdfBuffer = await reconstructPdfForEdition(edition);
-
-    const safeDate = edition.edition_date ? String(edition.edition_date).split('T')[0] : 'edition';
-    const downloadFilename = `mameka-mahodhayam-${safeDate}-edition.pdf`;
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-
-    if (pdfBuffer) {
-      return res.send(pdfBuffer);
-    } else {
-      const relPath = edition.pdf_path.startsWith('/') ? edition.pdf_path.substring(1) : edition.pdf_path;
-      const fullPath = path.join(__dirname, relPath);
-      if (fs.existsSync(fullPath)) {
-        return res.sendFile(fullPath);
-      }
-      return res.status(404).json({ success: false, error: 'Edition PDF file missing on server.' });
+    const diskPath = await ensureEditionPdfOnDisk(edition);
+    if (diskPath && fs.existsSync(diskPath)) {
+      const safeDate = getFormattedDateSlug(edition.edition_date);
+      const downloadFilename = `mameka-mahodayam-${safeDate}-edition.pdf`;
+      return res.download(diskPath, downloadFilename);
     }
+
+    return res.status(404).json({ success: false, error: 'Edition PDF file missing on server.' });
   } catch (err) {
     console.error('Download edition error:', err);
     res.status(500).json({ success: false, error: 'Failed to download edition PDF file.' });

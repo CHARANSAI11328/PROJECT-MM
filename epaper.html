@@ -207,12 +207,15 @@
           </p>
 
           <div style="display: flex; gap: var(--space-xs); flex-wrap: wrap;">
-            <a id="epaper-read-link" class="btn btn-primary" style="padding: 10px 24px; text-decoration: none;" href="#" target="_blank">
-              ఈ-పేపర్ చదవండి (Read PDF)
+            <a id="epaper-read-link" class="btn btn-primary" style="padding: 10px 24px; text-decoration: none;" href="#" target="_blank" rel="noopener">
+              📖 ఈ-పేపర్ చదవండి (Read PDF)
             </a>
-            <a id="epaper-download-link" class="btn btn-secondary" style="padding: 10px 24px; text-decoration: none; display: none;" href="#" download>
-              PDF డౌన్‌లోడ్ (Download)
+            <a id="epaper-download-link" class="btn btn-secondary" style="padding: 10px 24px; text-decoration: none;" href="#" download>
+              ⬇️ PDF డౌన్‌లోడ్ (Download)
             </a>
+            <button type="button" id="btn-scroll-to-reader" class="btn btn-outline" style="padding: 10px 20px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-weight: 700; color: #be185d; background: #ffffff; cursor: pointer; display: none;" onclick="const r = document.getElementById('epaper-reader-section'); if (r) { r.scrollIntoView({behavior: 'smooth'}); }">
+              🔍 ఆన్‌లైన్ పేజీ రీడర్ (Interactive Page Viewer)
+            </button>
           </div>
         </div>
 
@@ -365,7 +368,7 @@
     <script src="/js/districts-config.js"></script>
     <script src="/js/i18n.js"></script>
     <script src="/js/navigation.js?v=2.2.0"></script>
-    <script src="/js/content-api.js"></script>
+    <script src="/js/content-api.js?v=2.2.0"></script>
     <script src="/js/chatbot.js?v=2.2.0"></script>
     <script src="/js/pwa.js?v=2.2.0" defer></script>
   </body>

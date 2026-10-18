@@ -1261,10 +1261,18 @@
           if (readLink) {
             readLink.href = `/api/public/epaper/read/${edition.id}`;
             readLink.target = '_blank';
+            readLink.rel = 'noopener';
           }
           if (downloadLink) {
             downloadLink.href = `/api/public/epaper/download/${edition.id}`;
             downloadLink.style.display = 'inline-flex';
+            const safeDate = edition.edition_date ? String(edition.edition_date).split('T')[0] : 'edition';
+            downloadLink.setAttribute('download', `mameka-mahodayam-${safeDate}-edition.pdf`);
+          }
+
+          const btnScrollReader = document.getElementById('btn-scroll-to-reader');
+          if (btnScrollReader) {
+            btnScrollReader.style.display = (data.pages && data.pages.length > 0) ? 'inline-flex' : 'none';
           }
 
           // Cover Image Preview
