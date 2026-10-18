@@ -304,6 +304,8 @@
             <li><a href="/epaper.html" class="drawer-link-item" style="color: #0284c7; font-weight: 700;"><span>📰</span> <span>డిజిటల్ ఈ-పేపర్ (E-Paper)</span></a></li>
             <li><a href="/editorial-team.html" class="drawer-link-item" style="color: #be185d; font-weight: 700;"><span>👥</span> <span>మా సంపాదకీయ బృందం (Team)</span></a></li>
             <li><a href="/admin/index.html" class="drawer-link-item" style="color: #d97706; font-weight: 700;"><span>🔒</span> <span>అడ్మిన్ లాగిన్ (Admin Portal)</span></a></li>
+            <div class="drawer-divider"></div>
+            <li><a href="javascript:void(0)" onclick="if(window.mamekaInstallApp) window.mamekaInstallApp();" class="drawer-link-item" style="color: #ffcc00; font-weight: 800; background: rgba(255, 204, 0, 0.1); border-radius: 8px;"><span>📲</span> <span>మమేక యాప్‌ను ఇన్‌స్టాల్ చేయండి (Install App)</span></a></li>
           </ul>
           <div class="drawer-footer">
             <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;">మమేక మహోదయం దినపత్రిక</div>

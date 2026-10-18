@@ -220,9 +220,13 @@ async function generateAllQRCodes(customBaseUrl) {
   }
 }
 
-// Strict sensitive files protection middleware
+// Strict sensitive files protection middleware (with PWA exemptions)
 app.use((req, res, next) => {
   const reqPath = req.path.toLowerCase();
+  // Explicitly allow official PWA Web Manifest & Service Worker
+  if (reqPath === '/manifest.json' || reqPath === '/sw.js') {
+    return next();
+  }
   const blockedPatterns = [
     /^\/\.env/i,
     /\.(sqlite|sqlite3|db)$/i,
@@ -234,6 +238,20 @@ app.use((req, res, next) => {
     return res.status(403).json({ success: false, error: 'Access denied.' });
   }
   next();
+});
+
+// Explicit PWA Endpoints with standard HTTP headers
+app.get('/manifest.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(path.join(__dirname, 'manifest.json'));
+});
+
+app.get('/sw.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(path.join(__dirname, 'sw.js'));
 });
 
 app.use(express.static(__dirname, { dotfiles: 'ignore' }));

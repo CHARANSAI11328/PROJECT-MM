@@ -1,0 +1,86 @@
+{
+  "name": "మమేక మహోదయం — తెలుగు దినపత్రిక",
+  "short_name": "మమేక మహోదయం",
+  "description": "మమేక మహోదయం స్వతంత్ర తెలుగు డిజిటల్ దినపత్రిక, తాజా వార్తలు మరియు ప్రింట్ ఈ-పేపర్ ఎడిషన్",
+  "start_url": "/?utm_source=pwa_app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#8a084b",
+  "theme_color": "#d81b7a",
+  "lang": "te",
+  "dir": "ltr",
+  "categories": [
+    "news",
+    "magazines",
+    "newspapers"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "డిజిటల్ ఈ-పేపర్ (E-Paper)",
+      "short_name": "ఈ-పేపర్",
+      "description": "నేటి మమేక మహోదయం పూర్తి దినపత్రిక ఎడిషన్ చదవండి",
+      "url": "/epaper.html?utm_source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "తాజా వార్తలు (Latest News)",
+      "short_name": "వార్తలు",
+      "description": "ఆంధ్రప్రదేశ్ మరియు తెలంగాణ తాజా వార్తా కథనాలు",
+      "url": "/?utm_source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "సంపాదకీయ బృందం (Editorial Team)",
+      "short_name": "జర్నలిస్టులు",
+      "description": "జర్నలిస్టుల డైరెక్టరీ & డిజిటల్ ప్రెస్ గుర్తింపు కార్డులు",
+      "url": "/editorial-team.html?utm_source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

@@ -6,6 +6,16 @@
     <title>మమేక మహోదయం — MAMEKA MAHODAYAM | Official Telugu Newspaper</title>
     <meta name="description" content="మమేక మహోదయం తెలుగు దినపత్రిక — Official Digital Editorial Newspaper Homepage" />
     <link rel="stylesheet" href="/styles/design-system.css" />
+
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#d81b7a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="మమేక మహోదయం" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
   </head>
   <body>
     <a href="#main-content" class="skip-link" data-i18n="skip_link">ముఖ్య నివిడికి వెళ్ళండి</a>
@@ -24,8 +34,9 @@
             <a href="/epaper.html" style="color: inherit; text-decoration: underline;" data-i18n="top_epaper_link">ఈ-పేపర్</a> 
             <span aria-hidden="true" style="opacity: 0.5;">|</span> 
             <a href="/editorial-team.html" class="top-special-link" data-i18n="nav_team">✨ మా సంపాదకీయ బృందం</a>
-            <span aria-hidden="true" style="opacity: 0.5;">|</span> 
             <a href="/admin/index.html" style="color: #ffcc00; text-decoration: underline; font-weight: bold;" data-i18n="top_admin_link">🔒 అడ్మిన్ లాగిన్</a>
+            <span aria-hidden="true" style="opacity: 0.5;">|</span>
+            <button type="button" onclick="if(window.mamekaInstallApp) window.mamekaInstallApp();" class="top-pwa-install-btn" style="background: rgba(255, 204, 0, 0.15); border: 1px solid #ffcc00; color: #ffcc00; font-weight: 800; cursor: pointer; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; letter-spacing: 0.2px;">📲 యాప్ ఇన్‌స్టాల్</button>
             
             <!-- ONE-CLICK LANGUAGE SWITCHER -->
             <div class="lang-switcher" role="region" aria-label="Language Selector">
@@ -251,6 +262,7 @@
     <script src="/js/i18n.js"></script>
     <script src="/js/navigation.js"></script>
     <script src="/js/content-api.js"></script>
+    <script src="/js/pwa.js" defer></script>
     <script src="/js/chatbot.js" defer></script>
   </body>
 </html>
