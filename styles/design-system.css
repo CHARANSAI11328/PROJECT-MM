@@ -195,18 +195,30 @@
 .top-ai-header-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   background: linear-gradient(135deg, #7c3aed 0%, #be185d 100%);
   color: #ffffff !important;
   font-weight: 700;
   font-size: 0.8rem;
   padding: 3px 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   line-height: 1.2;
+}
+
+.top-ai-btn-icon {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid #ffcc00;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .top-ai-header-btn:hover {
@@ -219,16 +231,14 @@
   transform: scale(0.97);
 }
 
-/* OFFICIAL EMBLEM / MASTHEAD LOGO */
+/* OFFICIAL EMBLEM / MASTHEAD LOGO - HIDE FROM PAGE HEADERS PER USER REQUEST */
 .masthead-official-logo {
-  height: 68px;
-  width: auto;
-  max-width: 90px;
-  object-fit: contain;
-  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.18));
-  display: inline-block;
-  vertical-align: middle;
-  margin-bottom: 4px;
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* OFFICIAL PROMOTIONAL WIDGET */
@@ -4534,18 +4544,28 @@ body {
   .mobile-ai-badge {
     background: linear-gradient(135deg, #7c3aed 0%, #be185d 100%) !important;
     color: #ffffff !important;
-    font-size: 0.72rem !important;
+    font-size: 0.76rem !important;
     font-weight: 700 !important;
-    padding: 4px 8px !important;
+    padding: 3px 8px !important;
     border-radius: 14px !important;
     text-decoration: none !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 3px !important;
-    border: none !important;
+    gap: 4px !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
     cursor: pointer !important;
     box-shadow: 0 1px 4px rgba(124, 58, 237, 0.3) !important;
     line-height: 1 !important;
+  }
+
+  .mobile-ai-badge-icon {
+    width: 15px !important;
+    height: 15px !important;
+    border-radius: 50% !important;
+    object-fit: contain !important;
+    background: #ffffff !important;
+    border: 1px solid #ffcc00 !important;
+    flex-shrink: 0 !important;
   }
 
   .mobile-ai-badge:active {
@@ -4553,12 +4573,10 @@ body {
   }
 
   .mobile-header-logo {
-    height: 34px !important;
-    width: 34px !important;
-    object-fit: contain !important;
-    border-radius: 6px !important;
-    flex-shrink: 0 !important;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15)) !important;
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
   .mobile-search-trigger-btn {

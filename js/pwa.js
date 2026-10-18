@@ -13,6 +13,8 @@
         .register('/sw.js', { scope: '/' })
         .then((registration) => {
           console.log('✓ [PWA] Service Worker registered successfully with scope:', registration.scope);
+          // Check for updates on every page load
+          registration.update();
 
           // Handle automatic updates when new content/features are deployed
           registration.addEventListener('updatefound', () => {
@@ -20,7 +22,7 @@
             if (installingWorker) {
               installingWorker.addEventListener('statechange', () => {
                 if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('⚡ [PWA] New version available in background.');
+                  console.log('⚡ [PWA] New version installed and activating.');
                 }
               });
             }

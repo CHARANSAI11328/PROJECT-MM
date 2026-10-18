@@ -254,6 +254,14 @@ app.get('/sw.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'sw.js'));
 });
 
+// Force browsers and PWAs to always fetch fresh versions of chatbot and navigation scripts
+app.use(['/js/chatbot.js', '/js/navigation.js', '/js/pwa.js'], (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
 app.use(express.static(__dirname, { dotfiles: 'ignore' }));
 app.use('/admin', express.static(path.join(__dirname, 'admin'), { dotfiles: 'ignore' }));
 app.use('/uploads', express.static(uploadsDir, { dotfiles: 'ignore' }));
