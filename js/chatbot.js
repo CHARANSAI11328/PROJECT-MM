@@ -10,78 +10,23 @@
   // Injected Scoped CSS Styles with Strict Viewport Floating Position Overrides
   const styleContent = `
     #mameka-chat-launcher {
-      position: fixed !important;
-      bottom: 30px !important;
-      right: 30px !important;
-      top: auto !important;
-      left: auto !important;
-      z-index: 2147483647 !important;
-      width: 60px !important;
-      height: 60px !important;
-      border-radius: 50% !important;
-      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
-      color: #ffffff !important;
-      border: 3px solid #ffffff !important;
-      box-shadow: 0 10px 28px rgba(220, 38, 38, 0.55) !important;
-      cursor: pointer !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease !important;
-      outline: none !important;
-      user-select: none !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      float: none !important;
-      clear: both !important;
-    }
-
-    #mameka-chat-launcher:hover {
-      transform: scale(1.1) translateY(-3px) !important;
-      box-shadow: 0 14px 34px rgba(220, 38, 38, 0.68) !important;
-    }
-
-    #mameka-chat-launcher:active {
-      transform: scale(0.95) !important;
-    }
-
-    #mameka-chat-launcher .launcher-emblem {
-      font-size: 28px !important;
-      line-height: 1 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-
-    #mameka-chat-launcher .pulse-ring {
-      position: absolute !important;
-      top: -4px !important;
-      left: -4px !important;
-      right: -4px !important;
-      bottom: -4px !important;
-      border-radius: 50% !important;
-      border: 2px solid #dc2626 !important;
-      animation: mmPulse 2s infinite cubic-bezier(0.45, 0, 0.55, 1) !important;
+      display: none !important;
       pointer-events: none !important;
-    }
-
-    @keyframes mmPulse {
-      0% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.18); opacity: 0; }
-      100% { transform: scale(1); opacity: 0; }
+      opacity: 0 !important;
+      visibility: hidden !important;
     }
 
     #mameka-chat-modal {
       position: fixed !important;
-      bottom: 102px !important;
-      right: 30px !important;
-      top: auto !important;
+      top: 55px !important;
+      right: 20px !important;
+      bottom: auto !important;
       left: auto !important;
       z-index: 2147483647 !important;
       width: 390px !important;
-      max-width: calc(100vw - 40px) !important;
-      height: 540px !important;
-      max-height: calc(100vh - 130px) !important;
+      max-width: calc(100vw - 30px) !important;
+      height: 570px !important;
+      max-height: calc(100vh - 75px) !important;
       background-color: #ffffff !important;
       border-radius: 18px !important;
       box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28) !important;
@@ -90,9 +35,9 @@
       flex-direction: column !important;
       overflow: hidden !important;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
       opacity: 0 !important;
-      transform: translateY(20px) scale(0.95) !important;
+      transform: translateY(-12px) scale(0.96) !important;
       pointer-events: none !important;
       margin: 0 !important;
     }
@@ -329,20 +274,16 @@
     .mm-dot:nth-child(2) { animation-delay: -0.16s !important; }
 
     @media (max-width: 600px) {
-      #mameka-chat-launcher {
-        bottom: 24px !important;
-        right: 20px !important;
-        width: 54px !important;
-        height: 54px !important;
-      }
       #mameka-chat-modal {
-        bottom: 88px !important;
-        right: 15px !important;
-        left: 15px !important;
+        top: 58px !important;
+        bottom: 68px !important;
+        right: 8px !important;
+        left: 8px !important;
         width: auto !important;
         max-width: none !important;
-        height: calc(100vh - 110px) !important;
-        max-height: 560px !important;
+        height: auto !important;
+        max-height: calc(100vh - 130px) !important;
+        border-radius: 16px !important;
       }
     }
   `;
@@ -356,26 +297,17 @@
   const conversationHistory = [];
 
   function buildUI() {
-    if (document.getElementById('mameka-chat-launcher')) return;
-
-    const launcher = document.createElement('button');
-    launcher.id = 'mameka-chat-launcher';
-    launcher.setAttribute('aria-label', 'మమేక మహోదయం డిజిటల్ సహాయకుడు');
-    launcher.title = 'మమేక మహోదయం AI సహాయకుడు';
-    launcher.innerHTML = `
-      <div class="pulse-ring"></div>
-      <div class="launcher-emblem">📰</div>
-    `;
+    if (document.getElementById('mameka-chat-modal')) return;
 
     const modal = document.createElement('div');
     modal.id = 'mameka-chat-modal';
     modal.innerHTML = `
       <div class="mm-chat-header">
         <div class="mm-chat-header-info">
-          <div class="mm-chat-brand-badge">📰</div>
+          <div class="mm-chat-brand-badge">🤖</div>
           <div>
             <h3 class="mm-chat-title">మమేక మహోదయం</h3>
-            <div class="mm-chat-sub">డిజిటల్ AI సహాయకుడు</div>
+            <div class="mm-chat-sub">డిజిటల్ AI సహాయకుడు (AI Assistant)</div>
           </div>
         </div>
         <button class="mm-chat-close" id="mm-chat-close-btn" aria-label="ముగించు">&times;</button>
@@ -383,8 +315,8 @@
 
       <div class="mm-chat-body" id="mm-chat-body">
         <div class="mm-msg bot">
-          నమస్తే! 📰 <strong>మమేక మహోదయం</strong> డిజిటల్ సహాయకుడికి స్వాగతం.<br/><br/>
-          మా వెబ్‌సైట్‌లోని <strong>వార్తలు</strong>, <strong>విలేఖరుల వివరాలు</strong>, లేదా ఇతర సమాచారం గురించి నన్ను ఏమైనా అడగండి.
+          నమస్తే! 🤖 <strong>మమేక మహోదయం</strong> అధికారిక డిజిటల్ AI సహాయకుడికి స్వాగతం.<br/><br/>
+          మా వెబ్‌సైట్‌లోని <strong>తాజా వార్తలు</strong>, <strong>ఈ-పేపర్</strong>, లేదా <strong>విలేఖరుల వివరాలు</strong> గురించి నన్ను ఏమైనా అడగండి.
           <div class="mm-chat-chips">
             <button class="mm-chip-btn" data-query="మా వెబ్‌సైట్‌లో ఎన్ని వార్తలు ఉన్నాయి?">📰 మొత్తం వార్తలు</button>
             <button class="mm-chip-btn" data-query="వాకా శ్రీనివాసరావు గారి హోదా ఏమిటి?">👤 సంపాదకుల వివరాలు</button>
@@ -400,7 +332,6 @@
       </div>
     `;
 
-    document.body.appendChild(launcher);
     document.body.appendChild(modal);
 
     const inputEl = document.getElementById('mm-chat-input');
@@ -408,15 +339,34 @@
     const closeBtn = document.getElementById('mm-chat-close-btn');
     const bodyEl = document.getElementById('mm-chat-body');
 
-    function toggleChat() {
-      modal.classList.toggle('open');
+    function toggleChat(forceState) {
+      if (typeof forceState === 'boolean') {
+        modal.classList.toggle('open', forceState);
+      } else {
+        modal.classList.toggle('open');
+      }
       if (modal.classList.contains('open')) {
-        inputEl.focus();
+        setTimeout(() => inputEl.focus(), 120);
       }
     }
 
-    launcher.addEventListener('click', toggleChat);
-    closeBtn.addEventListener('click', toggleChat);
+    window.toggleMamekaChat = toggleChat;
+
+    // Close when tapping outside modal
+    document.addEventListener('click', (e) => {
+      if (modal && modal.classList.contains('open')) {
+        const isInside = modal.contains(e.target);
+        const isTrigger = e.target.closest('#mobile-top-ai-btn, .mobile-ai-badge, .top-ai-header-btn, .top-ai-btn, [data-open-ai-chat]');
+        if (!isInside && !isTrigger) {
+          modal.classList.remove('open');
+        }
+      }
+    });
+
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleChat(false);
+    });
 
     bodyEl.addEventListener('click', (e) => {
       if (e.target.classList.contains('mm-chip-btn')) {

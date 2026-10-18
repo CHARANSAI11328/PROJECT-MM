@@ -226,7 +226,7 @@
       #mameka-pwa-banner {
         bottom: 24px;
         left: auto;
-        right: 104px; /* leaves room for chatbot */
+        right: 24px;
         width: 380px;
       }
     }

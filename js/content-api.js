@@ -1259,12 +1259,134 @@
           if (sizeEl) sizeEl.textContent = edition.file_size_bytes ? `${(edition.file_size_bytes / (1024 * 1024)).toFixed(2)} MB` : 'PDF';
           
           if (readLink) {
-            readLink.href = edition.pdf_path;
+            readLink.href = `/api/public/epaper/read/${edition.id}`;
             readLink.target = '_blank';
           }
           if (downloadLink) {
             downloadLink.href = `/api/public/epaper/download/${edition.id}`;
             downloadLink.style.display = 'inline-flex';
+          }
+
+          // Cover Image Preview
+          const coverContainer = document.getElementById('epaper-cover-container');
+          const pages = data.pages || [];
+          if (coverContainer && pages.length > 0) {
+            coverContainer.innerHTML = `
+              <img src="${pages[0]}" alt="${escapeText(name)}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.12); cursor: pointer;" onclick="const r = document.getElementById('epaper-reader-section'); if (r) r.scrollIntoView({behavior: 'smooth'});" />
+            `;
+          }
+
+          // Initialize Interactive Page Reader
+          const readerSection = document.getElementById('epaper-reader-section');
+          if (readerSection && pages.length > 0) {
+            readerSection.style.display = 'block';
+            let currentPageIdx = 0;
+            let currentZoom = 1;
+
+            const activeImg = document.getElementById('epaper-active-page-img');
+            const pageIndicator = document.getElementById('reader-page-indicator');
+            const thumbsStrip = document.getElementById('epaper-thumbnails-strip');
+            const prevBtn = document.getElementById('btn-reader-prev');
+            const nextBtn = document.getElementById('btn-reader-next');
+            const zoomInBtn = document.getElementById('btn-reader-zoom-in');
+            const zoomOutBtn = document.getElementById('btn-reader-zoom-out');
+            const resetBtn = document.getElementById('btn-reader-reset');
+
+            function updateReaderUI() {
+              if (activeImg) {
+                activeImg.src = pages[currentPageIdx];
+                activeImg.style.transform = `scale(${currentZoom})`;
+              }
+              if (pageIndicator) {
+                pageIndicator.textContent = `పేజీ ${currentPageIdx + 1} / ${pages.length}`;
+              }
+              if (thumbsStrip) {
+                thumbsStrip.querySelectorAll('.reader-thumb-btn').forEach((btn, idx) => {
+                  if (idx === currentPageIdx) {
+                    btn.style.background = '#be185d';
+                    btn.style.color = '#ffffff';
+                    btn.style.borderColor = '#be185d';
+                  } else {
+                    btn.style.background = '#ffffff';
+                    btn.style.color = '#1e293b';
+                    btn.style.borderColor = '#cbd5e1';
+                  }
+                });
+              }
+              if (prevBtn) prevBtn.disabled = (currentPageIdx === 0);
+              if (nextBtn) nextBtn.disabled = (currentPageIdx === pages.length - 1);
+            }
+
+            // Render page selector badges
+            if (thumbsStrip) {
+              thumbsStrip.innerHTML = pages.map((p, idx) => `
+                <button type="button" class="reader-thumb-btn" data-page="${idx}" style="padding: 6px 14px; border: 1.5px solid #cbd5e1; border-radius: 20px; font-weight: 700; font-size: 0.82rem; cursor: pointer; white-space: nowrap; transition: all 0.15s ease;">
+                  పేజీ ${idx + 1}
+                </button>
+              `).join('');
+
+              thumbsStrip.addEventListener('click', (e) => {
+                const btn = e.target.closest('.reader-thumb-btn');
+                if (btn) {
+                  const pIdx = parseInt(btn.getAttribute('data-page'), 10);
+                  if (!isNaN(pIdx)) {
+                    currentPageIdx = pIdx;
+                    currentZoom = 1;
+                    updateReaderUI();
+                  }
+                }
+              });
+            }
+
+            if (prevBtn) {
+              prevBtn.onclick = () => {
+                if (currentPageIdx > 0) {
+                  currentPageIdx--;
+                  currentZoom = 1;
+                  updateReaderUI();
+                }
+              };
+            }
+
+            if (nextBtn) {
+              nextBtn.onclick = () => {
+                if (currentPageIdx < pages.length - 1) {
+                  currentPageIdx++;
+                  currentZoom = 1;
+                  updateReaderUI();
+                }
+              };
+            }
+
+            if (zoomInBtn) {
+              zoomInBtn.onclick = () => {
+                currentZoom = Math.min(currentZoom + 0.25, 2.5);
+                if (activeImg) activeImg.style.transform = `scale(${currentZoom})`;
+              };
+            }
+
+            if (zoomOutBtn) {
+              zoomOutBtn.onclick = () => {
+                currentZoom = Math.max(currentZoom - 0.25, 0.75);
+                if (activeImg) activeImg.style.transform = `scale(${currentZoom})`;
+              };
+            }
+
+            if (resetBtn) {
+              resetBtn.onclick = () => {
+                currentZoom = 1;
+                if (activeImg) activeImg.style.transform = 'scale(1)';
+              };
+            }
+
+            if (activeImg) {
+              activeImg.onclick = () => {
+                currentZoom = currentZoom === 1 ? 1.5 : 1;
+                activeImg.style.transform = `scale(${currentZoom})`;
+              };
+            }
+
+            updateReaderUI();
           }
         }
 
@@ -1278,7 +1400,7 @@
                   <span>${window.MM_i18n ? window.MM_i18n.getText('publication_date_label') : 'ప్రచురణ తేదీ:'} <strong>${dateStr}</strong></span>
                 </div>
                 <div class="flex gap-3 flex-wrap">
-                  <a href="${edition.pdf_path}" target="_blank" class="btn btn-primary" style="padding: 10px 20px; background-color: #d81b7a; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                  <a href="/api/public/epaper/read/${edition.id}" target="_blank" class="btn btn-primary" style="padding: 10px 20px; background-color: #d81b7a; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold;">
                     ${window.MM_i18n ? window.MM_i18n.getText('read_epaper') : '📖 ఈ-పేపర్ చదవండి'}
                   </a>
                   <a href="/api/public/epaper/download/${edition.id}" class="btn btn-outline" style="padding: 10px 20px; border: 1px solid #cbd5e1; color: #1e293b; text-decoration: none; border-radius: 6px; font-weight: 500;">
@@ -1315,7 +1437,7 @@
                 </div>
               </div>
               <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; pt-2; border-top: 1px solid #f1f5f9;">
-                <a href="${ed.pdf_path}" target="_blank" class="btn btn-sm" style="background-color: #d81b7a; color: #ffffff; text-decoration: none; padding: 6px 14px; border-radius: 4px; font-size: 0.825rem; font-weight: 600;">
+                <a href="/api/public/epaper/read/${ed.id}" target="_blank" class="btn btn-sm" style="background-color: #d81b7a; color: #ffffff; text-decoration: none; padding: 6px 14px; border-radius: 4px; font-size: 0.825rem; font-weight: 600;">
                   📖 చదవండి
                 </a>
                 <a href="/api/public/epaper/download/${ed.id}" class="btn btn-sm" style="background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; text-decoration: none; padding: 6px 14px; border-radius: 4px; font-size: 0.825rem; font-weight: 600;">

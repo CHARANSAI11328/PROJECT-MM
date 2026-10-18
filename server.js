@@ -298,35 +298,52 @@ async function reconstructPdfForEdition(editionOrId) {
     }
 
     // 3. Fallback Synthesizer: Reconstruct PDF from page images stored in persistent_uploads or disk
-    let pageRows = await dbAll(
-      'SELECT file_path FROM persistent_uploads WHERE file_path LIKE ? ORDER BY file_path ASC',
-      [`%/edition_${edition.id}_page_%.png`]
-    );
-
-    if (!pageRows || pageRows.length === 0) {
-      pageRows = await dbAll(
-        'SELECT file_path FROM persistent_uploads WHERE file_path LIKE ? ORDER BY file_path ASC',
-        ['%/edition_%_page_%.png']
-      );
-    }
-
+    const pageRows = await dbAll("SELECT file_path FROM persistent_uploads WHERE file_path LIKE '%page_%.png' ORDER BY file_path ASC");
     if (!pageRows || pageRows.length === 0) {
       return null;
     }
 
-    console.log(`[PDF SYNTHESIZER] Synthesizing PDF for edition ${edition.id} (${edition.edition_date || ''}) from ${pageRows.length} page images...`);
+    const groups = {};
+    for (const r of pageRows) {
+      const match = r.file_path.match(/^(.*edition_.+?_page_)(\d+)\.png$/);
+      if (match) {
+        const prefix = match[1];
+        const pageNum = parseInt(match[2], 10);
+        if (!groups[prefix]) groups[prefix] = {};
+        groups[prefix][pageNum] = r.file_path;
+      }
+    }
+
+    const groupKeys = Object.keys(groups);
+    const matchedPrefix = groupKeys.find(k => k.includes(`_${edition.id}_`)) || groupKeys[groupKeys.length - 1];
+    if (!matchedPrefix || !groups[matchedPrefix]) {
+      return null;
+    }
+
+    const selectedPages = [];
+    for (let p = 1; p <= 8; p++) {
+      if (groups[matchedPrefix][p]) {
+        selectedPages.push({ pageNum: p, file_path: groups[matchedPrefix][p] });
+      }
+    }
+
+    if (selectedPages.length === 0) {
+      return null;
+    }
+
+    console.log(`[PDF SYNTHESIZER] Synthesizing PDF for edition ${edition.id} (${edition.edition_date || ''}) from ${selectedPages.length} ordered page images...`);
     const pdfDoc = await PDFDocument.create();
 
-    for (const pageRow of pageRows) {
+    for (const p of selectedPages) {
       let imgBuffer = null;
-      const localImgPath = path.join(__dirname, pageRow.file_path.startsWith('/') ? pageRow.file_path.substring(1) : pageRow.file_path);
+      const localImgPath = path.join(__dirname, p.file_path.startsWith('/') ? p.file_path.substring(1) : p.file_path);
 
       if (fs.existsSync(localImgPath)) {
         try { imgBuffer = fs.readFileSync(localImgPath); } catch (e) {}
       }
 
       if (!imgBuffer) {
-        const dataRow = await dbGet('SELECT file_data FROM persistent_uploads WHERE file_path = ?', [pageRow.file_path]);
+        const dataRow = await dbGet('SELECT file_data FROM persistent_uploads WHERE file_path = ?', [p.file_path]);
         if (dataRow && dataRow.file_data) {
           imgBuffer = Buffer.from(dataRow.file_data, 'base64');
         }
@@ -909,7 +926,36 @@ app.delete(['/api/editions/:id', '/api/admin/editions/:id'], authenticateToken, 
 // 3. PUBLIC WEBSITE API ROUTES (CONSUMED BY FRONTEND)
 // ==========================================================================
 
-// Public E-Paper API (Returns latest or date-filtered published print edition PDF reference)
+// Helper to retrieve page images list for an edition
+async function getPagesForEdition(edition) {
+  try {
+    const pageRows = await dbAll("SELECT file_path FROM persistent_uploads WHERE file_path LIKE '%page_%.png' ORDER BY file_path ASC");
+    if (!pageRows || pageRows.length === 0) return [];
+    const groups = {};
+    for (const r of pageRows) {
+      const match = r.file_path.match(/^(.*edition_.+?_page_)(\d+)\.png$/);
+      if (match) {
+        const prefix = match[1];
+        const pageNum = parseInt(match[2], 10);
+        if (!groups[prefix]) groups[prefix] = {};
+        groups[prefix][pageNum] = r.file_path;
+      }
+    }
+    const groupKeys = Object.keys(groups);
+    const matchedPrefix = (edition && groupKeys.find(k => k.includes(`_${edition.id}_`))) || groupKeys[groupKeys.length - 1];
+    const pages = [];
+    if (matchedPrefix && groups[matchedPrefix]) {
+      for (let p = 1; p <= 8; p++) {
+        if (groups[matchedPrefix][p]) pages.push(groups[matchedPrefix][p]);
+      }
+    }
+    return pages;
+  } catch (e) {
+    return [];
+  }
+}
+
+// Public E-Paper API (Returns latest or date-filtered published print edition PDF reference & pages)
 app.get('/api/public/epaper', async (req, res) => {
   try {
     const dateQuery = req.query.date ? String(req.query.date).trim() : null;
@@ -926,15 +972,33 @@ app.get('/api/public/epaper', async (req, res) => {
       if (edition) exactMatch = true;
     }
 
+    const pages = await getPagesForEdition(edition);
+
     res.json({
       success: true,
       edition: edition || null,
+      pages: pages,
+      total_pages: pages.length,
       exact_match: exactMatch,
       requested_date: dateQuery
     });
   } catch (err) {
     console.error('Public epaper error:', err);
     res.status(500).json({ success: false, error: 'Failed to fetch e-paper edition.' });
+  }
+});
+
+// Public E-Paper Pages API (Returns page image URLs for reader)
+app.get('/api/public/epaper/pages', async (req, res) => {
+  try {
+    const pages = await getPagesForEdition(null);
+    res.json({
+      success: true,
+      total_pages: pages.length,
+      pages: pages
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to fetch e-paper pages.' });
   }
 });
 
@@ -956,6 +1020,50 @@ app.get('/api/public/epaper/archive', async (req, res) => {
   } catch (err) {
     console.error('Public epaper archive error:', err);
     res.status(500).json({ success: false, error: 'Failed to fetch e-paper archives.' });
+  }
+});
+
+// Public E-Paper Inline Reader API (Serves PDF inline for in-browser / mobile viewing)
+app.get(['/api/public/epaper/read/:id', '/api/public/epaper/:id/read', '/api/public/epaper/read'], async (req, res) => {
+  try {
+    const id = req.params.id || 'latest';
+    let edition;
+
+    if (id === 'latest') {
+      edition = await dbGet("SELECT * FROM editions WHERE status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' ORDER BY edition_date DESC, created_at DESC LIMIT 1");
+    } else {
+      edition = await dbGet("SELECT * FROM editions WHERE id = ? OR edition_date = ? OR pdf_filename = ?", [id, id, id]);
+    }
+
+    if (!edition) {
+      edition = await dbGet("SELECT * FROM editions WHERE status = 'published' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' ORDER BY edition_date DESC, created_at DESC LIMIT 1");
+    }
+
+    if (!edition) {
+      return res.status(404).json({ success: false, error: 'Edition not found.' });
+    }
+
+    const pdfBuffer = await reconstructPdfForEdition(edition);
+    const safeDate = edition.edition_date ? String(edition.edition_date).split('T')[0] : 'edition';
+    const filename = `mameka-mahodayam-${safeDate}-edition.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+
+    if (pdfBuffer) {
+      return res.send(pdfBuffer);
+    } else {
+      const relPath = edition.pdf_path.startsWith('/') ? edition.pdf_path.substring(1) : edition.pdf_path;
+      const fullPath = path.join(__dirname, relPath);
+      if (fs.existsSync(fullPath)) {
+        return res.sendFile(fullPath);
+      }
+      return res.status(404).json({ success: false, error: 'Edition PDF file missing on server.' });
+    }
+  } catch (err) {
+    console.error('Read edition error:', err);
+    res.status(500).json({ success: false, error: 'Failed to stream edition PDF.' });
   }
 });
 
@@ -986,6 +1094,7 @@ app.get(['/api/public/epaper/download/:id', '/api/public/epaper/:id/download'], 
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
 
     if (pdfBuffer) {
       return res.send(pdfBuffer);

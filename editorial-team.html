@@ -30,7 +30,9 @@
             <span data-i18n="top_edition_placeholder">ఆంధ్రప్రదేశ్ &amp; తెలంగాణ</span>
           </div>
           <div class="utility-bar-right">
-            <a href="/epaper.html" style="color: inherit; text-decoration: underline;" data-i18n="top_epaper_link">ఈ-పేపర్ చదవండి</a> 
+            <a href="/epaper.html" style="color: inherit; text-decoration: underline;" data-i18n="top_epaper_link">ఈ-పేపర్</a> 
+            <span aria-hidden="true" style="opacity: 0.5;">|</span> 
+            <button type="button" onclick="if(window.toggleMamekaChat) window.toggleMamekaChat();" class="top-ai-header-btn" title="మమేక మహోదయం AI సహాయకుడు">🤖 AI సహాయకుడు</button>
             <span aria-hidden="true" style="opacity: 0.5;">|</span> 
             <a href="/editorial-team.html" class="top-special-link" data-i18n="nav_team">✨ మా సంపాదకీయ బృందం</a>
             <span aria-hidden="true" style="opacity: 0.5;">|</span> 
@@ -54,7 +56,8 @@
             <div class="masthead-left desktop-only"></div>
 
             <div class="masthead-center">
-              <a href="/" style="text-decoration: none;">
+              <a href="/" style="text-decoration: none; display: flex; flex-direction: column; align-items: center;">
+                <img src="/icons/logo-official.png" alt="మమేక మహోదయం అధికారిక చిహ్నం" class="masthead-official-logo" />
                 <h1 class="brand-logo-3d" aria-label="మమేక మహోదయం">
                   <span class="brand-stacked-wrap">
                     <span class="brand-prefix-stacked" data-i18n="brand_prefix_te">మమేక</span>
@@ -147,7 +150,7 @@
     <footer class="site-footer" role="contentinfo">
       <div class="container">
         <div class="footer-top-grid">
-          <!-- Col 1: Newspaper Identity & Social Media Placeholders -->
+          <!-- Col 1: Newspaper Identity & Social Media Channels -->
           <div class="footer-col-brand">
             <div class="footer-brand-title">మమేక మహోదయం</div>
             <div class="footer-brand-subtitle">MAMEKA MAHODAYAM DAILY</div>
@@ -199,7 +202,7 @@
             </ul>
           </div>
 
-          <!-- Col 5: Contact Metadata Placeholders -->
+          <!-- Col 5: Contact Information -->
           <div>
             <h3 class="footer-col-title">కార్యాలయ వివరాలు</h3>
             <div class="footer-contact-block">

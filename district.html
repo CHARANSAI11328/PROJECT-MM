@@ -32,6 +32,8 @@
           <div class="utility-bar-right">
             <a href="/epaper.html" style="color: inherit; text-decoration: underline;" data-i18n="top_epaper_link">ఈ-పేపర్</a> 
             <span aria-hidden="true" style="opacity: 0.5;">|</span> 
+            <button type="button" onclick="if(window.toggleMamekaChat) window.toggleMamekaChat();" class="top-ai-header-btn" title="మమేక మహోదయం AI సహాయకుడు">🤖 AI సహాయకుడు</button>
+            <span aria-hidden="true" style="opacity: 0.5;">|</span> 
             <a href="/editorial-team.html" class="top-special-link" data-i18n="nav_team">✨ మా సంపాదకీయ బృందం</a>
             <span aria-hidden="true" style="opacity: 0.5;">|</span> 
             <a href="/admin/index.html" style="color: #ffcc00; text-decoration: underline; font-weight: bold;" data-i18n="top_admin_link">🔒 అడ్మిన్ లాగిన్</a>
@@ -54,7 +56,8 @@
             <div class="masthead-left desktop-only"></div>
 
             <div class="masthead-center">
-              <a href="/" onclick="navigateToHome(event)" style="text-decoration: none;">
+              <a href="/" onclick="navigateToHome(event)" style="text-decoration: none; display: flex; flex-direction: column; align-items: center;">
+                <img src="/icons/logo-official.png" alt="మమేక మహోదయం అధికారిక చిహ్నం" class="masthead-official-logo" />
                 <h1 class="brand-logo-3d" aria-label="మమేక మహోదయం">
                   <span class="brand-stacked-wrap">
                     <span class="brand-prefix-stacked" data-i18n="brand_prefix_te">మమేక</span>

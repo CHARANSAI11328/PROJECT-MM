@@ -115,6 +115,7 @@
 
       // Contact Form
       contact_title: "సంప్రదింపు పత్రం",
+      contact_office_address: "కార్యాలయ చిరునామా: తెనాలి, సంగం జాగర్లమూడి, గుంటూరు జిల్లా & విజయవాడ, ఆంధ్రప్రదేశ్ | ఫోన్: +91 7075652808",
       contact_form_name: "మీ పూర్తి పేరు",
       contact_form_email: "ఈమెయిల్ చిరునామా",
       contact_form_dept: "విభాగం",
@@ -222,6 +223,7 @@
 
       // Contact Form
       contact_title: "Contact Desk",
+      contact_office_address: "Office Address: Tenali, Sangam Jagarlamudi, Guntur Dist & Vijayawada, AP | Phone: +91 7075652808",
       contact_form_name: "Full Name",
       contact_form_email: "Email Address",
       contact_form_dept: "Department",
