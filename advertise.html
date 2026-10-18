@@ -131,9 +131,6 @@
               <div style="border: 1px solid var(--color-border); padding: var(--space-md); background: var(--color-surface);">
                 <h3 class="tp-h3" style="font-size: 1.05rem; color: var(--color-brand-primary);">1. ప్రింట్ పేపర్ ప్రకటనలు (Print Newspaper Ads)</h3>
                 <ul class="footer-nav-list" style="margin-top: 8px; color: var(--color-text-secondary);">
-              <div style="border: 1px solid var(--color-border); padding: var(--space-md); background: var(--color-surface);">
-                <h3 class="tp-h3" style="font-size: 1.05rem; color: var(--color-brand-primary);">1. ప్రింట్ పేపర్ ప్రకటనలు (Print Newspaper Ads)</h3>
-                <ul class="footer-nav-list" style="margin-top: 8px; color: var(--color-text-secondary);">
                   <li>• ఫ్రంట్ పేజీ జాకెట్ &amp; సోల్ బానర్ ప్రకటనలు</li>
                   <li>• ఫుల్ పేజీ &amp; హాఫ్ పేజీ కలర్ వర్ణపత్ర ప్రకటనలు</li>
                   <li>• వర్గీకృత ప్రకటనలు &amp; నియామకాలు (Classifieds &amp; Ads)</li>
@@ -178,26 +175,27 @@
           <!-- Media Kit / Inquiry Form -->
           <div class="utility-card">
             <h2 class="utility-card-title">ప్రకటనల విచారణ పత్రం (Media Kit Inquiry Form)</h2>
-            <form onsubmit="event.preventDefault();" style="display: flex; flex-direction: column; gap: var(--space-md);">
+            <div id="adStatusAlert" style="display: none; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-weight: 600;"></div>
+            <form id="adInquiryForm" style="display: flex; flex-direction: column; gap: var(--space-md);">
               <div class="grid-2">
                 <div class="utility-form-group">
                   <label class="utility-label" for="adCompany">సంస్థ/వ్యాపారం పేరు / Company Name *</label>
-                  <input type="text" id="adCompany" class="utility-input" placeholder="మీ సంస్థ లేదా వ్యాపార సంస్థ పేరు" required />
+                  <input type="text" id="adCompany" name="company" class="utility-input" placeholder="మీ సంస్థ లేదా వ్యాపార సంస్థ పేరు" required />
                 </div>
                 <div class="utility-form-group">
                   <label class="utility-label" for="adContactPerson">సంప్రదించాల్సిన వ్యక్తి / Contact Person *</label>
-                  <input type="text" id="adContactPerson" class="utility-input" placeholder="మీ పేరు" required />
+                  <input type="text" id="adContactPerson" name="contactPerson" class="utility-input" placeholder="మీ పేరు" required />
                 </div>
               </div>
 
               <div class="grid-2">
                 <div class="utility-form-group">
                   <label class="utility-label" for="adEmail">ఈమెయిల్ / Email Address *</label>
-                  <input type="email" id="adEmail" class="utility-input" placeholder="మీ వ్యాపార ఈమెయిల్ చిరునామా" required />
+                  <input type="email" id="adEmail" name="email" class="utility-input" placeholder="మీ వ్యాపార ఈమెయిల్ చిరునామా" required />
                 </div>
                 <div class="utility-form-group">
                   <label class="utility-label" for="adType">ప్రకటన రకం / Ad Type *</label>
-                  <select id="adType" class="utility-select">
+                  <select id="adType" name="adType" class="utility-select" required>
                     <option value="">ప్రకటన రకాన్ని ఎంచుకోండి</option>
                     <option value="print">PRINT NEWSPAPER AD / ప్రింట్ పేపర్</option>
                     <option value="digital">DIGITAL WEBSITE AD / డిజిటల్ వెబ్‌సైట్</option>
@@ -209,10 +207,10 @@
 
               <div class="utility-form-group">
                 <label class="utility-label" for="adRequirements">ప్రకటనల వివరాలు / Ad Details &amp; Budget *</label>
-                <textarea id="adRequirements" class="utility-textarea" rows="4" placeholder="ప్రకటన పరిమాణం మరియు సందేశపు వివరాలు రాయండి..." required></textarea>
+                <textarea id="adRequirements" name="message" class="utility-textarea" rows="4" placeholder="ప్రకటన పరిమాణం మరియు సందేశపు వివరాలు రాయండి..." required></textarea>
               </div>
 
-              <button type="submit" class="utility-btn-primary">ప్రకటనల రేట్ల వివరాలు అడగండి (Request Media Kit)</button>
+              <button type="submit" id="adSubmitBtn" class="utility-btn-primary">ప్రకటనల రేట్ల వివరాలు అడగండి (Request Media Kit)</button>
             </form>
           </div>
 
@@ -332,7 +330,71 @@
       </div>
     </footer>
 
+    <script src="/js/config.js"></script>
     <script src="/js/i18n.js"></script>
+    <script src="/js/navigation.js"></script>
     <script src="/js/chatbot.js" defer></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('adInquiryForm');
+        const alertBox = document.getElementById('adStatusAlert');
+        const submitBtn = document.getElementById('adSubmitBtn');
+
+        if (form) {
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const company = document.getElementById('adCompany')?.value.trim();
+            const contactPerson = document.getElementById('adContactPerson')?.value.trim();
+            const email = document.getElementById('adEmail')?.value.trim();
+            const adType = document.getElementById('adType')?.value;
+            const message = document.getElementById('adRequirements')?.value.trim();
+
+            if (!company || !contactPerson || !email) {
+              alertBox.style.display = 'block';
+              alertBox.style.background = '#fef2f2';
+              alertBox.style.color = '#991b1b';
+              alertBox.style.border = '1px solid #fecaca';
+              alertBox.textContent = 'దయచేసి సంస్థ పేరు, సంప్రదించాల్సిన వ్యక్తి మరియు ఈమెయిల్ నమోదు చేయండి.';
+              return;
+            }
+
+            if (submitBtn) {
+              submitBtn.disabled = true;
+              submitBtn.textContent = 'పంపుతోంది... (Submitting...)';
+            }
+
+            try {
+              const res = await fetch('/api/public/advertise', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ company, contactPerson, email, adType, message })
+              });
+              const data = await res.json();
+              if (data.success) {
+                alertBox.style.display = 'block';
+                alertBox.style.background = '#f0fdf4';
+                alertBox.style.color = '#166534';
+                alertBox.style.border = '1px solid #bbf7d0';
+                alertBox.textContent = data.message || 'ధన్యవాదాలు! మీ విచారణ విజయవంతంగా అందింది.';
+                form.reset();
+              } else {
+                throw new Error(data.error || 'విచారణ పంపడం విఫలమైంది.');
+              }
+            } catch (err) {
+              alertBox.style.display = 'block';
+              alertBox.style.background = '#fef2f2';
+              alertBox.style.color = '#991b1b';
+              alertBox.style.border = '1px solid #fecaca';
+              alertBox.textContent = err.message || 'లోపం సంభవించింది. దయచేసి మళ్లీ ప్రయత్నించండి.';
+            } finally {
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'ప్రకటనల రేట్ల వివరాలు అడగండి (Request Media Kit)';
+              }
+            }
+          });
+        }
+      });
+    </script>
   </body>
 </html>

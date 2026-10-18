@@ -130,8 +130,8 @@ async function deleteFile(publicOrRelativeUrl) {
       normalizedPath,
       `%/${filename}`
     ]);
-    await dbRun('DELETE FROM media_assets WHERE file_name = ? OR file_path LIKE ?', [
-      filename,
+    await dbRun('DELETE FROM media_assets WHERE file_path = ? OR file_path LIKE ?', [
+      normalizedPath,
       `%/${filename}`
     ]);
   } catch (err) {

@@ -216,7 +216,7 @@
             పిడిఎఫ్ ఫైల్ లోడ్ చేయబడుతోంది...
           </p>
           <div style="display: flex; justify-content: center; gap: var(--space-xs); flex-wrap: wrap;">
-            <button class="btn btn-primary" type="button" onclick="toggleEpaperViewer(false)">వీవర్ మూసివేయి</button>
+            <button class="btn btn-primary" type="button" onclick="if(window.toggleEpaperViewer){toggleEpaperViewer(false);}else{const c=document.getElementById('epaperViewerContainer');if(c)c.style.display='none';}">వీవర్ మూసివేయి</button>
           </div>
         </div>
       </section>

@@ -93,6 +93,7 @@ async function cleanupOrphanQRCodes() {
     const validEditions = new Set((await dbAll('SELECT id FROM editions')).map(e => String(e.id)));
     const validArticles = new Set((await dbAll('SELECT id FROM articles')).map(a => String(a.id)));
 
+    const files = fs.readdirSync(qrUploadDir);
     for (const f of files) {
       if (!f.endsWith('.png')) continue;
       let shouldKeep = false;
@@ -1230,6 +1231,87 @@ app.get('/api/public/categories', (req, res) => {
     res.json({ success: true, categories });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to load category configuration.' });
+  }
+});
+
+// Public Contact & Feedback Submission API
+app.post('/api/public/contact', async (req, res) => {
+  try {
+    const { name, email, department, subject, message } = req.body;
+    if (!name || !email || !message) {
+      return res.status(400).json({ success: false, error: 'పేరు, ఈమెయిల్ మరియు సందేశం తప్పనిసరి (Name, email, and message are required).' });
+    }
+    const inquiryId = `inq_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    try {
+      await dbRun(`
+        CREATE TABLE IF NOT EXISTS inquiries (
+          id TEXT PRIMARY KEY,
+          type TEXT DEFAULT 'contact',
+          name TEXT,
+          email TEXT,
+          phone TEXT,
+          department TEXT,
+          subject TEXT,
+          message TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      await dbRun(
+        `INSERT INTO inquiries (id, type, name, email, department, subject, message) VALUES (?, 'contact', ?, ?, ?, ?, ?)`,
+        [inquiryId, name.trim(), email.trim(), department || 'general', subject || 'Contact Inquiry', message.trim()]
+      );
+    } catch (dbErr) {
+      console.warn('Inquiry DB save notice:', dbErr.message);
+    }
+    console.log(`✓ [CONTACT INQUIRY] Received message from: ${name} (${email}) - ${subject}`);
+    res.json({
+      success: true,
+      message: 'ధన్యవాదాలు! మీ సందేశం సంపాదకీయ బృందానికి విజయవంతంగా అందింది. (Thank you! Your message has been received.)'
+    });
+  } catch (err) {
+    console.error('Contact submission error:', err);
+    res.status(500).json({ success: false, error: 'సందేశం పంపడంలో లోపం ఏర్పడింది. దయచేసి మళ్లీ ప్రయత్నించండి.' });
+  }
+});
+
+// Public Advertising Inquiry Submission API
+app.post('/api/public/advertise', async (req, res) => {
+  try {
+    const { company, contactPerson, email, phone, adType, budget, message } = req.body;
+    if (!company || !contactPerson || !email) {
+      return res.status(400).json({ success: false, error: 'సంస్థ పేరు, సంప్రదించాల్సిన వ్యక్తి మరియు ఈమెయిల్ తప్పనిసరి (Company name, contact person, and email are required).' });
+    }
+    const inquiryId = `ad_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    try {
+      await dbRun(`
+        CREATE TABLE IF NOT EXISTS inquiries (
+          id TEXT PRIMARY KEY,
+          type TEXT DEFAULT 'advertise',
+          name TEXT,
+          email TEXT,
+          phone TEXT,
+          department TEXT,
+          subject TEXT,
+          message TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      const details = `Company: ${company} | Ad Type: ${adType || 'N/A'} | Budget: ${budget || 'N/A'}\n${message || ''}`;
+      await dbRun(
+        `INSERT INTO inquiries (id, type, name, email, phone, department, subject, message) VALUES (?, 'advertise', ?, ?, ?, 'advertising', ?, ?)`,
+        [inquiryId, contactPerson.trim(), email.trim(), phone || '', `Ad Inquiry: ${company}`, details]
+      );
+    } catch (dbErr) {
+      console.warn('Ad inquiry DB save notice:', dbErr.message);
+    }
+    console.log(`✓ [AD INQUIRY] Received ad inquiry from: ${company} - ${contactPerson} (${email})`);
+    res.json({
+      success: true,
+      message: 'ధన్యవాదాలు! మీ ప్రకటనల విచారణ మా ప్రకటనల విభాగానికి అందింది. మా ప్రతినిధి త్వరలోనే మిమ్మల్ని సంప్రదిస్తారు. (Thank you! Our advertising team will contact you soon.)'
+    });
+  } catch (err) {
+    console.error('Advertise submission error:', err);
+    res.status(500).json({ success: false, error: 'విచారణ పంపడంలో లోపం ఏర్పడింది. దయచేసి మళ్లీ ప్రయత్నించండి.' });
   }
 });
 
@@ -3008,7 +3090,7 @@ app.get('/sitemap.xml', async (req, res) => {
     const now = new Date().toISOString().split('T')[0];
 
     const articles = await dbAll("SELECT id, slug, published_at, updated_at FROM articles WHERE status = 'published' ORDER BY published_at DESC LIMIT 500");
-    const editions = await dbAll("SELECT id, edition_date FROM editions WHERE status = 'active' AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' ORDER BY edition_date DESC LIMIT 100");
+    const editions = await dbAll("SELECT id, edition_date FROM editions WHERE (status = 'published' OR status = 'active') AND file_size_bytes > 0 AND pdf_filename != 'default.pdf' ORDER BY edition_date DESC LIMIT 100");
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 

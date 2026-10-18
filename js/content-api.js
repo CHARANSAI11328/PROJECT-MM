@@ -1332,9 +1332,15 @@
       console.error('Error rendering epaper page:', err);
       if (loadingEl) loadingEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'block';
-      if (epaperContainer) renderSubtleEmptyState(epaperContainer, 'empty_epaper');
     }
   }
+
+  window.toggleEpaperViewer = function(show) {
+    const container = document.getElementById('epaperViewerContainer');
+    if (container) {
+      container.style.display = show ? 'flex' : 'none';
+    }
+  };
 
   async function renderSearchPage() {
     const searchInput = document.getElementById('searchInput');

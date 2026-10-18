@@ -126,22 +126,23 @@
           <!-- Contact Form Component -->
           <div class="utility-card">
             <h2 class="utility-card-title" data-i18n="contact_title">సంప్రదింపు పత్రం</h2>
-            <form onsubmit="event.preventDefault();" style="display: flex; flex-direction: column; gap: var(--space-md);">
+            <div id="contactStatusAlert" style="display: none; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-weight: 600;"></div>
+            <form id="contactForm" style="display: flex; flex-direction: column; gap: var(--space-md);">
               <div class="grid-2">
                 <div class="utility-form-group">
-                  <label class="utility-label" for="contactName" data-i18n="contact_form_name">మీ పేరు ప్లేస్‌హోల్డర్</label>
-                  <input type="text" id="contactName" class="utility-input" data-i18n-placeholder="contact_form_name" placeholder="మీ పేరు..." required />
+                  <label class="utility-label" for="contactName" data-i18n="contact_form_name">మీ పూర్తి పేరు *</label>
+                  <input type="text" id="contactName" name="name" class="utility-input" placeholder="మీ పూర్తి పేరు నమోదు చేయండి..." required />
                 </div>
                 <div class="utility-form-group">
-                  <label class="utility-label" for="contactEmail" data-i18n="contact_form_email">ఇమెయిల్ చిరునామా ప్లేస్‌హోల్డర్</label>
-                  <input type="email" id="contactEmail" class="utility-input" data-i18n-placeholder="contact_form_email" placeholder="మీ ఇమెయిల్..." required />
+                  <label class="utility-label" for="contactEmail" data-i18n="contact_form_email">ఈమెయిల్ చిరునామా *</label>
+                  <input type="email" id="contactEmail" name="email" class="utility-input" placeholder="మీ ఈమెయిల్ చిరునామా..." required />
                 </div>
               </div>
 
               <div class="grid-2">
                 <div class="utility-form-group">
-                  <label class="utility-label" for="contactDept">విభాగం / Department *</label>
-                  <select id="contactDept" class="utility-select">
+                  <label class="utility-label" for="contactDept" data-i18n="contact_form_dept">విభాగం / Department *</label>
+                  <select id="contactDept" name="department" class="utility-select" required>
                     <option value="">విభాగాన్ని ఎంచుకోండి (Select Department)</option>
                     <option value="editorial">EDITORIAL DESK / సంపాదకీయ విభాగం</option>
                     <option value="advertising">ADVERTISING DESK / ప్రకటనల విభాగం</option>
@@ -150,17 +151,17 @@
                   </select>
                 </div>
                 <div class="utility-form-group">
-                  <label class="utility-label" for="contactSubject">విషయం / Subject *</label>
-                  <input type="text" id="contactSubject" class="utility-input" placeholder="విషయం రాయండి..." required />
+                  <label class="utility-label" for="contactSubject" data-i18n="contact_form_subject">విషయం / Subject *</label>
+                  <input type="text" id="contactSubject" name="subject" class="utility-input" placeholder="విషయం రాయండి..." required />
                 </div>
               </div>
 
               <div class="utility-form-group">
-                <label class="utility-label" for="contactMessage">మీ సందేశం / Your Message *</label>
-                <textarea id="contactMessage" class="utility-textarea" rows="5" placeholder="మీ సందేశం లేదా పత్రిక విచారణ రాయండి..." required></textarea>
+                <label class="utility-label" for="contactMessage" data-i18n="contact_form_message">మీ సందేశం / Your Message *</label>
+                <textarea id="contactMessage" name="message" class="utility-textarea" rows="5" placeholder="మీ సందేశం లేదా పత్రిక విచారణ రాయండి..." required></textarea>
               </div>
 
-              <button type="submit" class="utility-btn-primary">సందేశం పంపండి (Send Message)</button>
+              <button type="submit" id="contactSubmitBtn" class="utility-btn-primary" data-i18n="contact_form_submit">సందేశం పంపండి (Send Message)</button>
             </form>
           </div>
 
@@ -318,7 +319,71 @@
       </div>
     </footer>
 
+    <script src="/js/config.js"></script>
     <script src="/js/i18n.js"></script>
+    <script src="/js/navigation.js"></script>
     <script src="/js/chatbot.js" defer></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('contactForm');
+        const alertBox = document.getElementById('contactStatusAlert');
+        const submitBtn = document.getElementById('contactSubmitBtn');
+
+        if (form) {
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('contactName')?.value.trim();
+            const email = document.getElementById('contactEmail')?.value.trim();
+            const department = document.getElementById('contactDept')?.value;
+            const subject = document.getElementById('contactSubject')?.value.trim();
+            const message = document.getElementById('contactMessage')?.value.trim();
+
+            if (!name || !email || !message) {
+              alertBox.style.display = 'block';
+              alertBox.style.background = '#fef2f2';
+              alertBox.style.color = '#991b1b';
+              alertBox.style.border = '1px solid #fecaca';
+              alertBox.textContent = 'దయచేసి అన్ని అవసరమైన వివరాలను నమోదు చేయండి (Please fill in all required fields).';
+              return;
+            }
+
+            if (submitBtn) {
+              submitBtn.disabled = true;
+              submitBtn.textContent = 'పంపుతోంది... (Sending...)';
+            }
+
+            try {
+              const res = await fetch('/api/public/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, department, subject, message })
+              });
+              const data = await res.json();
+              if (data.success) {
+                alertBox.style.display = 'block';
+                alertBox.style.background = '#f0fdf4';
+                alertBox.style.color = '#166534';
+                alertBox.style.border = '1px solid #bbf7d0';
+                alertBox.textContent = data.message || 'ధన్యవాదాలు! మీ సందేశం విజయవంతంగా అందింది.';
+                form.reset();
+              } else {
+                throw new Error(data.error || 'సందేశం పంపడం విఫలమైంది.');
+              }
+            } catch (err) {
+              alertBox.style.display = 'block';
+              alertBox.style.background = '#fef2f2';
+              alertBox.style.color = '#991b1b';
+              alertBox.style.border = '1px solid #fecaca';
+              alertBox.textContent = err.message || 'లోపం సంభవించింది. దయచేసి మళ్లీ ప్రయత్నించండి.';
+            } finally {
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'సందేశం పంపండి (Send Message)';
+              }
+            }
+          });
+        }
+      });
+    </script>
   </body>
 </html>

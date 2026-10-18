@@ -111,7 +111,16 @@
       footer_about_desc: "సమాజ హితమే ధ్యేయంగా, నిష్పాక్షిక వార్తా కథనాలతో పాఠకులకు విశ్వసనీయ సమాచారాన్ని అందిస్తున్న తెలుగు దినపత్రిక.",
       footer_quick_links: "త్వరిత లింకులు",
       footer_epaper_desc: "రోజువారీ ప్రింట్ దినపత్రిక డిజిటల్ పిడిఎఫ్ రూపంలో అందుబాటులో ఉంటుంది.",
-      footer_copyright: "సర్వ హక్కులూ ప్రత్యేకించబడ్డాయి."
+      footer_copyright: "సర్వ హక్కులూ ప్రత్యేకించబడ్డాయి.",
+
+      // Contact Form
+      contact_title: "సంప్రదింపు పత్రం",
+      contact_form_name: "మీ పూర్తి పేరు",
+      contact_form_email: "ఈమెయిల్ చిరునామా",
+      contact_form_dept: "విభాగం",
+      contact_form_subject: "విషయం",
+      contact_form_message: "మీ సందేశం",
+      contact_form_submit: "సందేశం పంపండి"
     },
 
     en: {
@@ -209,7 +218,16 @@
       footer_about_desc: "Independent Telugu Daily Newspaper committed to trustworthy, objective journalism.",
       footer_quick_links: "Quick Links",
       footer_epaper_desc: "Daily print edition available in digital PDF reader format.",
-      footer_copyright: "All Rights Reserved."
+      footer_copyright: "All Rights Reserved.",
+
+      // Contact Form
+      contact_title: "Contact Desk",
+      contact_form_name: "Full Name",
+      contact_form_email: "Email Address",
+      contact_form_dept: "Department",
+      contact_form_subject: "Subject",
+      contact_form_message: "Your Message",
+      contact_form_submit: "Send Message"
     }
   };
 
