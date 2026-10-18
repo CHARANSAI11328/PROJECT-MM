@@ -230,29 +230,94 @@
     </main>
 
     <!-- 5. FOOTER -->
+    <!-- GLOBAL FOOTER SYSTEM -->
     <footer class="site-footer" role="contentinfo">
-      <div class="container-standard" style="padding-top: 32px; padding-bottom: 32px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; border-bottom: 1px solid #334155; padding-bottom: 24px; margin-bottom: 16px;">
-          <div>
-            <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 8px;" data-i18n="footer_about_title">మమేక మహోదయం</h3>
-            <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.6;" data-i18n="footer_about_desc">
-              సమాజ హితమే ధ్యేయంగా, నిష్పాక్షిక వార్తా కథనాలతో పాఠకులకు విశ్వసనీయ సమాచారాన్ని అందిస్తున్న తెలుగు దినపత్రిక.
-            </p>
+      <div class="container">
+        <div class="footer-top-grid">
+          <!-- Col 1: Newspaper Identity & Social Media Channels -->
+          <div class="footer-col-brand">
+            <div class="footer-brand-title">మమేక మహోదయం</div>
+            <div class="footer-brand-subtitle">MAMEKA MAHODAYAM DAILY</div>
+            <p class="footer-tagline">తెలుగు ప్రజల విశ్వసనీయ దినపత్రిక | Independent Telugu Daily Newspaper</p>
+            <div class="footer-social-title">సోషల్ మీడియా వేదికలు / Social Handles</div>
+            <div class="footer-social-list" style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <a href="https://x.com/mamekamahodayam" target="_blank" rel="noopener" class="social-btn-link" style="color: #cbd5e1; text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 4px 10px; border: 1px solid #475569; border-radius: 4px;" title="X (Twitter)">X (TWITTER)</a>
+              <a href="https://facebook.com/mamekamahodayam" target="_blank" rel="noopener" class="social-btn-link" style="color: #cbd5e1; text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 4px 10px; border: 1px solid #475569; border-radius: 4px;" title="Facebook">FACEBOOK</a>
+              <a href="https://youtube.com/@mamekamahodayam" target="_blank" rel="noopener" class="social-btn-link" style="color: #cbd5e1; text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 4px 10px; border: 1px solid #475569; border-radius: 4px;" title="YouTube">YOUTUBE</a>
+              <a href="https://wa.me/917075652808" target="_blank" rel="noopener" class="social-btn-link" style="color: #cbd5e1; text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 4px 10px; border: 1px solid #475569; border-radius: 4px;" title="WhatsApp">WHATSAPP</a>
+            </div>
           </div>
+
+          <!-- Col 2: News Sections -->
           <div>
-            <h4 style="color: #f1f5f9; font-size: 1rem; margin-bottom: 12px;" data-i18n="footer_quick_links">త్వరిత లింకులు</h4>
-            <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.88rem; line-height: 2; color: #cbd5e1;">
-              <li><a href="/" style="color: inherit; text-decoration: none;" data-i18n="nav_home">హోమ్</a></li>
-              <li><a href="/category.html?c=state" style="color: inherit; text-decoration: none;" data-i18n="nav_state">ఆంధ్రప్రదేశ్</a></li>
-              <li><a href="/district.html" style="color: inherit; text-decoration: none;" data-i18n="nav_district">జిల్లాల వార్తలు</a></li>
-              <li><a href="/epaper.html" style="color: inherit; text-decoration: none;" data-i18n="nav_epaper">ఈ-పేపర్</a></li>
-              <li><a href="/editorial-team.html" style="color: inherit; text-decoration: none;">సంపాదకీయ బృందం</a></li>
-              <li><a href="/sitemap.xml" style="color: inherit; text-decoration: none;">సైట్‌మ్యాప్</a></li>
+            <h3 class="footer-col-title">వార్తా విభాగములు</h3>
+            <ul class="footer-nav-list">
+              <li><a href="/category.html?c=state">రాష్ట్ర వార్తలు (State News)</a></li>
+              <li><a href="/district.html">జిల్లాల సమాచారం (District News)</a></li>
+              <li><a href="/category.html?c=politics">రాజకీయాలు (Politics)</a></li>
+              <li><a href="/category.html?c=national">జాతీయ / అంతర్జాతీయ (National &amp; Int)</a></li>
+              <li><a href="/category.html?c=sports">క్రీడలు (Sports)</a></li>
+              <li><a href="/category.html?c=cinema">సినిమా / వినోదం (Cinema)</a></li>
+              <li><a href="/category.html?c=education">విద్య &amp; ఉద్యోగాలు (Education)</a></li>
+              <li><a href="/category.html?c=editorial">సంపాదకీయం (Editorial)</a></li>
             </ul>
           </div>
+
+          <!-- Col 3: About & Services -->
+          <div>
+            <h3 class="footer-col-title">మా సమాచారం</h3>
+            <ul class="footer-nav-list">
+              <li><a href="/about.html">మన గురించి (About Us)</a></li>
+              <li><a href="/editorial-team.html">సంపాదకీయ బృందం (Editorial Team)</a></li>
+              <li><a href="/contact.html">సంప్రదించండి (Contact Us)</a></li>
+              <li><a href="/advertise.html">ప్రకటనలు (Advertise)</a></li>
+              <li><a href="/epaper.html">ఈ-పేపర్ (E-Paper)</a></li>
+            </ul>
+          </div>
+
+          <!-- Col 4: Legal & Policies -->
+          <div>
+            <h3 class="footer-col-title">నిబంధనలు &amp; హక్కులు</h3>
+            <ul class="footer-nav-list">
+              <li><a href="/privacy.html">గోప్యతా విధానం (Privacy Policy)</a></li>
+              <li><a href="/terms.html">నిబంధనలు &amp; షరతులు (Terms of Service)</a></li>
+              <li><a href="/search.html">వార్తల శోధన (Search Archive)</a></li>
+              <li><a href="/epaper.html">ఈ-పేపర్ ఆర్కైవ్ (E-Paper Archive)</a></li>
+              <li><a href="/sitemap.xml" style="color: inherit; text-decoration: none;">సైట్‌మ్యాప్ (Sitemap)</a></li>
+            </ul>
+          </div>
+
+          <!-- Col 5: Contact Information -->
+          <div>
+            <h3 class="footer-col-title">కార్యాలయ వివరాలు</h3>
+            <div class="footer-contact-block">
+              <div class="footer-contact-item">
+                <span class="footer-contact-label">ప్రధాన కార్యాలయం / Head Office</span>
+                <span class="footer-contact-value">తెనాలి &amp; విజయవాడ, ఆంధ్రప్రదేశ్</span>
+              </div>
+              <div class="footer-contact-item">
+                <span class="footer-contact-label">ఈమెయిల్ / Email</span>
+                <span class="footer-contact-value">mahodayamnews@gmail.com</span>
+              </div>
+              <div class="footer-contact-item">
+                <span class="footer-contact-label">ఫోన్ / Phone</span>
+                <span class="footer-contact-value">+91 7075652808</span>
+              </div>
+              <div class="footer-contact-item">
+                <span class="footer-contact-label">నమోదు / Registration</span>
+                <span class="footer-contact-value">APTEL/26/A5988</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div style="text-align: center; color: #94a3b8; font-size: 0.85rem;">
-          &copy; 2026 MAMEKA MAHODAYAM (మమేక మహోదయం). <span data-i18n="footer_copyright">సర్వ హక్కులూ ప్రత్యేకించబడ్డాయి.</span>
+
+        <!-- Bottom Bar -->
+        <div class="footer-bottom-bar">
+          <div>&copy; 2026 MAMEKA MAHODAYAM (మమేక మహోదయం). All rights reserved.</div>
+          <div style="display: flex; gap: var(--space-xs); flex-wrap: wrap;">
+            <span class="footer-meta-tag">RNI: APTEL/26/A5988</span>
+            <span class="footer-meta-tag">TELUGU DAILY NEWSPAPER</span>
+          </div>
         </div>
       </div>
     </footer>
@@ -262,7 +327,7 @@
     <script src="/js/districts-config.js"></script>
     <script src="/js/i18n.js"></script>
     <script src="/js/navigation.js?v=2.2.0"></script>
-    <script src="/js/content-api.js"></script>
+    <script src="/js/content-api.js?v=2.2.0"></script>
     <script src="/js/chatbot.js?v=2.2.0"></script>
     <script src="/js/pwa.js?v=2.2.0" defer></script>
   </body>
