@@ -3,7 +3,7 @@
  * High-Performance Offline Caching, Stale-While-Revalidate, and Resilient PWA Engine
  */
 
-const CACHE_VERSION = 'mameka-mahodayam-v2.2.0';
+const CACHE_VERSION = 'mameka-mahodayam-v1.0.0';
 const STATIC_CACHE = `mameka-static-${CACHE_VERSION}`;
 const DATA_CACHE = `mameka-data-${CACHE_VERSION}`;
 const IMAGE_CACHE = `mameka-images-${CACHE_VERSION}`;
@@ -144,22 +144,6 @@ self.addEventListener('fetch', (event) => {
 
   // Ignore non-GET requests and browser-extension / socket schemes
   if (request.method !== 'GET' || !url.protocol.startsWith('http')) {
-    return;
-  }
-
-  // A0. Critical Frontend Logic Scripts -> Always Network-First (Never serve stale chatbot or nav)
-  if (url.pathname.includes('/js/chatbot.js') || url.pathname.includes('/js/navigation.js') || url.pathname.includes('/js/pwa.js')) {
-    event.respondWith(
-      fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(STATIC_CACHE).then(cache => cache.put(request, clone));
-          }
-          return networkResponse;
-        })
-        .catch(() => caches.match(request))
-    );
     return;
   }
 

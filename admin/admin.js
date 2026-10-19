@@ -92,9 +92,6 @@ function initAdminApp() {
         if (window.API_BASE_URL) return window.API_BASE_URL.replace(/\/$/, '');
         const saved = localStorage.getItem('mm_api_base_url');
         if (saved && saved.trim()) return saved.trim().replace(/\/$/, '');
-        if (window.location.protocol === 'file:' || !window.location.host || window.location.origin === 'null') {
-            return 'http://localhost:3000';
-        }
         return '';
     }
 
@@ -1174,7 +1171,7 @@ function initAdminApp() {
             const publicUrl = `/article.html?id=${encodeURIComponent(art.id)}${art.slug ? `&slug=${encodeURIComponent(art.slug)}` : ''}`;
 
             return `
-                <tr>
+                <tr id="article-row-${art.id}" data-article-id="${art.id}">
                     <td>
                         <strong>${escapeHTML(art.title_te || art.title_en)}</strong>
                     </td>
@@ -1240,22 +1237,53 @@ function initAdminApp() {
     };
 
     window.deleteArticle = async function(articleId) {
-        if (!confirm('మీరు ఈ వార్తను పూర్తిగా తొలగించాలనుకుంటున్నారా?')) return;
+        if (!confirm('మీరు ఈ వార్తను డాటాబేస్ మరియు లైవ్ సైట్ నుండి పూర్తిగా తొలగించాలనుకుంటున్నారా? (Permanently remove article?)')) return;
 
         const token = localStorage.getItem('admin_token');
         if (!token) return;
+
+        const row = document.getElementById(`article-row-${articleId}`) || document.querySelector(`button[onclick*="${articleId}"]`)?.closest('tr');
+        if (row) {
+            row.style.transition = 'all 0.25s ease';
+            row.style.opacity = '0.35';
+            row.style.pointerEvents = 'none';
+        }
 
         try {
             const res = await apiFetch(`/api/admin/articles/${articleId}`, {
                 method: 'DELETE'
             });
             if (res && res.ok) {
-                loadArticlesListView();
+                if (row) {
+                    row.style.transform = 'translateX(25px)';
+                    row.style.opacity = '0';
+                    setTimeout(() => row.remove(), 250);
+                }
+                // Decrement count badges immediately
+                document.querySelectorAll('.tab-btn, .filter-btn').forEach(btn => {
+                    const match = btn.textContent.match(/\((\d+)\)/);
+                    if (match) {
+                        const cnt = parseInt(match[1], 10);
+                        if (cnt > 0) {
+                            btn.textContent = btn.textContent.replace(/\(\d+\)/, `(${cnt - 1})`);
+                        }
+                    }
+                });
             } else {
-                alert('వార్త తొలగింపు విఫలమైంది');
+                if (row) {
+                    row.style.opacity = '1';
+                    row.style.pointerEvents = 'auto';
+                }
+                const errData = res ? await res.json().catch(() => ({})) : {};
+                alert('వార్త తొలగింపు విఫలమైంది: ' + (errData.error || 'Server error'));
             }
         } catch (err) {
             console.error('Failed to delete article:', err);
+            if (row) {
+                row.style.opacity = '1';
+                row.style.pointerEvents = 'auto';
+            }
+            alert('వార్త తొలగింపు విఫలమైంది: ' + err.message);
         }
     };
 

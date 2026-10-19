@@ -24,33 +24,34 @@ const imagesDir = path.join(uploadsDir, 'images');
 
 const rawDbUrl = (process.env.DATABASE_URL || process.env.POSTGRES_URL || '').trim();
 const databaseUrl = rawDbUrl.replace(/^["']|["']$/g, '').trim();
-const isPostgres = Boolean(databaseUrl);
 
+if (!databaseUrl) {
+  console.error('CRITICAL: DATABASE_URL is not defined in environment variables! Neon PostgreSQL is required.');
+}
+
+const isPostgres = true;
 let db = null;
 let pgPool = null;
 
-if (isPostgres) {
-  const { Pool } = require('pg');
-  try {
-    const parsed = new URL(databaseUrl);
-    console.log(`Connecting to PostgreSQL host: ${parsed.host} | db: ${parsed.pathname}`);
-  } catch (e) {}
+const { Pool } = require('pg');
+try {
+  const parsed = new URL(databaseUrl);
+  console.log(`Connecting exclusively to Neon PostgreSQL host: ${parsed.host} | db: ${parsed.pathname}`);
+} catch (e) {}
 
-  pgPool = new Pool({
-    connectionString: databaseUrl,
-    ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false }
-  });
-  console.log('✓ Connected to Live Production PostgreSQL database (Neon / Cloud DB)');
-} else {
-  const sqlite3 = require('sqlite3').verbose();
-  db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-      console.error('Failed to connect to SQLite database:', err.message);
-    } else {
-      console.log('Connected to Local SQLite database at:', dbPath);
-    }
-  });
-}
+pgPool = new Pool({
+  connectionString: databaseUrl,
+  ssl: { rejectUnauthorized: false },
+  connectionTimeoutMillis: 15000,
+  idleTimeoutMillis: 30000,
+  max: 25
+});
+
+pgPool.on('error', (err) => {
+  console.error('PostgreSQL idle client notice:', err.message);
+});
+
+console.log('✓ Neon PostgreSQL exclusively initialized as primary system database');
 
 // Convert SQLite parameter placeholders (?) to PostgreSQL ($1, $2, $3...)
 function translateSqlForPostgres(sql) {

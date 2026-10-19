@@ -263,7 +263,6 @@
         </div>
         <div class="mobile-app-right">
           <a href="/epaper.html" class="mobile-epaper-badge">📰 ఈ-పేపర్</a>
-          <button type="button" id="mobile-top-ai-btn" class="mobile-ai-badge" onclick="if(window.toggleMamekaChat) window.toggleMamekaChat();" title="AI సహాయకుడు" aria-label="AI సహాయకుడు"><img src="/icons/logo-official.png" alt="AI" class="mobile-ai-badge-icon" /> AI</button>
           <button type="button" id="mobile-search-trigger" class="mobile-search-trigger-btn" aria-label="శోధన (Search)">🔍</button>
         </div>
       `;
@@ -286,7 +285,7 @@
                 <span class="drawer-brand-main">మహోదయం</span>
               </div>
               <div class="drawer-brand-tagline">అక్షరంలో ఆత్మీయత - వార్తల్లో వాస్తవం</div>
-              <div style="font-size: 0.68rem; color: #fbcfe8; margin-top: 2px; font-family: sans-serif;">RNI: APTEL/26/A5988 • తెలుగు దినపత్రిక</div>
+              <div style="font-size: 0.68rem; color: #fbcfe8; margin-top: 4px; font-family: sans-serif;">RNI: APTEL/26/A5988 • తెలుగు దినపత్రిక</div>
             </div>
             <button type="button" id="mobile-drawer-close" class="drawer-close-btn" aria-label="మెనూ మూసివేయి">✕</button>
           </div>
@@ -303,7 +302,6 @@
             <li><a href="/category.html?c=editorial" class="drawer-link-item"><span>✍️</span> <span>సంపాదకీయం (Editorial)</span></a></li>
             <div class="drawer-divider"></div>
             <li><a href="/epaper.html" class="drawer-link-item" style="color: #0284c7; font-weight: 700;"><span>📰</span> <span>డిజిటల్ ఈ-పేపర్ (E-Paper)</span></a></li>
-            <li><a href="javascript:void(0)" onclick="if(window.toggleMamekaChat) window.toggleMamekaChat(); const ov = document.getElementById('mobile-drawer-overlay'); if (ov) { ov.classList.remove('active'); document.body.style.overflow = ''; document.body.style.touchAction = ''; }" class="drawer-link-item" style="color: #9333ea; font-weight: 700;"><img src="/icons/logo-official.png" alt="AI" style="width: 20px; height: 20px; border-radius: 50%; object-fit: contain; vertical-align: middle; background: #fff;" /> <span>AI సహాయకుడు (AI Assistant)</span></a></li>
             <li><a href="/editorial-team.html" class="drawer-link-item" style="color: #be185d; font-weight: 700;"><span>👥</span> <span>మా సంపాదకీయ బృందం (Team)</span></a></li>
             <li><a href="/admin/index.html" class="drawer-link-item" style="color: #d97706; font-weight: 700;"><span>🔒</span> <span>అడ్మిన్ లాగిన్ (Admin Portal)</span></a></li>
             <div class="drawer-divider"></div>

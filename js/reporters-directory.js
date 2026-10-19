@@ -47,12 +47,6 @@
     if (window.API_BASE_URL) return window.API_BASE_URL.replace(/\/$/, '');
     const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('mm_api_base_url') : null;
     if (saved && saved.trim()) return saved.trim().replace(/\/$/, '');
-    if (window.location.protocol === 'file:' || !window.location.host || window.location.origin === 'null') {
-      return 'http://localhost:3000';
-    }
-    if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '3000') {
-      return 'http://localhost:3000';
-    }
     return '';
   }
 

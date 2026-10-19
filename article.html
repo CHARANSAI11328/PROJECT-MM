@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>వార్త వివరాలు - మమేక మహోదయం | Mameka Mahodayam</title>
     <meta name="description" content="మమేక మహోదయం వార్తా కథనం. Mameka Mahodayam Telugu Daily Newspaper." />
-    <link rel="stylesheet" href="/styles/design-system.css?v=2.2.0" />
+    <link rel="stylesheet" href="/styles/design-system.css" />
 
     <!-- PWA & Mobile Web App Meta Tags -->
     <link rel="manifest" href="/manifest.json" />
@@ -47,7 +47,7 @@
           <div class="utility-bar-right">
             <a href="/epaper.html" style="color: inherit; text-decoration: underline;" data-i18n="top_epaper_link">ఈ-పేపర్</a> 
             <span aria-hidden="true" style="opacity: 0.5;">|</span> 
-            <button type="button" class="top-ai-header-btn" title="మమేక మహోదయం AI సహాయకుడు"><img src="/icons/logo-official.png" alt="AI" class="top-ai-btn-icon" /> AI సహాయకుడు</button>
+            <button type="button" onclick="if(window.toggleMamekaChat) window.toggleMamekaChat();" class="top-ai-header-btn" title="మమేక మహోదయం AI సహాయకుడు">🤖 AI సహాయకుడు</button>
             <span aria-hidden="true" style="opacity: 0.5;">|</span> 
             <a href="/editorial-team.html" class="top-special-link" data-i18n="nav_team">✨ మా సంపాదకీయ బృందం</a>
             <span aria-hidden="true" style="opacity: 0.5;">|</span> 
@@ -234,12 +234,10 @@
               <div id="sidebar-latest-container" style="display: flex; flex-direction: column; gap: var(--space-xs);"></div>
             </div>
 
-            <!-- Sidebar Widget 2: E-Paper Promotional Card -->
-            <div class="epaper-promo-widget">
-              <div style="font-size: 1.8rem; margin-bottom: 6px;">📰</div>
-              <h3 style="font-size: 1rem; font-weight: 800; color: #9d174d; margin: 0 0 6px;">మమేక మహోదయం ఈ-పేపర్</h3>
-              <p style="font-size: 0.8rem; color: #475569; margin: 0 0 12px; line-height: 1.4;">ఈనాటి పూర్తి దినపత్రిక పేజీలను ఆన్‌లైన్‌లో నేరుగా వీక్షించండి.</p>
-              <a href="/epaper.html" style="display: inline-block; background: #be185d; color: #ffffff; font-weight: 700; font-size: 0.82rem; padding: 7px 16px; border-radius: 20px; text-decoration: none;">ఈ-పేపర్ తెరవండి ➔</a>
+            <!-- Sidebar Widget 2: Advertisement Unit -->
+            <div class="ad-placeholder" style="margin-top: var(--space-md);">
+              <div>ప్రకటన స్థలం</div>
+              <div style="font-size: 0.7rem; color: var(--color-text-muted); margin-top: 4px;">300 x 250 AD UNIT</div>
             </div>
 
           </aside>
@@ -267,7 +265,7 @@
     <footer class="site-footer" role="contentinfo">
       <div class="container">
         <div class="footer-top-grid">
-          <!-- Col 1: Newspaper Identity & Social Media Channels -->
+          <!-- Col 1: Newspaper Identity & Social Media Placeholders -->
           <div class="footer-col-brand">
             <div class="footer-brand-title">మమేక మహోదయం</div>
             <div class="footer-brand-subtitle">MAMEKA MAHODAYAM DAILY</div>
@@ -319,7 +317,7 @@
             </ul>
           </div>
 
-          <!-- Col 5: Contact Information -->
+          <!-- Col 5: Contact Metadata Placeholders -->
           <div>
             <h3 class="footer-col-title">కార్యాలయ వివరాలు</h3>
             <div class="footer-contact-block">
@@ -358,9 +356,9 @@
     <script src="/js/categories-config.js"></script>
     <script src="/js/districts-config.js"></script>
     <script src="/js/i18n.js"></script>
-    <script src="/js/navigation.js?v=2.2.0"></script>
+    <script src="/js/navigation.js"></script>
     <script src="/js/content-api.js"></script>
-    <script src="/js/chatbot.js?v=2.2.0"></script>
-    <script src="/js/pwa.js?v=2.2.0" defer></script>
+    <script src="/js/pwa.js" defer></script>
+    <script src="/js/chatbot.js" defer></script>
   </body>
 </html>

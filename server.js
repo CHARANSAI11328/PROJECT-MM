@@ -1,5 +1,5 @@
 const path = require('path');
-try { require('dotenv').config({ path: path.join(__dirname, '.env') }); } catch (e) {}
+try { require('dotenv').config({ path: path.join(__dirname, '.env'), override: true }); } catch (e) {}
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -13,7 +13,7 @@ const { uploadFile, deleteFile } = require('./services/storage');
 const { getOptimizedImage } = require('./services/image-optimizer');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5050;
 
 // Production JWT Secret Fallback Check
 const crypto = require('crypto');
@@ -1218,6 +1218,8 @@ app.get(['/api/public/articles', '/api/articles'], async (req, res) => {
         filters.push("LOWER(a.category) IN ('politics', 'రాజకీయాలు')");
       } else if (catLower === 'editorial') {
         filters.push("LOWER(a.category) IN ('editorial', 'సంపాదకీయం')");
+      } else if (catLower === 'business' || catLower === 'commerce') {
+        filters.push("LOWER(a.category) IN ('business', 'commerce', 'వాణిజ్యం', 'బిజినెస్')");
       } else {
         filters.push('(LOWER(a.category) = LOWER(?) OR LOWER(a.category) LIKE ?)');
         params.push(category, `%${catLower}%`);
@@ -1984,52 +1986,49 @@ app.get('/api/admin/articles/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Admin Delete Article API Endpoint
+// Admin Delete Article API Endpoint - Lightning-fast & Accurate (DB & Live Site)
 app.delete('/api/admin/articles/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const existing = await dbGet('SELECT * FROM articles WHERE id = ?', [id]);
+    const existing = await dbGet('SELECT id, title_te, image_url FROM articles WHERE id = ?', [id]);
     if (!existing) {
       return res.status(404).json({ success: false, error: 'Article not found.' });
     }
 
-    // 1. Collect all image URLs belonging to this article
-    const toDeleteUrls = new Set();
-    if (existing.image_url && typeof existing.image_url === 'string' && existing.image_url.trim()) {
-      toDeleteUrls.add(existing.image_url.trim());
-    }
-    if (existing.images_json) {
-      try {
-        const sub = typeof existing.images_json === 'string' ? JSON.parse(existing.images_json) : existing.images_json;
-        if (Array.isArray(sub)) {
-          sub.forEach(u => { if (typeof u === 'string' && u.trim()) toDeleteUrls.add(u.trim()); });
-        }
-      } catch (e) {}
-    }
-    try {
-      const artImgs = await dbAll('SELECT image_url FROM article_images WHERE article_id = ?', [id]);
-      if (Array.isArray(artImgs)) {
-        artImgs.forEach(r => { if (r.image_url && typeof r.image_url === 'string' && r.image_url.trim()) toDeleteUrls.add(r.image_url.trim()); });
-      }
-    } catch (e) {}
-
-    // 2. Permanently delete all photos belonging to this article from database & storage
-    for (const imgUrl of toDeleteUrls) {
-      try {
-        await deleteFile(imgUrl);
-      } catch (err) {
-        console.warn('Failed to delete image file:', imgUrl, err.message);
-      }
-    }
-
-    // 3. Remove article and image relations from database
+    // 1. Immediately delete article and relations from database
     await dbRun('DELETE FROM article_images WHERE article_id = ?', [id]);
     await dbRun('DELETE FROM articles WHERE id = ?', [id]);
 
-    res.json({ success: true, message: 'వార్త మరియు దాని చిత్రాలు శాశ్వతంగా తొలగించబడ్డాయి (Article and media deleted successfully).' });
+    // 2. Return instant HTTP 200 response to caller
+    res.json({
+      success: true,
+      message: 'వార్త డాటాబేస్ మరియు లైవ్ సైట్ నుండి విజయవంతంగా తొలగించబడింది (Article deleted successfully from database and live site).'
+    });
+
+    // 3. Asynchronously handle any non-critical storage unlinking in background
+    setImmediate(async () => {
+      try {
+        if (existing.image_url && typeof existing.image_url === 'string') {
+          const fn = path.basename(existing.image_url);
+          // Only unlink if not a core system image or shared page image
+          if (fn && !fn.startsWith('edition_') && !fn.includes('logo') && !fn.includes('favicon')) {
+            const stillUsed = await dbGet('SELECT id FROM articles WHERE image_url LIKE ? OR images_json LIKE ?', [`%${fn}%`, `%${fn}%`]);
+            if (!stillUsed) {
+              const { imagesDir } = require('./db');
+              const localFp = path.join(imagesDir, fn);
+              if (fs.existsSync(localFp)) {
+                try { fs.unlinkSync(localFp); } catch (e) {}
+              }
+            }
+          }
+        }
+      } catch (bgErr) {
+        console.warn('Background cleanup notice:', bgErr.message);
+      }
+    });
   } catch (err) {
     console.error('Admin delete article error:', err);
-    res.status(500).json({ success: false, error: 'Failed to delete article.' });
+    res.status(500).json({ success: false, error: 'Failed to delete article: ' + (err.message || 'Server error') });
   }
 });
 
@@ -2813,20 +2812,34 @@ app.get(['/api/public/reporters/:id/qr.png', '/api/public/reporters/:id/qr'], as
 });
 
 // Built-in Smart Local Knowledge Engine for Website Chatbot
-function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, totalEditions, allActiveReporters, matchingArticles, latestArticles, categoryStatsSummary, districtStatsSummary, currentPageUrl, currentPageTitle }) {
+function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, totalEditions, allActiveReporters, matchingArticles, latestArticles, categoryStatsSummary, districtStatsSummary, currentPageUrl, currentPageTitle, latestEditionInfo }) {
   const queryLower = (userQuery || '').toLowerCase().trim();
 
-  // 1. Greetings
-  if (/^(hello|hi|hey|నమస్కారం|హలో|హాయ్)$/i.test(queryLower)) {
-    return `నమస్కారం! 🙏 నేను **మమేక మహోదయం AI సహాయకుడిని**.\n\nమా వెబ్‌సైట్‌లోని వార్తలు, విలేఖరుల వివరాలు, ఈ-పేపర్ లేదా ఏ వెబ్‌సైట్ పేజీల వివరాలైనా నన్ను అడగవచ్చు.`;
+  // 1. Greetings & Overview
+  if (/^(hello|hi|hey|నమస్కారం|హలో|హాయ్|నమస్తే|శుభోదయం|గ్రీటింగ్స్)$/i.test(queryLower)) {
+    return `నమస్కారం! 🙏 నేను **మమేక మహోదయం AI సహాయకుడిని**.\n\n` +
+      `మా దినపత్రిక (RNI: APTEL/26/A5988), వెబ్‌సైట్‌లోని తాజా వార్తలు, ఈ-పేపర్ (E-Paper), విలేఖరుల వివరాలు, ప్రకటనల రేట్లు లేదా వెబ్‌సైట్‌లోని ఏ పేజీకైనా నా ద్వారా సులభంగా వెళ్లవచ్చు. మీరు ఏమి తెలుసుకోవాలనుకుంటున్నారో అడగండి!`;
   }
 
-  // 2. Current Page Details
+  // 2. Newspaper Background, Slogan, RNI & History
+  if (/(మమేక మహోదయం|newspaper|పత్రిక|దినపత్రిక|చరిత్ర|history|rni|స్లొగన్|ధ్వేయం|ఆశయం|motto|background|about)/i.test(queryLower) && /(గురించి|ఏమిటి|వివరాలు|చరిత్ర|rni|motto|ధ్వేయం|చెప్పు|సమాచారం)/i.test(queryLower)) {
+    return `📰 **మమేక మహోదయం (MAMEKA MAHODAYAM) దినపత్రిక సమగ్ర పరిచయం:**\n\n` +
+      `• **ధ్వేయం (Motto):** *"సత్యమే ఆధారం... ప్రజాహితమే మా ధ్యేయం!"* మరియు *"నిజం వైపు - జనం కోసం"*.\n` +
+      `• **రిజిస్ట్రేషన్ (RNI No):** **APTEL/26/A5988** (భారత ప్రభుత్వ గుర్తింపు పొందిన తెలుగు దినపత్రిక).\n` +
+      `• **వ్యవస్థాపక ప్రధాన సంపాదకులు:** **వాకా శ్రీనివాసరావు** గారు (ఫోన్: +91 9441085075 / +91 7075652808).\n` +
+      `• **అసోసియేట్ ఎడిటర్:** **కామరాజుగడ్డ శ్రీనివాస విజయ కుమార్** గారు (ఫోన్: +91 9866162808).\n` +
+      `• **తెలంగాణ స్టేట్ బ్యూరో:** **మక్కపాటి నివేదిత** గారు (ఫోన్: +91 9440832347).\n` +
+      `• **ప్రధాన కార్యాలయం:** తెనాలి & సంగం జాగర్లమూడి, గుంటూరు జిల్లా మరియు విజయవాడ, ఆంధ్రప్రదేశ్.\n` +
+      `• **సర్క్యులేషన్ & పాఠకులు:** ప్రతిరోజూ **50,000+** ముద్రణా కాపీలు మరియు నెలకు **2,50,000+** డిజిటల్ పాఠకులతో ఆంధ్రప్రదేశ్, తెలంగాణలలో విస్తృత ఆదరణ పొందుతున్నది.\n\n` +
+      `👉 [మరిన్ని వివరాలకు మా గురించి (About Us) పేజీ చూడండి](/about.html)`;
+  }
+
+  // 3. Current Page Details
   if (/(ఈ పేజీ|current page|ఈ ఆర్టికల్|ఈ వ్యాసం|ఇక్కడ ఏమిటి|this page)/i.test(queryLower)) {
     return `📄 **ప్రస్తుత పేజీ సమాచారం:**\n\n• **పేజీ శీర్షిక:** ${currentPageTitle || 'మమేక మహోదయం'}\n• **URL:** ${currentPageUrl || '/'}\n\nఈ పేజీ లేదా వెబ్‌సైట్‌లోని వార్తలు & విలేఖరుల గురించి ఏ సందేహం ఉన్నా అడగండి!`;
   }
 
-  // 3. Article Counts / Website Statistics
+  // 4. Article Counts / Website Statistics
   if (/(వార్తలు|వార్తా|articles|news|count|సంఖ్య|ఎన్ని|మొత్తం)/i.test(queryLower) && /(ఎన్ని|ఉన్నాయి|count|total|how many|available|మొత్తం|వివరాలు|సమాచారం)/i.test(queryLower)) {
     let statsText = `📰 **మమేక మహోదయం వెబ్‌సైట్ ప్రత్యక్ష వివరాలు (Live Stats):**\n\n`;
     statsText += `• **మొత్తం ప్రచురితమైన వార్తలు:** ${totalArticles} వార్తా కథనాలు\n`;
@@ -2839,18 +2852,22 @@ function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, t
     return statsText;
   }
 
-  // 4. Reporters / Editors / Position / Staff Details
-  if (/(reporter|reporters|editor|position|designation|విలేఖరి|విలేఖరుల|సంపాదకులు|హోదా|టీమ్|బృందం|వాకా|శ్రీనివాసరావు)/i.test(queryLower)) {
+  // 5. Reporters / Editors / Directory Matching
+  if (/(reporter|reporters|editor|position|designation|విలేఖరి|విలేఖరుల|సంపాదకులు|హోదా|టీమ్|బృందం|వాకా|శ్రీనివాసరావు|విజయకుమార్|నివేదిత|ఇమ్మనుయేల్|సాల్మన్|రోసైయ|సుధాకర్|శివ ప్రభాస్|సమీర్|కాలేష|తెలంగాణ|బ్యూరో|bureau)/i.test(queryLower)) {
     const nameMappings = [
       { keys: ['vaka', 'srinivasarao', 'srinivasa rao', 'వాకా', 'శ్రీనివాసరావు', 'editor in chief', 'editor-in-chief', 'ప్రధాన సంపాదకులు'], matchName: 'వాకా శ్రీనివాసరావు' },
       { keys: ['kamarajugadda', 'srinivasa vijay kumar', 'vijay kumar', 'కామరాజుగడ్డ', 'విజయ కుమార్', 'associate editor', 'అసోసియేట్ ఎడిటర్'], matchName: 'కామరాజుగడ్డ' },
-      { keys: ['nivedita', 'makkapati', 'మక్కపాటి', 'నివేదిత'], matchName: 'మక్కపాటి నివేదిత' },
-      { keys: ['immanuel', 'medapati', 'ఇమ్మనుయేల్', 'మేడపాటి'], matchName: 'ఇమ్మనుయేల్' },
-      { keys: ['prabhas', 'barapati', 'శివ ప్రభాస్', 'బరపాటి'], matchName: 'ప్రభాస్' },
+      { keys: ['nivedita', 'makkapati', 'మక్కపాటి', 'నివేదిత', 'telangana bureau', 'తెలంగాణ బ్యూరో'], matchName: 'మక్కపాటి నివేదిత' },
+      { keys: ['immanuel', 'medapati', 'ఇమ్మనుయేల్', 'మేడపాటి', 'east godavari'], matchName: 'ఇమ్మనుయేల్' },
+      { keys: ['prabhas', 'barapati', 'శివ ప్రభాస్', 'బరపాటి', 'ntr'], matchName: 'ప్రభాస్' },
       { keys: ['bhagyam', 'భాగ్యం'], matchName: 'భాగ్యం' },
       { keys: ['sudhakar', 'pulipati', 'సుధాకర్', 'పులిపాటి'], matchName: 'సుధాకర్' },
-      { keys: ['samir beg', 'sameer beg', 'సమీర్ బేగ్'], matchName: 'సమీర్' },
-      { keys: ['sai ram', 'devaki', 'దేవకి సాయి రామ్'], matchName: 'దేవకి' }
+      { keys: ['samir beg', 'sameer beg', 'సమీర్ బేగ్', 'సమీర్'], matchName: 'సమీర్' },
+      { keys: ['salman raj', 'సాల్మన్ రాజ్'], matchName: 'సాల్మన్' },
+      { keys: ['rosaiah', 'రోసైయ'], matchName: 'రోసైయ' },
+      { keys: ['singaraju', 'సింగరాజు', 'మార్కాపురం బ్యూరో'], matchName: 'సింగరాజు' },
+      { keys: ['sai ram', 'devaki', 'దేవకి సాయి రామ్'], matchName: 'దేవకి' },
+      { keys: ['vali', 'వలి', 'కాలేష'], matchName: 'వలి' }
     ];
 
     let matchedReporter = null;
@@ -2870,75 +2887,124 @@ function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, t
 
     if (matchedReporter) {
       return `👤 **విలేఖరి / సంపాదకుల వివరాలు:**\n\n` +
-        `• **పేరు:** ${matchedReporter.name}\n` +
-        `• **హోదా (Position):** ${matchedReporter.designation || 'విలేఖరి'}\n` +
-        `• **జిల్లా/మండలం:** ${matchedReporter.district || 'ఆంధ్రప్రదేశ్'}${matchedReporter.mandal ? ` (${matchedReporter.mandal})` : ''}\n` +
-        `• **సంప్రదించు నంబర్:** ${matchedReporter.phone || 'అందుబాటులో ఉంది'}\n` +
+        `• **పేరు:** **${matchedReporter.name}**\n` +
+        `• **హోదా (Designation):** ${matchedReporter.designation || 'విలేఖరి'}\n` +
+        `• **జిల్లా/పరిధి:** ${matchedReporter.district || 'ఆంధ్రప్రదేశ్'}${matchedReporter.mandal ? ` (${matchedReporter.mandal})` : ''}\n` +
+        `• **ఫోన్ నంబర్:** ${matchedReporter.phone || '+91 7075652808'}\n` +
         `• **ఈమెయిల్:** ${matchedReporter.email || 'mahodayamnews@gmail.com'}\n` +
-        `${matchedReporter.bio ? `• **వివరాలు:** ${matchedReporter.bio}\n` : ''}\n` +
-        `👉 [సంపాదకీయ బృందం పూర్తి వివరాలు](/editorial-team.html)`;
+        `${matchedReporter.bio ? `• **వివరణ:** ${matchedReporter.bio}\n` : ''}\n` +
+        `👉 [సంపాదకీయ బృందం పూర్తి జాబితా చూడండి](/editorial-team.html)`;
     }
 
     if (/(విలేఖరులు|టీమ్|బృందం|సంపాదకులు|reporters|team|editors)/i.test(queryLower)) {
       let repText = `👥 **మమేక మహోదయం సంపాదకీయ బృందం & విలేఖరులు (${totalReporters} మంది):**\n\n`;
       (allActiveReporters || []).slice(0, 8).forEach(r => {
-        repText += `• **${r.name}** - ${r.designation || 'విలేఖరి'} (${r.district || 'ఆంధ్రప్రదేశ్'})\n`;
+        repText += `• **${r.name}** - ${r.designation || 'విలేఖరి'} (${r.district || 'ఆంధ్రప్రదేశ్'}${r.phone ? ` | 📞 ${r.phone}` : ''})\n`;
       });
-      repText += `\n👉 [సంపాదకీయ బృందం పేజీ చూడండి](/editorial-team.html)`;
+      repText += `\n👉 [సంపాదకీయ బృందం పూర్తి డైరెక్టరీ తెరవండి](/editorial-team.html)`;
       return repText;
     }
   }
 
-  // 5. E-Paper & PDF Queries
-  if (/(epaper|ఈ[-–\s]*పేపర్|pdf|పత్రిక|దినపత్రిక|download|డౌన్‌లోడ్|సంచిక)/i.test(queryLower)) {
-    return `🗞️ **మమేక మహోదయం ఈ-పేపర్ (E-Paper):**\n\nమా దినపత్రిక డిజిటల్ PDF సంచికలను మీ మొబైల్ లేదా కంప్యూటర్‌లో ఉచితంగా చదవవచ్చు మరియు డౌన్‌లోడ్ చేసుకోవచ్చు.\n\n👉 [ఈ-పేపర్ చదవడానికి మరియు డౌన్‌లోడ్ చేయడానికి ఇక్కడ క్లిక్ చేయండి](/epaper.html)`;
+  // 6. E-Paper & PDF Queries
+  if (/(epaper|ఈ[-–\s]*పేపర్|pdf|పత్రిక|దినపత్రిక|download|డౌన్‌లోడ్|సంచిక|పేజీలు|pages)/i.test(queryLower)) {
+    const pagesCount = latestEditionInfo ? latestEditionInfo.total_pages || 8 : 8;
+    const editionDate = latestEditionInfo && latestEditionInfo.edition_date ? String(latestEditionInfo.edition_date).split('T')[0] : 'నేటి సంచిక';
+    return `🗞️ **మమేక మహోదయం ఈ-పేపర్ (Digital E-Paper):**\n\n` +
+      `• **సంచిక:** ${editionDate} (పూర్తి రంగుల ముద్రణా ప్రతి)\n` +
+      `• **మొత్తం పేజీలు:** **${pagesCount} పేజీలు**\n` +
+      `• **ఆన్‌లైన్ రీడర్:** పేజీ వారీగా జూమ్ మరియు ఇంటరాక్టివ్ రీడర్ అందుబాటులో ఉంది.\n` +
+      `• **డౌన్‌లోడ్:** ఉచిత పూర్తి PDF డౌన్‌లోడ్ సదుపాయం కలదు.\n\n` +
+      `👉 [ఈ-పేపర్ చదవడానికి మరియు డౌన్‌లోడ్ చేయడానికి ఇక్కడ క్లిక్ చేయండి](/epaper.html)`;
   }
 
-  // 6. Explicit Latest News Queries
-  if (/(latest|recent|తాజా|కొత్త)/i.test(queryLower) && /(news|వార్తలు|వార్తా)/i.test(queryLower)) {
-    if (latestArticles && latestArticles.length > 0) {
-      let artText = `📰 **మా వెబ్‌సైట్‌లోని తాజా వార్తలు:**\n\n`;
-      latestArticles.slice(0, 4).forEach((a, idx) => {
-        const link = a.slug ? `/news/${a.slug}` : `/article.html?id=${a.id}`;
-        artText += `${idx + 1}. **[${a.title_te}](${link})**\n   _${a.category || 'వార్తలు'} • ${a.district || 'ఆంధ్రప్రదేశ్'}_\n\n`;
-      });
-      return artText;
-    }
+  // 7. Contact / Office / Phone / Address / Email
+  if (/(contact|phone|email|office|చిరునామా|ఆఫీస్|ఫోన్|నంబర్|ఈమెయిల్|మమ్మల్ని సంప్రదించండి|సంప్రదించండి|whatsapp|వాట్సాప్|కార్యాలయం|ప్రధాన కార్యాలయం|హెడ్ ఆఫీస్|address)/i.test(queryLower)) {
+    return `📞 **మమేక మహోదయం కార్యాలయ సంప్రదింపు వివరాలు:**\n\n` +
+      `• **ప్రధాన కార్యాలయం (Head Office):** తెనాలి, సంగం జాగర్లమూడి, గుంటూరు జిల్లా, ఆంధ్రప్రదేశ్.\n` +
+      `• **ప్రాంతీయ కార్యాలయం:** విజయవాడ, ఆంధ్రప్రదేశ్.\n` +
+      `• **మొబైల్ & WhatsApp:** **+91 7075652808**, **+91 9441085075**\n` +
+      `• **అధికారిక ఈమెయిల్:** **mahodayamnews@gmail.com**\n` +
+      `• **ప్రధాన సంపాదకులు:** వాకా శ్రీనివాసరావు\n\n` +
+      `👉 [మమ్మల్ని సంప్రదించండి పేజీకి వెళ్లండి](/contact.html)`;
   }
 
-  // 7. Relevant Articles Search Match
+  // 8. Advertising & Media Kit Tariff
+  if (/(advertise|అడ్వర్టైజ్|ప్రకటనలు|యాడ్స్|రేట్లు|tariff|packages|media kit)/i.test(queryLower)) {
+    return `📢 **ప్రకటనల వివరాలు & టారిఫ్ (Advertisement Tariff):**\n\n` +
+      `• **ముద్రణా ప్రకటనలు:** Full Page, Half Page, Quarter Page మరియు బాటమ్ స్ట్రిప్ యాడ్స్ లభ్యం.\n` +
+      `• **డిజిటల్ బ్యానర్లు:** వెబ్‌సైట్ మరియు PWA మొబైల్ యాప్‌లో హై-విజిబిలిటీ బ్యానర్లు.\n` +
+      `• **సర్క్యులేషన్:** రోజూ 50,000+ ప్రింట్ కాపీలు, నెలకు 2,50,000+ డిజిటల్ వీక్షణలు.\n` +
+      `• **బుకింగ్ సంప్రదింపు:** ఫోన్: +91 7075652808 | ఈమెయిల్: mahodayamnews@gmail.com\n\n` +
+      `👉 [ప్రకటనల పేజీని తెరవండి](/advertise.html)`;
+  }
+
+  // 9. Search & Verification (Telling whether news is present or not)
   if (matchingArticles && matchingArticles.length > 0) {
-    let artText = `📰 **మా వెబ్‌సైట్‌లోని సంబంధిత వార్తలు:**\n\n`;
+    let artText = `📰 **మీరు వెతికిన అంశంపై మా వెబ్‌సైట్‌లో ప్రచురితమైన కథనాలు లభించాయి:**\n\n`;
     matchingArticles.slice(0, 4).forEach((a, idx) => {
       const link = a.slug ? `/news/${a.slug}` : `/article.html?id=${a.id}`;
       artText += `${idx + 1}. **[${a.title_te}](${link})**\n   _${a.category || 'వార్తలు'} • ${a.district || 'ఆంధ్రప్రదేశ్'}_\n\n`;
     });
+    artText += `👉 [మరిన్ని ఫలితాల కోసం సెర్చ్ పేజీ చూడండి](/search.html?q=${encodeURIComponent(userQuery)})`;
     return artText;
   }
 
-  // 8. Contact / Advertising
-  if (/(contact|phone|email|advertise|అడ్వర్టైజ్|ప్రకటనలు|మమ్మల్ని సంప్రదించండి|సంప్రదించండి)/i.test(queryLower)) {
-    return `📞 **సంప్రదించే వివరాలు:**\n\n• **ఈమెయిల్:** mahodayamnews@gmail.com\n• **ఫోన్:** +91 7075652808\n• **ప్రకటనలు:** [ప్రకటనల పేజీ](/advertise.html)\n• **చిరునామా:** బాపట్ల, ఆంధ్రప్రదేశ్.`;
+  // If user asked about a specific news item, person, or event not in DB:
+  if (/(వార్త|ఉందా|జరిగిందా|ప్రమాదం|కేసు|మంత్రి|సీఎం|పోలీస్|రోడ్డు|విషయం|న్యూస్|news|article|present|available)/i.test(queryLower)) {
+    return `క్షమించండి, మీరు అడిగిన **"${userQuery}"** అంశంపై ప్రస్తుతం మా వెబ్‌సైట్‌లో ప్రత్యేకంగా ప్రచురితమైన వార్తా కథనం లభించలేదు.\n\n` +
+      `మా దినపత్రిక ప్రతిరోజూ ప్రచురించే తాజా వార్తల కోసం దయచేసి **ఈ-పేపర్** చూడండి లేదా మా **శోధన (Search)** పేజీ ద్వారా వెతకండి.\n\n` +
+      `👉 [ఈ-పేపర్ సంచిక చూడండి](/epaper.html) | [వార్తను శోధించండి](/search.html?q=${encodeURIComponent(userQuery)})`;
   }
 
-  return `క్షమించండి, ఈ ప్రశ్నకు సంబంధించిన వివరాలు లభ్యం కాలేదు.\n\nమీరు మా వెబ్‌సైట్‌లోని **వార్తలు, ఈ-పేపర్, విలేఖరుల వివరాలు లేదా సంపాదకీయ బృందం** గురించి ప్రశ్నలు అడగవచ్చు.\n\n👉 [తాజా వార్తలు చూడండి](/category.html?c=latest)`;
+  return `క్షమించండి, మీ ప్రశ్నకు సరిపోయే వివరాలు మా వద్ద లభ్యం కాలేదు.\n\n` +
+    `మీరు **వార్తలు, ఈ-పేపర్, విలేఖరుల జాబితా, ఆఫీస్ చిరునామా లేదా ప్రకటనల రేట్లు** గురించి నన్ను అడగవచ్చు. లేదా నేను మిమ్మల్ని సంబంధిత పేజీకి తీసుకెళ్లగలను!`;
 }
 
 // Helper to detect website manipulation action intent
 function detectWebsiteAction(queryLower) {
-  const norm = (queryLower || '').replace(/[\u2010-\u2015\u2212]/g, '-');
-  if (/(epaper|ఈ[-–\s]*పేపర్|pdf|పత్రిక|దినపత్రిక|open epaper|show epaper|తెరవండి|డౌన్‌లోడ్)/i.test(norm)) {
-    return { type: 'NAVIGATE', url: '/epaper.html', label: '📖 ఈ-పేపర్ తెరవండి (Open E-Paper)' };
+  const norm = (queryLower || '').replace(/[\u2010-\u2015\u2212]/g, '-').trim();
+  const isDirectNavigation = /(redirect|take me|go to|goto|open|navigate|show me|తీసుకెళ్ళు|తీసుకువెళ్ళు|వెళ్ళు|ఓపెన్|చూపించు|తెరవండి|వెళ్ళాలి)/i.test(norm);
+
+  // E-Paper
+  if (/(epaper|ఈ[-–\s]*పేపర్|pdf|పత్రిక|దినపత్రిక|download|డౌన్‌లోడ్)/i.test(norm)) {
+    return { type: 'NAVIGATE', url: '/epaper.html', label: '📖 ఈ-పేపర్ తెరవండి (Open E-Paper)', autoRedirect: isDirectNavigation };
   }
+  // Editorial Team
   if (/(reporters|editorial[-–\s]*team|సంపాదకీయ[-–\s]*బృందం|విలేఖరుల[-–\s]*జాబితా|మొత్తం[-–\s]*విలేఖరులు|team[-–\s]*page|సంపాదకులు|విలేఖరులు)/i.test(norm)) {
-    return { type: 'NAVIGATE', url: '/editorial-team.html', label: '👥 సంపాదకీయ బృందం చూడండి (View Team)' };
+    return { type: 'NAVIGATE', url: '/editorial-team.html', label: '👥 సంపాదకీయ బృందం (Editorial Team)', autoRedirect: isDirectNavigation };
   }
-  if (/(advertise|ప్రకటనలు|ad rates)/i.test(norm)) {
-    return { type: 'NAVIGATE', url: '/advertise.html', label: '📢 ప్రకటనల వివరాలు (View Ad Rates)' };
+  // Advertising
+  if (/(advertise|ప్రకటనలు|ad rates|టారిఫ్|యాడ్స్)/i.test(norm)) {
+    return { type: 'NAVIGATE', url: '/advertise.html', label: '📢 ప్రకటనల వివరాలు (View Ad Rates)', autoRedirect: isDirectNavigation };
   }
-  if (/(contact|సంప్రదించండి|contact us|office|ఫోన్|ఈమెయిల్)/i.test(norm)) {
-    return { type: 'NAVIGATE', url: '/contact.html', label: '📞 సంప్రదించే పేజీ (Contact Us)' };
+  // Contact
+  if (/(contact|సంప్రదించండి|contact us|office|ఫోన్|ఈమెయిల్|చిరునామా|ఆఫీస్)/i.test(norm)) {
+    return { type: 'NAVIGATE', url: '/contact.html', label: '📞 సంప్రదించే పేజీ (Contact Us)', autoRedirect: isDirectNavigation };
   }
+  // About
+  if (/(about|మా గురించి|చరిత్ర|history|background)/i.test(norm)) {
+    return { type: 'NAVIGATE', url: '/about.html', label: 'ℹ️ మా గురించి (About Us)', autoRedirect: isDirectNavigation };
+  }
+  // Privacy
+  if (/(privacy|గోప్యత|పాలసీ|policy)/i.test(norm)) {
+    return { type: 'NAVIGATE', url: '/privacy.html', label: '🔒 గోప్యతా విధానం (Privacy Policy)', autoRedirect: isDirectNavigation };
+  }
+  // Terms
+  if (/(terms|నిబంధనలు|షరతులు|conditions)/i.test(norm)) {
+    return { type: 'NAVIGATE', url: '/terms.html', label: '📜 నిబంధనలు (Terms of Service)', autoRedirect: isDirectNavigation };
+  }
+  // Home
+  if (/(home|హోమ్|ముఖ్య పేజీ|main page)/i.test(norm)) {
+    return { type: 'NAVIGATE', url: '/', label: '🏠 హోమ్ పేజీ (Home Page)', autoRedirect: isDirectNavigation };
+  }
+  // Search
+  if (/(search|వెతుకు|శోధించు|అన్వేషణ|find)/i.test(norm)) {
+    const cleanQ = norm.replace(/(search|for|find|శోధించు|వెతుకు|గురించి|తీసుకెళ్ళు|ఓపెన్)/gi, '').trim();
+    const searchUrl = cleanQ ? `/search.html?q=${encodeURIComponent(cleanQ)}` : '/search.html';
+    return { type: 'SEARCH', query: cleanQ, url: searchUrl, label: `🔍 శోధించండి (Search${cleanQ ? ` "${cleanQ}"` : ''})`, autoRedirect: isDirectNavigation };
+  }
+  // Language Switch
   if (/(english|ఇంగ్లీష్|switch to english)/i.test(norm)) {
     return { type: 'SWITCH_LANGUAGE', lang: 'en', label: '🌐 Switch to English' };
   }
@@ -2946,6 +3012,7 @@ function detectWebsiteAction(queryLower) {
     return { type: 'SWITCH_LANGUAGE', lang: 'te', label: '🌐 Switch to Telugu' };
   }
 
+  // Districts
   const districtMap = {
     'bapatla': 'బాపట్ల', 'బాపట్ల': 'బాపట్ల',
     'prakasam': 'ప్రకాశం', 'ప్రకాశం': 'ప్రకాశం',
@@ -2956,22 +3023,26 @@ function detectWebsiteAction(queryLower) {
   };
   for (const [key, name] of Object.entries(districtMap)) {
     if (norm.includes(key)) {
-      return { type: 'FILTER_DISTRICT', district: key, url: `/district.html?d=${key}`, label: `📍 ${name} వార్తలు (View ${name} News)` };
+      return { type: 'FILTER_DISTRICT', district: key, url: `/district.html?d=${key}`, label: `📍 ${name} వార్తలు (View ${name} News)`, autoRedirect: isDirectNavigation };
     }
   }
 
+  // Categories
   const catMap = {
     'politics': 'రాజకీయాలు', 'రాజకీయాలు': 'రాజకీయాలు',
     'state': 'రాష్ట్ర వార్తలు', 'రాష్ట్ర': 'రాష్ట్ర వార్తలు',
     'cinema': 'సినిమా', 'సినిమా': 'సినిమా',
     'sports': 'క్రీడలు', 'క్రీడలు': 'క్రీడలు',
-    'education': 'విద్య & ఉద్యోగాలు', 'విద్య': 'విద్య & ఉద్యోగాలు'
+    'education': 'విద్య & ఉద్యోగాలు', 'విద్య': 'విద్య & ఉద్యోగాలు',
+    'editorial': 'సంపాదకీయం', 'సంపాదకీయం': 'సంపాదకీయం',
+    'national': 'జాతీయ వార్తలు', 'జాతీయ': 'జాతీయ వార్తలు'
   };
   for (const [key, name] of Object.entries(catMap)) {
     if (norm.includes(key)) {
-      return { type: 'FILTER_CATEGORY', category: key, url: `/category.html?c=${key}`, label: `📰 ${name} (View ${name})` };
+      return { type: 'FILTER_CATEGORY', category: key, url: `/category.html?c=${key}`, label: `📰 ${name} (View ${name})`, autoRedirect: isDirectNavigation };
     }
   }
+
   return null;
 }
 
@@ -3059,6 +3130,7 @@ app.post('/api/chatbot', async (req, res) => {
     let totalEditions = 0;
     let categoryStatsSummary = '';
     let districtStatsSummary = '';
+    let latestEditionInfo = null;
 
     try {
       const artCountRow = await dbGet("SELECT COUNT(*) as count FROM articles WHERE status = 'published'");
@@ -3067,7 +3139,7 @@ app.post('/api/chatbot', async (req, res) => {
       const repCountRow = await dbGet("SELECT COUNT(*) as count FROM reporters WHERE status = 'active'");
       totalReporters = repCountRow ? parseInt(repCountRow.count || repCountRow['COUNT(*)'] || 0) : 0;
 
-      const edCountRow = await dbGet("SELECT COUNT(*) as count FROM editions");
+      const edCountRow = await dbGet("SELECT COUNT(*) as count FROM editions WHERE file_size_bytes > 0 AND status = 'published'");
       totalEditions = edCountRow ? parseInt(edCountRow.count || edCountRow['COUNT(*)'] || 0) : 0;
 
       const catRows = await dbAll("SELECT category, COUNT(*) as count FROM articles WHERE status = 'published' GROUP BY category");
@@ -3079,6 +3151,8 @@ app.post('/api/chatbot', async (req, res) => {
       if (distRows && distRows.length > 0) {
         districtStatsSummary = distRows.map(r => `${r.district}: ${r.count || r['COUNT(*)']}`).join(', ');
       }
+
+      latestEditionInfo = await dbGet("SELECT id, edition_date, total_pages, edition_name, pdf_filename, file_size_bytes FROM editions WHERE status = 'published' AND file_size_bytes > 0 ORDER BY edition_date DESC, created_at DESC LIMIT 1");
     } catch (e) {
       console.warn('Chatbot stats aggregation warning:', e.message);
     }
@@ -3105,55 +3179,81 @@ app.post('/api/chatbot', async (req, res) => {
 
     // Build structured real-time context text for Gemini
     let websiteContext = `
-[CURRENT USER VISITING PAGE CONTEXT]:
+[NEWSPAPER IDENTITY & CORE FACTS]:
+- Official Name: మమేక మహోదయం (MAMEKA MAHODAYAM) - Telugu Daily Newspaper (తెలుగు దినపత్రిక).
+- Slogan / Motto: "సత్యమే ఆధారం... ప్రజాహితమే మా ధ్యేయం!" and "నిజం వైపు - జనం కోసం".
+- RNI Registration Number: APTEL/26/A5988 (Government of India registered).
+- Founder & Editor-in-Chief (వ్యవస్థాపక ప్రధాన సంపాదకులు): వాకా శ్రీనివాసరావు (Vaka Srinivasa Rao) | Phone: +91 9441085075, +91 7075652808.
+- Associate Editor (అసోసియేట్ ఎడిటర్): కామరాజుగడ్డ శ్రీనివాస విజయ కుమార్ (Kamarajugadda Srinivasa Vijaya Kumar) | Phone: +91 9866162808.
+- Telangana State Bureau: మక్కపాటి నివేదిత | Phone: +91 9440832347.
+- Head Office: తెనాలి & సంగం జాగర్లమూడి, గుంటూరు జిల్లా, ఆంధ్రప్రదేశ్.
+- Regional Office: విజయవాడ, ఆంధ్రప్రదేశ్.
+- Official Email: mahodayamnews@gmail.com | Official WhatsApp & Phone: +91 7075652808.
+- Circulation & Reach: 50,000+ Daily Print circulation across Andhra Pradesh & Telangana; 2,50,000+ Monthly digital readers; covering 26+ districts.
+- Advertising Tariff: Full Page, Half Page, Quarter Page, Bottom Strip, Digital banner advertising (/advertise.html).
+
+[DIGITAL E-PAPER PUBLICATION]:
+- Status: Daily 8-page full color print edition replica available online every morning.
+- Interactive Reader URL: /epaper.html (features high-resolution zoom, full screen, page 1 to 8 selector, and free full-issue PDF download).
+- Latest Edition Date: ${latestEditionInfo && latestEditionInfo.edition_date ? String(latestEditionInfo.edition_date).split('T')[0] : '2026-10-19'} (${latestEditionInfo ? latestEditionInfo.total_pages || 8 : 8} Pages).
+
+[CURRENT USER VISITING CONTEXT]:
 - User Current URL: ${currentPageUrl || '/'}
 - Page Title: ${currentPageTitle || 'మమేక మహోదయం'}
 - Language Preference: ${lang || 'te'}
-- Page Content Excerpt: ${pageExcerpt ? pageExcerpt.slice(0, 400) : 'N/A'}
+- Page Excerpt: ${pageExcerpt ? pageExcerpt.slice(0, 400) : 'N/A'}
 
-[LIVE WEBSITE DATABASE STATISTICS & COUNTS]:
-- Total Published News Articles on Website: ${totalArticles}
+[LIVE DATABASE STATISTICS]:
+- Total Published News Articles: ${totalArticles}
 - Total Active Reporters & Editors in Directory: ${totalReporters}
-- Total E-Paper Digital Editions Uploaded: ${totalEditions}
-- Articles by Category: ${categoryStatsSummary || 'Various categories available'}
-- Articles by District: ${districtStatsSummary || 'Various districts available'}
+- Total E-Paper Editions: ${totalEditions}
+- Categories Breakdown: ${categoryStatsSummary || 'Various categories available'}
+- Districts Breakdown: ${districtStatsSummary || 'Various districts available'}
 
-[WEBSITE NAVIGATION & TAXONOMY]:
-- Categories: State (రాష్ట్ర వార్తలు), Politics (రాజకీయాలు), National (జాతీయ అంతర్జాతీయ), Cinema (సినిమా), Sports (క్రీడలు), Education (విద్య & ఉద్యోగాలు), Editorial (సంపాదకీయం).
-- Districts: Bapatla (బాపట్ల), Prakasam (ప్రకాశం), Markapuram (మార్కాపురం), Guntur (గుంటూరు), Palnadu (పల్నాడు), Krishna (కృష్ణా).
+[COMPLETE SITEMAP & PAGE NAVIGATION TARGETS]:
+- Home Page: /
 - E-Paper Reader & PDF Download: /epaper.html
 - Editorial & Reporters Directory: /editorial-team.html
-- Contact Page & Office Address: /contact.html (Bapatla, AP | Phone: +91 7075652808 | Email: mahodayamnews@gmail.com)
-- Advertising Rates Page: /advertise.html
+- Contact Us & Office Address: /contact.html
+- Advertising Rates & Media Kit: /advertise.html
+- About Newspaper & Mission: /about.html
+- Privacy Policy: /privacy.html
+- Terms & Conditions: /terms.html
+- Search News: /search.html?q=...
+- Category Feeds: /category.html?c=state, politics, national, cinema, sports, education, editorial
+- District Feeds: /district.html?d=bapatla, prakasam, markapuram, guntur, palnadu, krishna
 
-[COMPLETE REPORTERS & EDITORIAL TEAM DIRECTORY]:
+[COMPLETE ACTIVE REPORTERS DIRECTORY (${allActiveReporters.length} JOURNALISTS)]:
 `;
     if (allActiveReporters.length > 0) {
       allActiveReporters.forEach((r, idx) => {
-        websiteContext += `${idx + 1}. Name: "${r.name}" | Designation: "${r.designation || 'Reporter'}" | District: "${r.district || 'N/A'}" | Mandal: "${r.mandal || 'N/A'}" | Phone: "${r.phone || 'N/A'}" | Email: "${r.email || 'N/A'}" | Bio: "${r.bio || 'N/A'}"\n`;
+        websiteContext += `${idx + 1}. Name: "${r.name}" | Designation: "${r.designation || 'Reporter'}" | District: "${r.district || 'N/A'}" | Mandal: "${r.mandal || 'N/A'}" | Phone: "${r.phone || 'N/A'}" | Email: "${r.email || 'N/A'}"\n`;
       });
     }
 
-    websiteContext += `\n[RELEVANT & LATEST PUBLISHED NEWS ARTICLES ON WEBSITE]:\n`;
+    websiteContext += `\n[PUBLISHED NEWS ARTICLES MATCHING QUERY OR RECENT]:\n`;
     if (finalArticles.length > 0) {
       finalArticles.forEach((a, idx) => {
         const link = a.slug ? `/news/${a.slug}` : `/article.html?id=${a.id}`;
         const contentExcerpt = (a.content_te || a.summary_te || '').slice(0, 350);
         websiteContext += `${idx + 1}. Title: "${a.title_te}" ${a.title_en ? `(${a.title_en})` : ''} | Category: ${a.category || 'General'} | District: ${a.district || 'N/A'} | Link: [${a.title_te}](${link})\n   Summary: ${contentExcerpt}\n\n`;
       });
+    } else {
+      websiteContext += `(No specific published articles matching this query found in database)\n`;
     }
 
-    // Try Gemini API if key is present
-    let apiKey = (process.env.GEMINI_API_KEY || '').trim();
+    // Read active Gemini API key directly from .env first to guarantee latest user key
+    let apiKey = '';
+    try {
+      const envPath = path.join(__dirname, '.env');
+      if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, 'utf8');
+        const match = envContent.match(/GEMINI_API_KEY\s*=\s*([^\r\n]+)/);
+        if (match && match[1]) apiKey = match[1].trim();
+      }
+    } catch (e) {}
     if (!apiKey) {
-      try {
-        const envPath = path.join(__dirname, '.env');
-        if (fs.existsSync(envPath)) {
-          const envContent = fs.readFileSync(envPath, 'utf8');
-          const match = envContent.match(/GEMINI_API_KEY\s*=\s*([^\r\n]+)/);
-          if (match && match[1]) apiKey = match[1].trim();
-        }
-      } catch (e) {}
+      apiKey = (process.env.GEMINI_API_KEY || '').trim();
     }
 
     let replyText = '';
@@ -3163,20 +3263,34 @@ app.post('/api/chatbot', async (req, res) => {
       const systemInstructionText = `You are "మమేక మహోదయం AI అసిస్టెంట్" (Mameka Mahodayam AI Assistant), the official virtual guide and interactive website controller for the MAMEKA MAHODAYAM (మమేక మహోదయం) Telugu daily newspaper website.
 
 YOUR RESPONSIBILITIES & CAPABILITIES:
-1. You have DIRECT access to live database statistics, complete reporter directory, published news articles, and the user's current webpage context.
-2. If asked about article counts or website statistics, quote the exact total count from the live database statistics provided in context.
-3. If asked about any reporter or editor, check the complete directory in context and provide exact details (name, position, district, phone, email).
-4. WEBSITE MANIPULATION / ACTIONS:
-   If the user asks to navigate, open a section, search, change language, or view a category/district, include an ACTION directive at the VERY END of your response in exact format:
-   ACTION_JSON:{"type":"NAVIGATE|FILTER_DISTRICT|FILTER_CATEGORY|SWITCH_LANGUAGE|SEARCH|SCROLL","url":"/path","label":"Action Button Text","payload":{}}
+1. ENCYCLOPEDIC KNOWLEDGE: You know every detail about Mameka Mahodayam (motto, RNI: APTEL/26/A5988, editor-in-chief వాకా శ్రీనివాసరావు, associate editor కామరాజుగడ్డ శ్రీనివాస విజయ కుమార్, Telangana bureau మక్కపాటి నివేదిత, office addresses in Tenali, Sangam Jagarlamudi, Vijayawada, phone +91 7075652808, advertising packages, e-paper, and all 21 reporters).
+2. SEARCH & VERIFICATION:
+   - When the user asks if a specific news story, topic, or event is present on the website:
+     * Check the published news articles in the context.
+     * If MATCHING articles are found: Confirm that the news IS available, quote the headline and key summary, provide the markdown link [వార్త చదవండి](/article.html?id=...), and add an action to open it.
+     * If NO matching articles are found in the website database:
+       Explicitly state that this specific story is NOT currently published on the website:
+       "క్షమించండి, మీరు అడిగిన అంశంపై ప్రస్తుతం మా వెబ్‌సైట్‌లో ప్రచురితమైన ప్రత్యేక కథనం లభించలేదు. అయితే మా తాజా ఈ-పేపర్ సంచికలో లేదా సెర్చ్ పేజీలో వెతకవచ్చు."
+       And emit an ACTION_JSON with type "SEARCH" or "NAVIGATE" pointing to /search.html?q=... or /epaper.html!
+3. PAGE REDIRECTION & WEBSITE ACTIONS:
+   - When the user asks to navigate, open, go to, view, or redirect to any page, category, district, or section (e.g. "take me to epaper", "open contact page", "బాపట్ల వార్తలకు తీసుకెళ్ళు", "redirect me to...", "ఓపెన్ చేయ్"):
+     * Confirm politely in your response text that you are directing them there.
+     * At the VERY END of your response, output an ACTION_JSON with "autoRedirect": true.
+     Example format:
+     ACTION_JSON:{"type":"NAVIGATE|FILTER_DISTRICT|FILTER_CATEGORY|SWITCH_LANGUAGE|SEARCH","url":"/path","label":"Action Button Text","autoRedirect":true}
+   - If the user asks a general question where navigating is optional, output "autoRedirect": false.
    Example actions:
-   - For E-Paper: ACTION_JSON:{"type":"NAVIGATE","url":"/epaper.html","label":"📖 ఈ-పేపర్ తెరవండి"}
-   - For Bapatla News: ACTION_JSON:{"type":"FILTER_DISTRICT","district":"bapatla","url":"/district.html?d=bapatla","label":"📍 బాపట్ల వార్తలు"}
-   - For Politics: ACTION_JSON:{"type":"FILTER_CATEGORY","category":"politics","url":"/category.html?c=politics","label":"📰 రాజకీయాలు"}
-   - For Editorial Team: ACTION_JSON:{"type":"NAVIGATE","url":"/editorial-team.html","label":"👥 సంపాదకీయ బృందం"}
-   - For Language Switch to English: ACTION_JSON:{"type":"SWITCH_LANGUAGE","lang":"en","label":"🌐 Switch to English"}
-5. Answer questions about news, reporters, e-paper, and site info accurately. Refuse non-website general trivia or outside topics.
-6. Format your responses with emojis, clean markdown links, and bullet points. Respond in Telugu if asked in Telugu, or English if asked in English.`;
+   - E-Paper: ACTION_JSON:{"type":"NAVIGATE","url":"/epaper.html","label":"📖 ఈ-పేపర్ తెరవండి (Open E-Paper)","autoRedirect":false}
+   - Contact: ACTION_JSON:{"type":"NAVIGATE","url":"/contact.html","label":"📞 సంప్రదించండి (Contact Us)","autoRedirect":false}
+   - Editorial Team: ACTION_JSON:{"type":"NAVIGATE","url":"/editorial-team.html","label":"👥 సంపాదకీయ బృందం (Editorial Team)","autoRedirect":false}
+   - Advertise: ACTION_JSON:{"type":"NAVIGATE","url":"/advertise.html","label":"📢 ప్రకటనల వివరాలు (Ad Rates)","autoRedirect":false}
+   - Bapatla News: ACTION_JSON:{"type":"FILTER_DISTRICT","district":"bapatla","url":"/district.html?d=bapatla","label":"📍 బాపట్ల వార్తలు","autoRedirect":false}
+   - Politics: ACTION_JSON:{"type":"FILTER_CATEGORY","category":"politics","url":"/category.html?c=politics","label":"📰 రాజకీయాలు","autoRedirect":false}
+   - Search: ACTION_JSON:{"type":"SEARCH","query":"search term","url":"/search.html?q=search+term","label":"🔍 శోధించండి","autoRedirect":false}
+4. TONE & ACCURACY:
+   - Respond in fluent, polite Telugu if the user writes in Telugu, or English if they write in English.
+   - Use bold titles, bullet points, emoji accents, and markdown links.
+   - Never invent outside rumors. Rely solely on true information about Mameka Mahodayam.`;
 
       const contentsPayload = [];
       if (Array.isArray(history) && history.length > 0) {
@@ -3196,7 +3310,7 @@ YOUR RESPONSIBILITIES & CAPABILITIES:
         parts: [{ text: currentPromptWithContext }]
       });
 
-      const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+      const modelsToTry = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
       for (const modelName of modelsToTry) {
         try {
           const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -3206,7 +3320,7 @@ YOUR RESPONSIBILITIES & CAPABILITIES:
             body: JSON.stringify({
               contents: contentsPayload,
               systemInstruction: { parts: [{ text: systemInstructionText }] },
-              generationConfig: { temperature: 0.2, maxOutputTokens: 1000 }
+              generationConfig: { temperature: 0.2, maxOutputTokens: 1200 }
             })
           });
 
@@ -3214,10 +3328,18 @@ YOUR RESPONSIBILITIES & CAPABILITIES:
             const geminiData = await geminiRes.json();
             if (geminiData && geminiData.candidates && geminiData.candidates[0] && geminiData.candidates[0].content && geminiData.candidates[0].content.parts) {
               replyText = geminiData.candidates[0].content.parts.map(p => p.text).join('\n');
-              if (replyText) break;
+              if (replyText) {
+                console.log(`✓ [AI CHATBOT] Generated response using Gemini model: ${modelName}`);
+                break;
+              }
             }
+          } else {
+            const errBody = await geminiRes.text();
+            console.warn(`[AI CHATBOT] Model ${modelName} returned status ${geminiRes.status}:`, errBody.slice(0, 120));
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn(`[AI CHATBOT] Fetch error for model ${modelName}:`, e.message);
+        }
       }
     }
 
@@ -3245,11 +3367,12 @@ YOUR RESPONSIBILITIES & CAPABILITIES:
         categoryStatsSummary,
         districtStatsSummary,
         currentPageUrl,
-        currentPageTitle
+        currentPageTitle,
+        latestEditionInfo
       });
     }
 
-    // Detect action intent if not set
+    // Detect action intent if not set by Gemini
     if (!action) {
       action = detectWebsiteAction(queryLower);
     }
@@ -3259,7 +3382,6 @@ YOUR RESPONSIBILITIES & CAPABILITIES:
       reply: replyText,
       action: action || null
     });
-
   } catch (err) {
     console.error('Chatbot API error:', err);
     res.status(500).json({

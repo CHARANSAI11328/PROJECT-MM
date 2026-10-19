@@ -191,67 +191,6 @@
   color: #ffcc00 !important;
 }
 
-/* TOP BAR AI ASSISTANT BUTTON (DESKTOP) */
-.top-ai-header-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, #7c3aed 0%, #be185d 100%);
-  color: #ffffff !important;
-  font-weight: 700;
-  font-size: 0.8rem;
-  padding: 3px 10px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  line-height: 1.2;
-}
-
-.top-ai-btn-icon {
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  object-fit: contain;
-  background: #ffffff;
-  border: 1px solid #ffcc00;
-  flex-shrink: 0;
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.top-ai-header-btn:hover {
-  background: linear-gradient(135deg, #6d28d9 0%, #9d174d 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(190, 24, 93, 0.45);
-}
-
-.top-ai-header-btn:active {
-  transform: scale(0.97);
-}
-
-/* OFFICIAL EMBLEM / MASTHEAD LOGO - HIDE FROM PAGE HEADERS PER USER REQUEST */
-.masthead-official-logo {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  width: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-/* OFFICIAL PROMOTIONAL WIDGET */
-.epaper-promo-widget {
-  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
-  border: 1.5px solid #f472b6;
-  border-radius: 12px;
-  padding: 18px 16px;
-  text-align: center;
-  box-shadow: 0 4px 14px rgba(216, 27, 122, 0.08);
-  margin-top: var(--space-md, 16px);
-}
-
 .masthead-grid {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -4541,44 +4480,6 @@ body {
     gap: 3px !important;
   }
 
-  .mobile-ai-badge {
-    background: linear-gradient(135deg, #7c3aed 0%, #be185d 100%) !important;
-    color: #ffffff !important;
-    font-size: 0.76rem !important;
-    font-weight: 700 !important;
-    padding: 3px 8px !important;
-    border-radius: 14px !important;
-    text-decoration: none !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    border: 1px solid rgba(255, 255, 255, 0.4) !important;
-    cursor: pointer !important;
-    box-shadow: 0 1px 4px rgba(124, 58, 237, 0.3) !important;
-    line-height: 1 !important;
-  }
-
-  .mobile-ai-badge-icon {
-    width: 15px !important;
-    height: 15px !important;
-    border-radius: 50% !important;
-    object-fit: contain !important;
-    background: #ffffff !important;
-    border: 1px solid #ffcc00 !important;
-    flex-shrink: 0 !important;
-  }
-
-  .mobile-ai-badge:active {
-    transform: scale(0.95);
-  }
-
-  .mobile-header-logo {
-    display: none !important;
-    visibility: hidden !important;
-    width: 0 !important;
-    height: 0 !important;
-  }
-
   .mobile-search-trigger-btn {
     width: 36px !important;
     height: 36px !important;
@@ -4845,5 +4746,44 @@ body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
   }
 }
+
+/* TOP BAR AI ASSISTANT BUTTON */
+.top-ai-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #7c3aed 0%, #be185d 100%);
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  line-height: 1.2;
+}
+
+.top-ai-header-btn:hover {
+  background: linear-gradient(135deg, #6d28d9 0%, #9d174d 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(190, 24, 93, 0.45);
+}
+
+.top-ai-header-btn:active {
+  transform: scale(0.97);
+}
+
+/* PURGE / HIDE ANY BOTTOM FLOATING LAUNCHER */
+#mameka-chat-launcher {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 
 
