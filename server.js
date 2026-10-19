@@ -2829,7 +2829,7 @@ function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, t
       `• **వ్యవస్థాపక ప్రధాన సంపాదకులు:** **వాకా శ్రీనివాసరావు** గారు (ఫోన్: +91 9441085075 / +91 7075652808).\n` +
       `• **అసోసియేట్ ఎడిటర్:** **కామరాజుగడ్డ శ్రీనివాస విజయ కుమార్** గారు (ఫోన్: +91 9866162808).\n` +
       `• **తెలంగాణ స్టేట్ బ్యూరో:** **మక్కపాటి నివేదిత** గారు (ఫోన్: +91 9440832347).\n` +
-      `• **ప్రధాన కార్యాలయం:** తెనాలి & సంగం జాగర్లమూడి, గుంటూరు జిల్లా మరియు విజయవాడ, ఆంధ్రప్రదేశ్.\n` +
+      `• **ప్రధాన కార్యాలయం (Head Office):** బాపట్ల, బాపట్ల జిల్లా, ఆంధ్రప్రదేశ్.\n` +
       `• **సర్క్యులేషన్ & పాఠకులు:** ప్రతిరోజూ **50,000+** ముద్రణా కాపీలు మరియు నెలకు **2,50,000+** డిజిటల్ పాఠకులతో ఆంధ్రప్రదేశ్, తెలంగాణలలో విస్తృత ఆదరణ పొందుతున్నది.\n\n` +
       `👉 [మరిన్ని వివరాలకు మా గురించి (About Us) పేజీ చూడండి](/about.html)`;
   }
@@ -2921,8 +2921,7 @@ function generateLocalChatbotReply({ userQuery, totalArticles, totalReporters, t
   // 7. Contact / Office / Phone / Address / Email
   if (/(contact|phone|email|office|చిరునామా|ఆఫీస్|ఫోన్|నంబర్|ఈమెయిల్|మమ్మల్ని సంప్రదించండి|సంప్రదించండి|whatsapp|వాట్సాప్|కార్యాలయం|ప్రధాన కార్యాలయం|హెడ్ ఆఫీస్|address)/i.test(queryLower)) {
     return `📞 **మమేక మహోదయం కార్యాలయ సంప్రదింపు వివరాలు:**\n\n` +
-      `• **ప్రధాన కార్యాలయం (Head Office):** తెనాలి, సంగం జాగర్లమూడి, గుంటూరు జిల్లా, ఆంధ్రప్రదేశ్.\n` +
-      `• **ప్రాంతీయ కార్యాలయం:** విజయవాడ, ఆంధ్రప్రదేశ్.\n` +
+      `• **ప్రధాన కార్యాలయం (Head Office):** బాపట్ల, బాపట్ల జిల్లా, ఆంధ్రప్రదేశ్.\n` +
       `• **మొబైల్ & WhatsApp:** **+91 7075652808**, **+91 9441085075**\n` +
       `• **అధికారిక ఈమెయిల్:** **mahodayamnews@gmail.com**\n` +
       `• **ప్రధాన సంపాదకులు:** వాకా శ్రీనివాసరావు\n\n` +
@@ -3186,8 +3185,7 @@ app.post('/api/chatbot', async (req, res) => {
 - Founder & Editor-in-Chief (వ్యవస్థాపక ప్రధాన సంపాదకులు): వాకా శ్రీనివాసరావు (Vaka Srinivasa Rao) | Phone: +91 9441085075, +91 7075652808.
 - Associate Editor (అసోసియేట్ ఎడిటర్): కామరాజుగడ్డ శ్రీనివాస విజయ కుమార్ (Kamarajugadda Srinivasa Vijaya Kumar) | Phone: +91 9866162808.
 - Telangana State Bureau: మక్కపాటి నివేదిత | Phone: +91 9440832347.
-- Head Office: తెనాలి & సంగం జాగర్లమూడి, గుంటూరు జిల్లా, ఆంధ్రప్రదేశ్.
-- Regional Office: విజయవాడ, ఆంధ్రప్రదేశ్.
+- Head Office: బాపట్ల, బాపట్ల జిల్లా, ఆంధ్రప్రదేశ్.
 - Official Email: mahodayamnews@gmail.com | Official WhatsApp & Phone: +91 7075652808.
 - Circulation & Reach: 50,000+ Daily Print circulation across Andhra Pradesh & Telangana; 2,50,000+ Monthly digital readers; covering 26+ districts.
 - Advertising Tariff: Full Page, Half Page, Quarter Page, Bottom Strip, Digital banner advertising (/advertise.html).
@@ -3263,7 +3261,7 @@ app.post('/api/chatbot', async (req, res) => {
       const systemInstructionText = `You are "మమేక మహోదయం AI అసిస్టెంట్" (Mameka Mahodayam AI Assistant), the official virtual guide and interactive website controller for the MAMEKA MAHODAYAM (మమేక మహోదయం) Telugu daily newspaper website.
 
 YOUR RESPONSIBILITIES & CAPABILITIES:
-1. ENCYCLOPEDIC KNOWLEDGE: You know every detail about Mameka Mahodayam (motto, RNI: APTEL/26/A5988, editor-in-chief వాకా శ్రీనివాసరావు, associate editor కామరాజుగడ్డ శ్రీనివాస విజయ కుమార్, Telangana bureau మక్కపాటి నివేదిత, office addresses in Tenali, Sangam Jagarlamudi, Vijayawada, phone +91 7075652808, advertising packages, e-paper, and all 21 reporters).
+1. ENCYCLOPEDIC KNOWLEDGE: You know every detail about Mameka Mahodayam (motto, RNI: APTEL/26/A5988, editor-in-chief వాకా శ్రీనివాసరావు, associate editor కామరాజుగడ్డ శ్రీనివాస విజయ కుమార్, Telangana bureau మక్కపాటి నివేదిత, head office in Bapatla, Andhra Pradesh, phone +91 7075652808, advertising packages, e-paper, and all 21 reporters).
 2. SEARCH & VERIFICATION:
    - When the user asks if a specific news story, topic, or event is present on the website:
      * Check the published news articles in the context.

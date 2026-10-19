@@ -313,7 +313,7 @@
           </ul>
           <div class="drawer-footer">
             <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;">మమేక మహోదయం దినపత్రిక</div>
-            <div>విజయవాడ &amp; గుంటూరు, ఆంధ్రప్రదేశ్</div>
+            <div>బాపట్ల, ఆంధ్రప్రదేశ్</div>
             <div style="margin-top: 6px; font-size: 0.7rem; color: #94a3b8;">&copy; 2026 All Rights Reserved.</div>
           </div>
         </div>
