@@ -3,7 +3,7 @@
  * High-Performance Offline Caching, Stale-While-Revalidate, and Resilient PWA Engine
  */
 
-const CACHE_VERSION = 'mameka-mahodayam-v1.0.0';
+const CACHE_VERSION = 'mameka-mahodayam-v2.3.0';
 const STATIC_CACHE = `mameka-static-${CACHE_VERSION}`;
 const DATA_CACHE = `mameka-data-${CACHE_VERSION}`;
 const IMAGE_CACHE = `mameka-images-${CACHE_VERSION}`;
@@ -231,7 +231,29 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // D. Static Assets (CSS, JS, Fonts) -> Stale-While-Revalidate
+  // D. Core UI Scripts & CSS -> Network-First with cache fallback
+  if (
+    url.pathname.includes('/js/navigation.js') ||
+    url.pathname.includes('/js/chatbot.js') ||
+    url.pathname.includes('/styles/design-system.css')
+  ) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(STATIC_CACHE).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // E. Other Static Assets -> Stale-While-Revalidate
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       const fetchPromise = fetch(request)

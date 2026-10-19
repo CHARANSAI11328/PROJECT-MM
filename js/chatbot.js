@@ -336,13 +336,13 @@
         height: 54px !important;
       }
       #mameka-chat-modal {
-        bottom: 88px !important;
-        right: 15px !important;
-        left: 15px !important;
+        bottom: 68px !important;
+        right: 12px !important;
+        left: 12px !important;
         width: auto !important;
         max-width: none !important;
-        height: calc(100vh - 110px) !important;
-        max-height: 560px !important;
+        height: calc(100vh - 130px) !important;
+        max-height: 540px !important;
       }
     }
   `;

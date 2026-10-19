@@ -262,6 +262,9 @@
           </a>
         </div>
         <div class="mobile-app-right">
+          <button type="button" id="mobile-ai-trigger" class="mobile-ai-badge" onclick="if(window.toggleMamekaChat) window.toggleMamekaChat();" title="మమేక మహోదయం AI సహాయకుడు" aria-label="AI సహాయకుడు">
+            <span>🤖 AI</span><span class="mobile-ai-text-full">&nbsp;సహాయకుడు</span>
+          </button>
           <a href="/epaper.html" class="mobile-epaper-badge">📰 ఈ-పేపర్</a>
           <button type="button" id="mobile-search-trigger" class="mobile-search-trigger-btn" aria-label="శోధన (Search)">🔍</button>
         </div>
@@ -290,6 +293,7 @@
             <button type="button" id="mobile-drawer-close" class="drawer-close-btn" aria-label="మెనూ మూసివేయి">✕</button>
           </div>
           <ul class="drawer-links-list">
+            <li><a href="javascript:void(0)" onclick="if(window.toggleMamekaChat) { window.toggleMamekaChat(true); const d=document.getElementById('mobile-drawer-overlay'); if(d) d.classList.remove('active'); document.body.style.overflow=''; }" class="drawer-link-item" style="color: #be185d; font-weight: 700; background: #fdf2f8;"><span>🤖</span> <span>AI సహాయకుడు (AI Assistant)</span></a></li>
             <li><a href="/" class="drawer-link-item"><span>🏠</span> <span>హోమ్ (Home)</span></a></li>
             <li><a href="/category.html?c=latest" class="drawer-link-item"><span>⚡</span> <span>తాజా వార్తలు (Latest News)</span></a></li>
             <li><a href="/category.html?c=state" class="drawer-link-item"><span>🏛️</span> <span>ఆంధ్రప్రదేశ్ &amp; తెలంగాణ</span></a></li>
@@ -332,13 +336,13 @@
           <span class="tab-icon">📍</span>
           <span>జిల్లాల వార్తలు</span>
         </a>
+        <button type="button" class="bottom-nav-tab" id="bottom-nav-ai-btn" onclick="if(window.toggleMamekaChat) window.toggleMamekaChat();" style="background: none; border: none; cursor: pointer; color: #be185d; font-weight: 700;">
+          <span class="tab-icon" style="font-size: 1.35rem;">🤖</span>
+          <span>AI అసిస్టెంట్</span>
+        </button>
         <a href="/epaper.html" class="bottom-nav-tab" data-nav="epaper">
           <span class="tab-icon">📰</span>
           <span>ఈ-పేపర్</span>
-        </a>
-        <a href="/editorial-team.html" class="bottom-nav-tab" data-nav="reporters">
-          <span class="tab-icon">👥</span>
-          <span>మా బృందం</span>
         </a>
         <button type="button" class="bottom-nav-tab" id="bottom-nav-search-btn" style="background: none; border: none; cursor: pointer;">
           <span class="tab-icon">🔍</span>
