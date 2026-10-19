@@ -336,9 +336,8 @@
           <span class="tab-icon">📍</span>
           <span>జిల్లాల వార్తలు</span>
         </a>
-        <button type="button" class="bottom-nav-tab" id="bottom-nav-ai-btn" onclick="if(window.toggleMamekaChat) window.toggleMamekaChat();" style="background: none; border: none; cursor: pointer; color: #be185d; font-weight: 700;">
-          <span class="tab-icon" style="font-size: 1.35rem;">🤖</span>
-          <span>AI అసిస్టెంట్</span>
+        <button type="button" class="bottom-nav-tab bottom-nav-logo-tab" id="bottom-nav-ai-btn" onclick="if(window.toggleMamekaChat) window.toggleMamekaChat();" aria-label="మమేక మహోదయం" title="మమేక మహోదయం">
+          <img src="/icons/logo-official.png" alt="మమేక మహోదయం" class="bottom-nav-logo-img" />
         </button>
         <a href="/epaper.html" class="bottom-nav-tab" data-nav="epaper">
           <span class="tab-icon">📰</span>

@@ -3,7 +3,7 @@
  * High-Performance Offline Caching, Stale-While-Revalidate, and Resilient PWA Engine
  */
 
-const CACHE_VERSION = 'mameka-mahodayam-v2.3.0';
+const CACHE_VERSION = 'mameka-mahodayam-v2.4.0';
 const STATIC_CACHE = `mameka-static-${CACHE_VERSION}`;
 const DATA_CACHE = `mameka-data-${CACHE_VERSION}`;
 const IMAGE_CACHE = `mameka-images-${CACHE_VERSION}`;

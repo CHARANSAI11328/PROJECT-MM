@@ -4736,6 +4736,33 @@ body {
     transform: scale(1.1) !important;
   }
 
+  .bottom-nav-logo-tab {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    padding: 2px 4px !important;
+    flex: 1 !important;
+    max-width: 72px !important;
+  }
+
+  .bottom-nav-logo-img {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    object-fit: contain !important;
+    display: block !important;
+    background: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(190, 24, 93, 0.28), 0 0 0 1.5px #fbcfe8 !important;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  }
+
+  .bottom-nav-logo-tab:active .bottom-nav-logo-img {
+    transform: scale(0.92) !important;
+  }
+
   /* 6. Native App Cards Refinements (Horizontal Feed for Mobile) */
   .card-standard,
   .tp-article-card {
