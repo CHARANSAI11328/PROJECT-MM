@@ -5,8 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "build": "node -e \"console.log('Build completed')\""
+    "dev": "node server.js"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.65",

@@ -46,28 +46,21 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-
 // Serve Public Static Files & Admin Portal
 const uploadsDir = path.join(__dirname, 'uploads');
 const qrcode = require('qrcode');
 const imagesDir = path.join(uploadsDir, 'images');
 const reportersUploadDir = path.join(uploadsDir, 'reporters');
 const qrUploadDir = path.join(uploadsDir, 'qr_codes');
-try {
-  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-  if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
-  if (!fs.existsSync(reportersUploadDir)) fs.mkdirSync(reportersUploadDir, { recursive: true });
-  if (!fs.existsSync(qrUploadDir)) fs.mkdirSync(qrUploadDir, { recursive: true });
-} catch (e) {
-  // Safe fallback for read-only serverless filesystems
-}
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+if (!fs.existsSync(reportersUploadDir)) fs.mkdirSync(reportersUploadDir, { recursive: true });
+if (!fs.existsSync(qrUploadDir)) fs.mkdirSync(qrUploadDir, { recursive: true });
 
 function getBaseServerUrl(reqOrBaseUrl) {
   let baseUrl = process.env.APP_BASE_URL || process.env.PUBLIC_URL;
   if (!baseUrl && process.env.RENDER_EXTERNAL_URL) {
     baseUrl = process.env.RENDER_EXTERNAL_URL;
-  } else if (!baseUrl && process.env.VERCEL_URL) {
-    baseUrl = 'https://' + process.env.VERCEL_URL;
   } else if (!baseUrl && process.env.RAILWAY_PUBLIC_DOMAIN) {
     baseUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
   } else if (!baseUrl && process.env.RAILWAY_STATIC_URL) {
@@ -82,7 +75,7 @@ function getBaseServerUrl(reqOrBaseUrl) {
     }
   }
   if (!baseUrl && isProduction) {
-    baseUrl = process.env.VERCEL_URL ? ('https://' + process.env.VERCEL_URL) : 'https://project-mm-1.onrender.com';
+    baseUrl = 'https://project-mm-1.onrender.com';
   }
   return baseUrl ? baseUrl.replace(/\/$/, '') : `http://localhost:${PORT}`;
 }
@@ -269,37 +262,9 @@ app.use(['/js/chatbot.js', '/js/navigation.js', '/js/pwa.js', '/js/content-api.j
   next();
 });
 
-const projectRoot = fs.existsSync(path.join(process.cwd(), 'index.html'))
-  ? process.cwd()
-  : (fs.existsSync(path.join(__dirname, 'index.html')) ? __dirname : path.resolve(__dirname, '..'));
-
-app.use(express.static(projectRoot, { dotfiles: 'ignore' }));
-app.use('/admin', express.static(path.join(projectRoot, 'admin'), { dotfiles: 'ignore' }));
-app.use('/styles', express.static(path.join(projectRoot, 'styles')));
-app.use('/js', express.static(path.join(projectRoot, 'js')));
-app.use('/icons', express.static(path.join(projectRoot, 'icons')));
+app.use(express.static(__dirname, { dotfiles: 'ignore' }));
+app.use('/admin', express.static(path.join(__dirname, 'admin'), { dotfiles: 'ignore' }));
 app.use('/uploads', express.static(uploadsDir, { dotfiles: 'ignore' }));
-
-// Root & Static HTML Page Fallbacks for Serverless Hosting
-app.get(['/', '/index.html'], (req, res) => {
-  res.sendFile(path.join(projectRoot, 'index.html'));
-});
-
-app.get('/:page.html', (req, res, next) => {
-  const filePath = path.join(projectRoot, `${req.params.page}.html`);
-  if (fs.existsSync(filePath)) {
-    return res.sendFile(filePath);
-  }
-  next();
-});
-
-app.get('/:page', (req, res, next) => {
-  const filePath = path.join(projectRoot, `${req.params.page}.html`);
-  if (fs.existsSync(filePath)) {
-    return res.sendFile(filePath);
-  }
-  next();
-});
 
 const { PDFDocument } = require('pdf-lib');
 
@@ -461,14 +426,6 @@ app.get('/uploads/*', async (req, res, next) => {
       res.setHeader('Content-Type', row.mime_type || (filename.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'));
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       return res.send(buffer);
-    }
-
-    // If QR code is requested but file not on ephemeral disk, redirect to public dynamic generator
-    if (fullUrl.includes('/uploads/qr_codes/')) {
-      const repMatch = filename.match(/^Reporter_(.+)_QR\.png$/i);
-      if (repMatch) {
-        return res.redirect('/api/public/reporters/' + encodeURIComponent(repMatch[1]) + '/qr.png');
-      }
     }
 
     // If file is a PDF (e.g. /uploads/editions/*.pdf) missing from persistent_uploads, restore/synthesize it!
@@ -3489,28 +3446,28 @@ app.get('/sitemap.xml', async (req, res) => {
 
 // Admin Portal Clean SPA Routing
 app.get(['/admin', '/admin/*'], (req, res) => {
-  res.sendFile(path.join(projectRoot, 'admin', 'index.html'));
+  res.sendFile(path.join(__dirname, 'admin', 'index.html'));
 });
 
 // Express Page Routing for Clean URLs
 app.get(['/reporters', '/reporters/:id', '/editorial-team', '/our-team'], (req, res) => {
-  res.sendFile(path.join(projectRoot, 'editorial-team.html'));
+  res.sendFile(path.join(__dirname, 'editorial-team.html'));
 });
 
 app.get(['/district', '/district/:slug'], (req, res) => {
-  res.sendFile(path.join(projectRoot, 'district.html'));
+  res.sendFile(path.join(__dirname, 'district.html'));
 });
 
 app.get(['/category', '/category/:slug', '/state', '/politics', '/national-international', '/sports', '/cinema', '/education-jobs', '/editorial'], (req, res) => {
-  res.sendFile(path.join(projectRoot, 'category.html'));
+  res.sendFile(path.join(__dirname, 'category.html'));
 });
 
 app.get(['/news', '/news/:identifier', '/news/*'], (req, res) => {
-  res.sendFile(path.join(projectRoot, 'article.html'));
+  res.sendFile(path.join(__dirname, 'article.html'));
 });
 
 app.get(['/epaper', '/e-paper'], (req, res) => {
-  res.sendFile(path.join(projectRoot, 'epaper.html'));
+  res.sendFile(path.join(__dirname, 'epaper.html'));
 });
 
 // Global Express Error Middleware (Catches Multer & Route Errors Cleanly)
@@ -3526,11 +3483,8 @@ app.use((err, req, res, next) => {
 });
 
 // Initialize Database Schema & Start Server
-if (process.env.VERCEL) {
-  initDatabase().catch(err => console.warn('Database schema init notice:', err.message));
-} else {
-  initDatabase().then(() => {
-    app.listen(PORT, '0.0.0.0', () => {
+initDatabase().then(() => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`=======================================================`);
     console.log(` MAMEKA MAHODAYAM CMS Backend Server Running           `);
     console.log(` Port: ${PORT} (0.0.0.0)                               `);
@@ -3546,7 +3500,6 @@ if (process.env.VERCEL) {
 }).catch(err => {
   console.error('Database initialization failed:', err);
   process.exit(1);
-  });
-}
+});
 
 module.exports = app;
