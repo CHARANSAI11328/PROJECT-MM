@@ -1,0 +1,70 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/uploads/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/admin/(.*)",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/district",
+      "destination": "/district.html"
+    },
+    {
+      "source": "/district/(.*)",
+      "destination": "/district.html"
+    },
+    {
+      "source": "/category",
+      "destination": "/category.html"
+    },
+    {
+      "source": "/category/(.*)",
+      "destination": "/category.html"
+    },
+    {
+      "source": "/news",
+      "destination": "/article.html"
+    },
+    {
+      "source": "/news/(.*)",
+      "destination": "/article.html"
+    },
+    {
+      "source": "/epaper",
+      "destination": "/epaper.html"
+    },
+    {
+      "source": "/e-paper",
+      "destination": "/epaper.html"
+    },
+    {
+      "source": "/editorial-team",
+      "destination": "/editorial-team.html"
+    },
+    {
+      "source": "/our-team",
+      "destination": "/editorial-team.html"
+    },
+    {
+      "source": "/reporters",
+      "destination": "/editorial-team.html"
+    },
+    {
+      "source": "/reporters/(.*)",
+      "destination": "/editorial-team.html"
+    }
+  ]
+}

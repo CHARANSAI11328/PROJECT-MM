@@ -52,15 +52,21 @@ const qrcode = require('qrcode');
 const imagesDir = path.join(uploadsDir, 'images');
 const reportersUploadDir = path.join(uploadsDir, 'reporters');
 const qrUploadDir = path.join(uploadsDir, 'qr_codes');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
-if (!fs.existsSync(reportersUploadDir)) fs.mkdirSync(reportersUploadDir, { recursive: true });
-if (!fs.existsSync(qrUploadDir)) fs.mkdirSync(qrUploadDir, { recursive: true });
+try {
+  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+  if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+  if (!fs.existsSync(reportersUploadDir)) fs.mkdirSync(reportersUploadDir, { recursive: true });
+  if (!fs.existsSync(qrUploadDir)) fs.mkdirSync(qrUploadDir, { recursive: true });
+} catch (e) {
+  // Safe fallback for read-only serverless filesystems
+}
 
 function getBaseServerUrl(reqOrBaseUrl) {
   let baseUrl = process.env.APP_BASE_URL || process.env.PUBLIC_URL;
   if (!baseUrl && process.env.RENDER_EXTERNAL_URL) {
     baseUrl = process.env.RENDER_EXTERNAL_URL;
+  } else if (!baseUrl && process.env.VERCEL_URL) {
+    baseUrl = 'https://' + process.env.VERCEL_URL;
   } else if (!baseUrl && process.env.RAILWAY_PUBLIC_DOMAIN) {
     baseUrl = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
   } else if (!baseUrl && process.env.RAILWAY_STATIC_URL) {
@@ -75,7 +81,7 @@ function getBaseServerUrl(reqOrBaseUrl) {
     }
   }
   if (!baseUrl && isProduction) {
-    baseUrl = 'https://project-mm-1.onrender.com';
+    baseUrl = process.env.VERCEL_URL ? ('https://' + process.env.VERCEL_URL) : 'https://project-mm-1.onrender.com';
   }
   return baseUrl ? baseUrl.replace(/\/$/, '') : `http://localhost:${PORT}`;
 }
@@ -426,6 +432,14 @@ app.get('/uploads/*', async (req, res, next) => {
       res.setHeader('Content-Type', row.mime_type || (filename.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'));
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       return res.send(buffer);
+    }
+
+    // If QR code is requested but file not on ephemeral disk, redirect to public dynamic generator
+    if (fullUrl.includes('/uploads/qr_codes/')) {
+      const repMatch = filename.match(/^Reporter_(.+)_QR\.png$/i);
+      if (repMatch) {
+        return res.redirect('/api/public/reporters/' + encodeURIComponent(repMatch[1]) + '/qr.png');
+      }
     }
 
     // If file is a PDF (e.g. /uploads/editions/*.pdf) missing from persistent_uploads, restore/synthesize it!
@@ -3483,8 +3497,11 @@ app.use((err, req, res, next) => {
 });
 
 // Initialize Database Schema & Start Server
-initDatabase().then(() => {
-  app.listen(PORT, '0.0.0.0', () => {
+if (process.env.VERCEL) {
+  initDatabase().catch(err => console.warn('Database schema init notice:', err.message));
+} else {
+  initDatabase().then(() => {
+    app.listen(PORT, '0.0.0.0', () => {
     console.log(`=======================================================`);
     console.log(` MAMEKA MAHODAYAM CMS Backend Server Running           `);
     console.log(` Port: ${PORT} (0.0.0.0)                               `);
@@ -3500,6 +3517,7 @@ initDatabase().then(() => {
 }).catch(err => {
   console.error('Database initialization failed:', err);
   process.exit(1);
-});
+  });
+}
 
 module.exports = app;
