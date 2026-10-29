@@ -279,20 +279,24 @@ app.use(['/js/chatbot.js', '/js/navigation.js', '/js/pwa.js', '/js/content-api.j
   next();
 });
 
-app.use(express.static(__dirname, { dotfiles: 'ignore' }));
-app.use('/admin', express.static(path.join(__dirname, 'admin'), { dotfiles: 'ignore' }));
-app.use('/styles', express.static(path.join(__dirname, 'styles')));
-app.use('/js', express.static(path.join(__dirname, 'js')));
-app.use('/icons', express.static(path.join(__dirname, 'icons')));
+const projectRoot = fs.existsSync(path.join(process.cwd(), 'index.html'))
+  ? process.cwd()
+  : (fs.existsSync(path.join(__dirname, 'index.html')) ? __dirname : path.resolve(__dirname, '..'));
+
+app.use(express.static(projectRoot, { dotfiles: 'ignore' }));
+app.use('/admin', express.static(path.join(projectRoot, 'admin'), { dotfiles: 'ignore' }));
+app.use('/styles', express.static(path.join(projectRoot, 'styles')));
+app.use('/js', express.static(path.join(projectRoot, 'js')));
+app.use('/icons', express.static(path.join(projectRoot, 'icons')));
 app.use('/uploads', express.static(uploadsDir, { dotfiles: 'ignore' }));
 
 // Root & Static HTML Page Fallbacks for Serverless Hosting
 app.get(['/', '/index.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(projectRoot, 'index.html'));
 });
 
 app.get('/:page.html', (req, res, next) => {
-  const filePath = path.join(__dirname, `${req.params.page}.html`);
+  const filePath = path.join(projectRoot, `${req.params.page}.html`);
   if (fs.existsSync(filePath)) {
     return res.sendFile(filePath);
   }
@@ -300,7 +304,7 @@ app.get('/:page.html', (req, res, next) => {
 });
 
 app.get('/:page', (req, res, next) => {
-  const filePath = path.join(__dirname, `${req.params.page}.html`);
+  const filePath = path.join(projectRoot, `${req.params.page}.html`);
   if (fs.existsSync(filePath)) {
     return res.sendFile(filePath);
   }
@@ -3495,28 +3499,28 @@ app.get('/sitemap.xml', async (req, res) => {
 
 // Admin Portal Clean SPA Routing
 app.get(['/admin', '/admin/*'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin', 'index.html'));
+  res.sendFile(path.join(projectRoot, 'admin', 'index.html'));
 });
 
 // Express Page Routing for Clean URLs
 app.get(['/reporters', '/reporters/:id', '/editorial-team', '/our-team'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'editorial-team.html'));
+  res.sendFile(path.join(projectRoot, 'editorial-team.html'));
 });
 
 app.get(['/district', '/district/:slug'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'district.html'));
+  res.sendFile(path.join(projectRoot, 'district.html'));
 });
 
 app.get(['/category', '/category/:slug', '/state', '/politics', '/national-international', '/sports', '/cinema', '/education-jobs', '/editorial'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'category.html'));
+  res.sendFile(path.join(projectRoot, 'category.html'));
 });
 
 app.get(['/news', '/news/:identifier', '/news/*'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'article.html'));
+  res.sendFile(path.join(projectRoot, 'article.html'));
 });
 
 app.get(['/epaper', '/e-paper'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'epaper.html'));
+  res.sendFile(path.join(projectRoot, 'epaper.html'));
 });
 
 // Global Express Error Middleware (Catches Multer & Route Errors Cleanly)
