@@ -270,7 +270,31 @@ app.use(['/js/chatbot.js', '/js/navigation.js', '/js/pwa.js', '/js/content-api.j
 
 app.use(express.static(__dirname, { dotfiles: 'ignore' }));
 app.use('/admin', express.static(path.join(__dirname, 'admin'), { dotfiles: 'ignore' }));
+app.use('/styles', express.static(path.join(__dirname, 'styles')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use('/icons', express.static(path.join(__dirname, 'icons')));
 app.use('/uploads', express.static(uploadsDir, { dotfiles: 'ignore' }));
+
+// Root & Static HTML Page Fallbacks for Serverless Hosting
+app.get(['/', '/index.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/:page.html', (req, res, next) => {
+  const filePath = path.join(__dirname, `${req.params.page}.html`);
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  next();
+});
+
+app.get('/:page', (req, res, next) => {
+  const filePath = path.join(__dirname, `${req.params.page}.html`);
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+  next();
+});
 
 const { PDFDocument } = require('pdf-lib');
 

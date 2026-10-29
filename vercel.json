@@ -1,69 +1,14 @@
 {
-  "cleanUrls": true,
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "{styles/**,js/**,icons/**,admin/**,*.html,manifest.json,sw.js}",
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
-      "source": "/api/(.*)",
+      "source": "/(.*)",
       "destination": "/api"
-    },
-    {
-      "source": "/uploads/(.*)",
-      "destination": "/api"
-    },
-    {
-      "source": "/admin",
-      "destination": "/admin/index.html"
-    },
-    {
-      "source": "/admin/(.*)",
-      "destination": "/admin/index.html"
-    },
-    {
-      "source": "/district",
-      "destination": "/district.html"
-    },
-    {
-      "source": "/district/(.*)",
-      "destination": "/district.html"
-    },
-    {
-      "source": "/category",
-      "destination": "/category.html"
-    },
-    {
-      "source": "/category/(.*)",
-      "destination": "/category.html"
-    },
-    {
-      "source": "/news",
-      "destination": "/article.html"
-    },
-    {
-      "source": "/news/(.*)",
-      "destination": "/article.html"
-    },
-    {
-      "source": "/epaper",
-      "destination": "/epaper.html"
-    },
-    {
-      "source": "/e-paper",
-      "destination": "/epaper.html"
-    },
-    {
-      "source": "/editorial-team",
-      "destination": "/editorial-team.html"
-    },
-    {
-      "source": "/our-team",
-      "destination": "/editorial-team.html"
-    },
-    {
-      "source": "/reporters",
-      "destination": "/editorial-team.html"
-    },
-    {
-      "source": "/reporters/(.*)",
-      "destination": "/editorial-team.html"
     }
   ]
 }
