@@ -46,16 +46,6 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.get('/api/debug-env', (req, res) => {
-  res.json({
-    dirname: __dirname,
-    cwd: process.cwd(),
-    hasIndexInDirname: fs.existsSync(path.join(__dirname, 'index.html')),
-    hasIndexInCwd: fs.existsSync(path.join(process.cwd(), 'index.html')),
-    filesInDirname: fs.existsSync(__dirname) ? fs.readdirSync(__dirname).slice(0, 20) : [],
-    filesInCwd: fs.existsSync(process.cwd()) ? fs.readdirSync(process.cwd()).slice(0, 20) : []
-  });
-});
 
 // Serve Public Static Files & Admin Portal
 const uploadsDir = path.join(__dirname, 'uploads');
