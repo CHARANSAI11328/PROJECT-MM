@@ -9,8 +9,12 @@ const thumbnailsDir = path.join(mediaDir, 'thumbnails');
 
 // Ensure derivative directories exist
 [optimizedDir, thumbnailsDir].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (e) {
+    // Safe fallback for read-only serverless filesystems
   }
 });
 

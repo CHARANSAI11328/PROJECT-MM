@@ -33,25 +33,29 @@ const isPostgres = true;
 let db = null;
 let pgPool = null;
 
-const { Pool } = require('pg');
-try {
-  const parsed = new URL(databaseUrl);
-  console.log(`Connecting exclusively to Neon PostgreSQL host: ${parsed.host} | db: ${parsed.pathname}`);
-} catch (e) {}
+if (databaseUrl) {
+  const { Pool } = require('pg');
+  try {
+    const parsed = new URL(databaseUrl);
+    console.log(`Connecting exclusively to Neon PostgreSQL host: ${parsed.host} | db: ${parsed.pathname}`);
+  } catch (e) {}
 
-pgPool = new Pool({
-  connectionString: databaseUrl,
-  ssl: { rejectUnauthorized: false },
-  connectionTimeoutMillis: 15000,
-  idleTimeoutMillis: 30000,
-  max: 25
-});
+  pgPool = new Pool({
+    connectionString: databaseUrl,
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 15000,
+    idleTimeoutMillis: 30000,
+    max: 25
+  });
 
-pgPool.on('error', (err) => {
-  console.error('PostgreSQL idle client notice:', err.message);
-});
+  pgPool.on('error', (err) => {
+    console.error('PostgreSQL idle client notice:', err.message);
+  });
 
-console.log('✓ Neon PostgreSQL exclusively initialized as primary system database');
+  console.log('✓ Neon PostgreSQL exclusively initialized as primary system database');
+} else {
+  console.warn('⚠️ DATABASE_URL not set in environment. Running in standby mode.');
+}
 
 // Convert SQLite parameter placeholders (?) to PostgreSQL ($1, $2, $3...)
 function translateSqlForPostgres(sql) {
@@ -96,6 +100,7 @@ function prepareDdlSql(sql) {
 
 // Helper wrapper for async database execution queries (INSERT, UPDATE, DELETE, DDL)
 const dbRun = async (sql, params = []) => {
+  if (!pgPool) return { id: null, changes: 0 };
   if (isPostgres) {
     const convertedSql = translateSqlForPostgres(prepareDdlSql(sql));
     const res = await pgPool.query(convertedSql, params);
@@ -116,6 +121,7 @@ const dbRun = async (sql, params = []) => {
 
 // Helper wrapper for multi-row database query fetches (SELECT *)
 const dbAll = async (sql, params = []) => {
+  if (!pgPool) return [];
   if (isPostgres) {
     const convertedSql = translateSqlForPostgres(sql);
     const res = await pgPool.query(convertedSql, params);
@@ -132,6 +138,7 @@ const dbAll = async (sql, params = []) => {
 
 // Helper wrapper for single-row database query fetches (SELECT ... LIMIT 1)
 const dbGet = async (sql, params = []) => {
+  if (!pgPool) return null;
   if (isPostgres) {
     const convertedSql = translateSqlForPostgres(sql);
     const res = await pgPool.query(convertedSql, params);
@@ -148,6 +155,10 @@ const dbGet = async (sql, params = []) => {
 
 // Initialize Database Schema (Compatible with both PostgreSQL and SQLite)
 async function initDatabase() {
+  if (!pgPool) {
+    console.warn('Skipping initDatabase: DATABASE_URL not set in environment.');
+    return;
+  }
   console.log(`Initializing database schema (${isPostgres ? 'Live PostgreSQL' : 'Local SQLite'})...`);
 
   // 1. Users Table
